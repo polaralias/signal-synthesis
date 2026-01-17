@@ -1,0 +1,142 @@
+package com.polaralias.signalsynthesis.ui
+
+import com.polaralias.signalsynthesis.data.alerts.AlertSettings
+import com.polaralias.signalsynthesis.data.provider.ApiKeys
+import com.polaralias.signalsynthesis.data.provider.MarketDataProviderFactory
+import com.polaralias.signalsynthesis.data.provider.ProviderBundle
+import com.polaralias.signalsynthesis.data.storage.AlertSettingsStorage
+import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
+import com.polaralias.signalsynthesis.data.worker.WorkScheduler
+import com.polaralias.signalsynthesis.domain.ai.LlmClient
+import com.polaralias.signalsynthesis.domain.model.AiSynthesis
+import com.polaralias.signalsynthesis.domain.model.TradeSetup
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class AnalysisViewModelTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+    private val clock = Clock.fixed(Instant.parse("2026-01-01T10:00:00Z"), ZoneId.of("UTC"))
+
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun initialStateIsCorrect() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        // Allow init to complete
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isLoading)
+        // hasAnyApiKeys depends on FakeApiKeyStore default which is false
+        assertEquals(false, state.hasAnyApiKeys)
+    }
+
+    @Test
+    fun updateKeyUpdatesState() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.updateKey(KeyField.ALPACA_KEY, "test_key")
+
+        val state = viewModel.uiState.value
+        assertEquals("test_key", state.keys.alpacaKey)
+    }
+
+    @Test
+    fun runAnalysisFailsWithoutKeys() = runTest(testDispatcher) {
+        val viewModel = createViewModel(hasKeys = false)
+        testDispatcher.scheduler.advanceUntilIdle() // let init finish
+
+        viewModel.runAnalysis()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.errorMessage)
+        assertTrue(state.errorMessage!!.contains("Add at least one provider key"))
+    }
+
+    @Test
+    fun runAnalysisSucceedsWithKeys() = runTest(testDispatcher) {
+        val viewModel = createViewModel(hasKeys = true)
+        testDispatcher.scheduler.advanceUntilIdle() // let init finish
+
+        viewModel.runAnalysis()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isLoading)
+        assertEquals(null, state.errorMessage)
+        // Result might be empty because fake provider returns nothing, but it shouldn't error
+        assertNotNull(state.result)
+    }
+
+    private fun createViewModel(
+        hasKeys: Boolean = false
+    ): AnalysisViewModel {
+        val keyStore = FakeApiKeyStore(hasKeys)
+        return AnalysisViewModel(
+            providerFactory = FakeProviderFactory(),
+            keyStore = keyStore,
+            alertStore = FakeAlertSettingsStore(),
+            workScheduler = FakeWorkScheduler(),
+            llmClient = FakeLlmClient(),
+            clock = clock,
+            ioDispatcher = testDispatcher
+        )
+    }
+
+    private class FakeProviderFactory : MarketDataProviderFactory {
+        override fun build(keys: ApiKeys): ProviderBundle {
+            return ProviderBundle(
+                emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList()
+            )
+        }
+    }
+
+    private class FakeApiKeyStore(private val initialHasKeys: Boolean) : ApiKeyStorage {
+        override suspend fun loadApiKeys(): ApiKeys {
+            return if (initialHasKeys) ApiKeys(alpacaKey = "test") else ApiKeys()
+        }
+        override suspend fun loadLlmKey(): String? = null
+        override suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?) {}
+        override suspend fun clear() {}
+    }
+
+    private class FakeAlertSettingsStore : AlertSettingsStorage {
+        override suspend fun loadSettings(): AlertSettings = AlertSettings()
+        override suspend fun saveSettings(settings: AlertSettings) {}
+        override suspend fun loadSymbols(): List<String> = emptyList()
+        override suspend fun saveSymbols(symbols: List<String>) {}
+    }
+
+    private class FakeWorkScheduler : WorkScheduler {
+        override fun scheduleAlerts(enabled: Boolean) {}
+    }
+
+    private class FakeLlmClient : LlmClient {
+        override suspend fun synthesizeSetup(setup: TradeSetup, context: String): AiSynthesis {
+            return AiSynthesis("summary", "risks", "verdict")
+        }
+    }
+}

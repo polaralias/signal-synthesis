@@ -578,3 +578,45 @@ Links:
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RankSetupsUseCaseTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/FilterTradeableUseCaseTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepositoryTest.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 8 - Hardening and Testing
+Owner/Agent: Jules
+
+Summary:
+- Refactored AnalysisViewModel and dependencies to improve testability.
+- Added unit tests for TimedCache, MarketDataRepository, and AnalysisViewModel.
+
+Work Completed:
+- Extracted AlertSettingsStorage and MarketDataProviderFactory interfaces.
+- Created WorkScheduler interface and WorkManagerScheduler wrapper.
+- Refactored AnalysisViewModel to use interfaces instead of concrete classes.
+- Updated MainActivity dependency injection.
+- Added TimedCacheTest.
+- Added caching tests to MarketDataRepositoryTest.
+- Added AnalysisViewModelTest with test fakes.
+- Updated local.properties to a placeholder path.
+
+Decisions:
+- Used interfaces to mock Android dependencies (WorkManager, SharedPreferences wrappers).
+- Created a custom WorkScheduler to avoid mocking WorkManager static/final classes directly.
+
+Risks/Blocks:
+- Tests could not be run due to missing Android SDK in the environment. Build failed with "SDK location not found".
+- local.properties was updated to a placeholder, which might need to be set correctly by the next developer.
+
+Next Steps:
+- Run tests in an environment with Android SDK.
+- Address any test failures.
+
+Links:
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisViewModel.kt
+- app/src/test/java/com/polaralias/signalsynthesis/ui/AnalysisViewModelTest.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/storage/AlertSettingsStore.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ProviderFactory.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/worker/WorkScheduler.kt
+- app/src/test/java/com/polaralias/signalsynthesis/data/cache/TimedCacheTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepositoryTest.kt
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt

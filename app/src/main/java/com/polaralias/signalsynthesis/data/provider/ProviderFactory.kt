@@ -5,10 +5,14 @@ import com.polaralias.signalsynthesis.data.provider.finnhub.FinnhubMarketDataPro
 import com.polaralias.signalsynthesis.data.provider.fmp.FmpMarketDataProvider
 import com.polaralias.signalsynthesis.data.provider.polygon.PolygonMarketDataProvider
 
+interface MarketDataProviderFactory {
+    fun build(keys: ApiKeys): ProviderBundle
+}
+
 class ProviderFactory(
     private val includeMock: Boolean = true
-) {
-    fun build(keys: ApiKeys): ProviderBundle {
+) : MarketDataProviderFactory {
+    override fun build(keys: ApiKeys): ProviderBundle {
         val hasKeys = keys.hasAny()
         
         // Create providers based on available keys
