@@ -652,3 +652,30 @@ Links:
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichIntradayUseCaseTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCaseTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCaseTest.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 8 - Hardening and Testing
+Owner/Agent: Jules
+
+Summary:
+- Added tests for repository error handling and partial data resilience.
+
+Work Completed:
+- Added `getQuotesReturnsEmptyWhenAllProvidersFail` to `MarketDataRepositoryTest`.
+- Created `RunAnalysisErrorTest` to verify pipeline resilience against total and partial data failures.
+
+Decisions:
+- Confirmed that the pipeline should produce partial setups (with lower confidence) rather than failing when enrichment data is missing.
+
+Risks/Blocks:
+- Android SDK still missing in environment; tests verified by code review only.
+
+Next Steps:
+- Configure valid Android SDK environment to execute tests.
+- Proceed to any final cleanup.
+
+Links:
+- app/src/test/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepositoryTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisErrorTest.kt
