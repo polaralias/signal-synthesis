@@ -179,25 +179,27 @@ milestone.
 - WorkManager schedules and runs worker on device/emulator.
 - Sample alerts display correct notification content.
 
-## Phase 7: LLM Integration (Optional)
+## Phase 7: AI Reasoning & Foundation
 
 ### Goals
-- Add optional AI explanations without blocking core features.
+- Implement the foundational AI layer that synthesizes market data.
+- Ensure the default view prioritizes AI insights when keys are available.
 
 ### Inputs
-- LLM API key storage and usage plan.
+- LLM API key storage and updated prompting strategy (analyst persona).
 
 ### Tasks
-- Implement LLM client with prompt builder.
-- Add ViewModel action `explainSetupWithAI`.
-- Add UI button and display for AI response.
+- Implement LLM client with structured prompting (Synthesis/Decision).
+- Integrate AI calls into the analysis flow (e.g., `synthesizeSetupWithAI`).
+- Update UI to display AI reasoning as the primary content in details/lists.
 
 ### Outputs
-- Optional AI explanation flow.
+- Core AI synthesis module and updated UI presentation.
 
 ### Acceptance Checks
-- AI request fires only when key is present.
-- UI shows loading and response states.
+- AI analysis runs automatically on setup view if key is present.
+- UI displays the synthesized summary prominently.
+- Fallback to raw data view is available.
 
 ## Phase 8: Hardening and Testing
 

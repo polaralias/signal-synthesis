@@ -14,7 +14,8 @@ data flow, and code structure.
 - Preserve logic parity: discovery -> filtering -> enrichment ->
   ranking -> results.
 - Allow users to bring their own API keys for data providers.
-- Add optional LLM-based explanations and summaries.
+- Establish AI as a foundational element, using LLM reasoning to
+  transform API data into meaningful insights and decisions.
 - Provide background alerts for user-defined signals.
 
 ### Non-Goals (initial release)
@@ -41,7 +42,7 @@ data flow, and code structure.
 2. ViewModel invokes pipeline.
 3. Repository fetches data (quotes, bars, fundamentals, sentiment).
 4. Domain logic computes indicators, filters, ranks.
-5. UI displays results; optional LLM summary.
+5. UI displays results, prioritizing the AI-synthesized summary over raw data.
 6. Background worker runs periodic checks for alerts.
 
 ## 3. Data Model Mapping
@@ -253,13 +254,13 @@ Return a single `AnalysisResult` object with counts and setups.
   - Summary of results.
 
 - **Results List**
-  - Cards with symbol, confidence, label, key indicators.
+  - Cards with symbol, confidence, label.
+  - Primary content: Short AI summary snippet.
   - Color or icon mapping for confidence and type.
 
 - **Setup Details**
-  - Full metrics, indicators, sentiment.
-  - Reason list that drove the score.
-  - Optional "Explain with AI" button.
+  - **Primary View:** AI-synthesized analysis, reasoning, and risk assessment.
+  - **Raw Data View (Toggle):** Full metrics, indicators, sentiment, score components.
 
 - **Alerts**
   - Toggle alerts on/off.
@@ -275,35 +276,43 @@ Return a single `AnalysisResult` object with counts and setups.
 Use Compose Navigation. Model each screen as a destination; pass
 `symbol` or `setupId` for detail navigation.
 
-## 8. LLM Integration
+## 8. AI Foundation & Reasoning
 
 ### Scope
 
-LLM features are optional and separate from the core pipeline. If no
-LLM key is set, features remain disabled.
+AI is a core component. The app is designed to reason on data before
+presentation. While the app can function in a "raw mode" without an LLM key,
+the intended and default experience relies on the LLM to synthesize
+complex signals into actionable intelligence.
 
 ### Integration Strategy
-- Use a simple Retrofit or OkHttp client for the LLM API.
+- Use a Retrofit or OkHttp client for the LLM API.
 - Store the LLM key in encrypted storage.
-- Build a prompt with structured context:
-  - Symbol, setup type, confidence.
-  - Key indicators and reasons.
-  - Context data if available.
+- **Synthesis Prompting:** Instead of just "explaining", the prompt should
+  ask the model to act as a senior analyst:
+  - Input: Full technical set (indicators, price levels), fundamental data,
+    and news sentiment.
+  - Output: A structured decision summary, risk factors, and a clear "Why"
+    narrative.
 
 ### Example Prompt
 ```
-Explain this trading signal for a non-expert.
+Act as a senior trading analyst. Review the following technical setup:
 Ticker: XYZ
-Setup: High Probability
-Confidence: 0.78
-Reasons: Price above VWAP; RSI Oversold (28); Positive Sentiment (Bullish)
-Context: Sector Technology, Market Cap 120B.
+Setup: High Probability (Score 2.5)
+Indicators: Price > VWAP, RSI 28 (Oversold), SMA200 Support.
+Context: Tech Sector, Bullish Sentiment.
+
+Provide:
+1. A concise synthesis of the opportunity.
+2. Key risk factors.
+3. A final verdict.
 ```
 
 ### UI Flow
-- User taps "Explain with AI".
-- Show loading state.
-- Render the response text in the detail screen.
+- **Default:** When a user views a setup, the app fetches the AI analysis automatically (if key is present).
+- **Presentation:** The AI response is shown as the main content.
+- **Interaction:** Users can tap "View Raw Data" to see the underlying numbers.
 
 ## 9. Alerts and Background Work
 
