@@ -18,6 +18,7 @@ import com.polaralias.signalsynthesis.data.ai.OpenAiService
 import com.polaralias.signalsynthesis.data.provider.ProviderFactory
 import com.polaralias.signalsynthesis.data.storage.AlertSettingsStore
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStore
+import com.polaralias.signalsynthesis.data.worker.WorkManagerScheduler
 import com.polaralias.signalsynthesis.ui.AnalysisViewModel
 import com.polaralias.signalsynthesis.ui.SignalSynthesisApp
 
@@ -64,6 +65,7 @@ private class AnalysisViewModelFactory(
             val keyStore = ApiKeyStore(activity)
             val alertStore = AlertSettingsStore(activity)
             val workManager = WorkManager.getInstance(activity)
+            val workScheduler = WorkManagerScheduler(workManager)
             val llmService = OpenAiService.create()
             val llmClient = OpenAiLlmClient(llmService)
             @Suppress("UNCHECKED_CAST")
@@ -71,7 +73,7 @@ private class AnalysisViewModelFactory(
                 providerFactory = providerFactory,
                 keyStore = keyStore,
                 alertStore = alertStore,
-                workManager = workManager,
+                workScheduler = workScheduler,
                 llmClient = llmClient
             ) as T
         }

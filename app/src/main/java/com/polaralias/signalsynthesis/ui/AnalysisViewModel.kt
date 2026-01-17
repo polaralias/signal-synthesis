@@ -2,17 +2,12 @@ package com.polaralias.signalsynthesis.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import com.polaralias.signalsynthesis.domain.ai.LlmClient
-import com.polaralias.signalsynthesis.data.provider.ProviderFactory
+import com.polaralias.signalsynthesis.data.provider.MarketDataProviderFactory
 import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
-import com.polaralias.signalsynthesis.data.alerts.MarketAlertWorker
-import com.polaralias.signalsynthesis.data.storage.AlertSettingsStore
-import com.polaralias.signalsynthesis.data.storage.ApiKeyStore
+import com.polaralias.signalsynthesis.data.storage.AlertSettingsStorage
+import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
+import com.polaralias.signalsynthesis.data.worker.WorkScheduler
+import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCase
 import com.polaralias.signalsynthesis.domain.usecase.SynthesizeSetupUseCase
@@ -26,10 +21,10 @@ import kotlinx.coroutines.launch
 import java.time.Clock
 
 class AnalysisViewModel(
-    private val providerFactory: ProviderFactory,
-    private val keyStore: ApiKeyStore,
-    private val alertStore: AlertSettingsStore,
-    private val workManager: WorkManager,
+    private val providerFactory: MarketDataProviderFactory,
+    private val keyStore: ApiKeyStorage,
+    private val alertStore: AlertSettingsStorage,
+    private val workScheduler: WorkScheduler,
     private val llmClient: LlmClient,
     private val clock: Clock = Clock.systemUTC(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -151,7 +146,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val current = alertStore.loadSettings()
             alertStore.saveSettings(current.copy(enabled = enabled))
-            scheduleAlerts(enabled)
+            workScheduler.scheduleAlerts(enabled)
         }
     }
 
@@ -179,26 +174,7 @@ class AnalysisViewModel(
                     alertSymbolCount = symbols.size
                 )
             }
-            scheduleAlerts(settings.enabled)
-        }
-    }
-
-    private fun scheduleAlerts(enabled: Boolean) {
-        if (enabled) {
-            val constraints = Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED)
-                .build()
-            val request = PeriodicWorkRequestBuilder<MarketAlertWorker>(15, java.util.concurrent.TimeUnit.MINUTES)
-                .setConstraints(constraints)
-                .addTag(MarketAlertWorker.WORK_TAG)
-                .build()
-            workManager.enqueueUniquePeriodicWork(
-                MarketAlertWorker.WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                request
-            )
-        } else {
-            workManager.cancelUniqueWork(MarketAlertWorker.WORK_NAME)
+            workScheduler.scheduleAlerts(settings.enabled)
         }
     }
 

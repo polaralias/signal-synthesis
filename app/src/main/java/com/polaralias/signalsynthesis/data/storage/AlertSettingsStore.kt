@@ -6,10 +6,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
-class AlertSettingsStore(context: Context) {
+interface AlertSettingsStorage {
+    suspend fun loadSettings(): AlertSettings
+    suspend fun saveSettings(settings: AlertSettings)
+    suspend fun loadSymbols(): List<String>
+    suspend fun saveSymbols(symbols: List<String>)
+}
+
+class AlertSettingsStore(context: Context) : AlertSettingsStorage {
     private val preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    suspend fun loadSettings(): AlertSettings = withContext(Dispatchers.IO) {
+    override suspend fun loadSettings(): AlertSettings = withContext(Dispatchers.IO) {
         AlertSettings(
             enabled = preferences.getBoolean(KEY_ENABLED, false),
             vwapDipPercent = preferences.getFloat(KEY_VWAP_DIP, AlertSettings.DEFAULT_VWAP_DIP_PERCENT.toFloat()).toDouble(),
@@ -18,7 +25,7 @@ class AlertSettingsStore(context: Context) {
         )
     }
 
-    suspend fun saveSettings(settings: AlertSettings) = withContext(Dispatchers.IO) {
+    override suspend fun saveSettings(settings: AlertSettings) = withContext(Dispatchers.IO) {
         preferences.edit()
             .putBoolean(KEY_ENABLED, settings.enabled)
             .putFloat(KEY_VWAP_DIP, settings.vwapDipPercent.toFloat())
@@ -27,7 +34,7 @@ class AlertSettingsStore(context: Context) {
             .apply()
     }
 
-    suspend fun loadSymbols(): List<String> = withContext(Dispatchers.IO) {
+    override suspend fun loadSymbols(): List<String> = withContext(Dispatchers.IO) {
         preferences.getString(KEY_SYMBOLS, "")
             .orEmpty()
             .split(",")
@@ -35,7 +42,7 @@ class AlertSettingsStore(context: Context) {
             .filter { it.isNotBlank() }
     }
 
-    suspend fun saveSymbols(symbols: List<String>) = withContext(Dispatchers.IO) {
+    override suspend fun saveSymbols(symbols: List<String>) = withContext(Dispatchers.IO) {
         val normalized = symbols
             .map { it.trim().uppercase(Locale.US) }
             .filter { it.isNotBlank() }
