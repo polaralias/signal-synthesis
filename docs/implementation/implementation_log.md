@@ -390,3 +390,191 @@ Links:
 - app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/FilterTradeableUseCase.kt
 - app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/RankSetupsUseCase.kt
 - app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCase.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 2.1 - AI Foundation Prep (Extended, Not Implemented)
+Owner/Agent: Codex
+
+Summary:
+- QA review against the implementation plan surfaced missing AI foundation, UI/ViewModel, and alerts work; AI-first rescoping is not reflected in code.
+
+Work Completed:
+- None (review only).
+
+Decisions:
+- Extend Phase 2 with a Phase 2.1 prep step to surface AI foundation prerequisites and unblock Phase 7 delivery.
+
+Risks/Blocks:
+- AI integration, key storage, and AI-first UI are absent, so the "AI as foundational tool" goal is not met.
+- Phase 5 UI/ViewModel and Phase 6 alerts are not implemented, blocking end-to-end app flow.
+- Acceptance checks calling for tests/harness are not satisfied.
+
+Next Steps:
+- Phase 2.1 extended but not implemented: define LLM key storage + client interfaces and data contracts needed for Phase 7.
+- Phase 5: implement AnalysisViewModel and Compose screens (keys, analysis, results, details, settings) with navigation.
+- Phase 6: implement MarketAlertWorker, notification channel, and UI toggle/conditions.
+- Phase 7: build LLM client, integrate `synthesizeSetupWithAI`, and make AI summaries primary in UI with raw-data fallback.
+- Phase 8: add indicator/ranking tests and repository fallback harness.
+
+Links:
+- docs/implementation/implementation_phases.md
+- docs/implementation/implementation_guide.md
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 5 - ViewModel and UI
+Owner/Agent: Codex
+
+Summary:
+- Implemented the Phase 5 ViewModel + Compose UI flow with navigation and key storage wiring.
+
+Work Completed:
+- Added encrypted key storage and wired ViewModel state/intent handling.
+- Built Compose navigation and screens for analysis, keys, results, detail, and settings.
+- Updated MainActivity to host the new app UI and ViewModel factory.
+- Added lifecycle/navigation/security dependencies required for UI and storage.
+
+Decisions:
+- Gate analysis runs on presence of at least one provider key to enforce explicit key validation.
+- Show AI summaries as placeholders until Phase 7 integration lands, with a raw-data toggle in detail.
+
+Risks/Blocks:
+- LLM integration, alerts, and persistence are still pending (Phase 6/7).
+- UI flow is unverified on-device; run a Compose preview or emulator pass.
+
+Next Steps:
+- Validate navigation and state transitions on device/emulator.
+- Implement WorkManager alerts (Phase 6) and AI synthesis flow (Phase 7).
+
+Links:
+- app/build.gradle.kts
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/storage/ApiKeyStore.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisUiState.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisViewModel.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SignalSynthesisApp.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/UiComponents.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 6 - Alerts and Background Work
+Owner/Agent: Codex
+
+Summary:
+- Added WorkManager-backed alert scheduling, storage, and notification delivery with a settings toggle.
+
+Work Completed:
+- Created alert settings model and storage for toggle state and monitored symbols.
+- Added MarketAlertWorker to evaluate VWAP/RSI alert conditions and send notifications.
+- Wired alert scheduling/cancellation into the ViewModel and persisted symbols from the last analysis run.
+- Added settings UI toggle for background alerts and surfaced monitored symbol count.
+- Added notification channel resources, WorkManager dependency, and notification permission.
+
+Decisions:
+- Alert scope uses the latest analysis symbol list with default thresholds (VWAP dip 1%, RSI 30/70).
+- Use WorkManager periodic work with network constraint for 15-minute checks.
+
+Risks/Blocks:
+- Notifications are unverified on device/emulator and depend on POST_NOTIFICATIONS permission grant.
+- Alert logic currently relies on intraday data availability per provider.
+
+Next Steps:
+- Validate alerts on device/emulator and refine thresholds or alert selection UI.
+- Add deep-link polish if multiple alerts fire (aggregation or grouping).
+
+Links:
+- app/src/main/java/com/polaralias/signalsynthesis/data/alerts/AlertSettings.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/alerts/MarketAlertWorker.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/storage/AlertSettingsStore.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisUiState.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisViewModel.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SignalSynthesisApp.kt
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
+- app/src/main/AndroidManifest.xml
+- app/build.gradle.kts
+- app/src/main/res/values/strings.xml
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 7 - AI Reasoning & Foundation
+Owner/Agent: Codex
+
+Summary:
+- Implemented AI synthesis client wiring and UI presentation for setup summaries.
+
+Work Completed:
+- Added OpenAI-compatible client/service models and an LLM interface.
+- Implemented AI synthesis use case with context fetching and JSON parsing.
+- Wired ViewModel requests and UI state to fetch and render AI summaries on detail view.
+- Updated results list and settings copy to reflect AI synthesis availability.
+
+Decisions:
+- Use an OpenAI-compatible chat completion client with JSON-only responses.
+- Trigger synthesis on detail view open to keep work incremental.
+
+Risks/Blocks:
+- AI calls are unverified without network access or API key.
+- Synthesis quality depends on prompt and provider context availability.
+
+Next Steps:
+- Validate AI synthesis end-to-end on device with a real LLM key.
+- Consider prefetching summaries for top results or caching outputs.
+
+Links:
+- app/src/main/java/com/polaralias/signalsynthesis/data/ai/OpenAiLlmClient.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/ai/OpenAiService.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/ai/LlmClient.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/AiSynthesis.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/SynthesizeSetupUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisUiState.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisViewModel.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SignalSynthesisApp.kt
+- app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 8 - Hardening and Testing
+Owner/Agent: Codex
+
+Summary:
+- Added unit tests for indicator calculations, ranking, tradeability filtering, and repository fallback behavior.
+
+Work Completed:
+- Added unit tests covering VWAP, RSI, ATR, and SMA indicators.
+- Added RankSetupsUseCase and FilterTradeableUseCase tests for scoring and filter logic.
+- Added a MarketDataRepository fallback test to validate provider ordering behavior.
+
+Decisions:
+- Focus on deterministic unit tests with fixed inputs and clock control for ranking logic.
+
+Risks/Blocks:
+- Tests have not been executed in this environment.
+
+Next Steps:
+- Run unit tests (e.g., `./gradlew testDebugUnitTest`) and address any failures.
+- Extend coverage for repository caching and ViewModel state transitions if needed.
+
+Links:
+- app/src/test/java/com/polaralias/signalsynthesis/domain/indicators/VwapIndicatorTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/indicators/RsiIndicatorTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/indicators/AtrIndicatorTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/indicators/SmaIndicatorTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RankSetupsUseCaseTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/FilterTradeableUseCaseTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepositoryTest.kt

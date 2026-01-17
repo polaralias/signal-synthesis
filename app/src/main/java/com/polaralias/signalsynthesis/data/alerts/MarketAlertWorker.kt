@@ -1,0 +1,139 @@
+package com.polaralias.signalsynthesis.data.alerts
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.TaskStackBuilder
+import androidx.work.CoroutineWorker
+import androidx.work.WorkerParameters
+import com.polaralias.signalsynthesis.MainActivity
+import com.polaralias.signalsynthesis.R
+import com.polaralias.signalsynthesis.data.provider.ProviderFactory
+import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
+import com.polaralias.signalsynthesis.data.storage.AlertSettingsStore
+import com.polaralias.signalsynthesis.data.storage.ApiKeyStore
+import com.polaralias.signalsynthesis.domain.indicators.RsiIndicator
+import com.polaralias.signalsynthesis.domain.indicators.VwapIndicator
+import kotlin.math.roundToInt
+
+class MarketAlertWorker(
+    appContext: Context,
+    params: WorkerParameters
+) : CoroutineWorker(appContext, params) {
+
+    override suspend fun doWork(): Result {
+        val alertStore = AlertSettingsStore(applicationContext)
+        val settings = alertStore.loadSettings()
+        if (!settings.enabled) return Result.success()
+
+        val symbols = alertStore.loadSymbols()
+        if (symbols.isEmpty()) return Result.success()
+
+        val apiKeys = ApiKeyStore(applicationContext).loadApiKeys()
+        if (!apiKeys.hasAny()) return Result.success()
+
+        val repository = MarketDataRepository(ProviderFactory().build(apiKeys))
+        val quotes = repository.getQuotes(symbols)
+        if (quotes.isEmpty()) return Result.success()
+
+        val alerts = mutableListOf<AlertEvent>()
+        for (symbol in symbols) {
+            val quote = quotes[symbol] ?: continue
+            val bars = repository.getIntraday(symbol, 1)
+            val vwap = VwapIndicator.calculate(bars)
+            val rsi = RsiIndicator.calculateFromIntraday(bars)
+
+            if (vwap != null && quote.price < vwap * (1.0 - settings.vwapDipPercent / 100.0)) {
+                alerts.add(AlertEvent(symbol, "Price below VWAP", quote.price, vwap))
+            }
+            if (rsi != null && rsi <= settings.rsiOversold) {
+                alerts.add(AlertEvent(symbol, "RSI oversold (${rsi.roundToInt()})", quote.price, vwap))
+            }
+            if (rsi != null && rsi >= settings.rsiOverbought) {
+                alerts.add(AlertEvent(symbol, "RSI overbought (${rsi.roundToInt()})", quote.price, vwap))
+            }
+        }
+
+        if (alerts.isEmpty()) return Result.success()
+
+        ensureChannel()
+        for (event in alerts) {
+            NotificationManagerCompat.from(applicationContext).notify(
+                event.notificationId,
+                buildNotification(event)
+            )
+        }
+
+        return Result.success()
+    }
+
+    private fun buildNotification(event: AlertEvent) =
+        NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setContentTitle("${event.symbol} alert")
+            .setContentText(event.reason)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(event.longText))
+            .setAutoCancel(true)
+            .setContentIntent(buildPendingIntent(event.symbol))
+            .build()
+
+    private fun buildPendingIntent(symbol: String) =
+        TaskStackBuilder.create(applicationContext)
+            .addNextIntentWithParentStack(
+                Intent(applicationContext, MainActivity::class.java).apply {
+                    putExtra(MainActivity.EXTRA_SYMBOL, symbol)
+                }
+            )
+            .getPendingIntent(symbol.hashCode(), pendingIntentFlags())
+
+    private fun ensureChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            applicationContext.getString(R.string.alert_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = applicationContext.getString(R.string.alert_channel_description)
+        }
+        manager.createNotificationChannel(channel)
+    }
+
+    private fun pendingIntentFlags(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        } else {
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT
+        }
+    }
+
+    data class AlertEvent(
+        val symbol: String,
+        val reason: String,
+        val price: Double,
+        val vwap: Double?
+    ) {
+        val notificationId: Int = (symbol + reason).hashCode()
+        val longText: String = buildString {
+            append(reason)
+            append(". Price ")
+            append(formatPrice(price))
+            if (vwap != null) {
+                append(", VWAP ")
+                append(formatPrice(vwap))
+            }
+        }
+    }
+
+    companion object {
+        const val WORK_NAME = "market_alerts"
+        const val WORK_TAG = "market_alerts_tag"
+        const val CHANNEL_ID = "market_alerts_channel"
+    }
+}
+
+private fun formatPrice(value: Double): String = "$" + String.format("%.2f", value)
