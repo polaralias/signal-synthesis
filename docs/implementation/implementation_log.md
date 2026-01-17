@@ -41,7 +41,7 @@ Work Completed:
 - Documented package name and structure in the root README.
 
 Decisions:
-- Use package name `com.signalsynthesis` and a single-module `app` start.
+- Use package name `com.polaralias.signalsynthesis` and a single-module `app` start.
 
 Risks/Blocks:
 - Android Gradle project not yet initialized; build validation pending.
@@ -52,9 +52,9 @@ Next Steps:
 
 Links:
 - README.md
-- app/src/main/java/com/signalsynthesis/data
-- app/src/main/java/com/signalsynthesis/domain
-- app/src/main/java/com/signalsynthesis/ui
+- app/src/main/java/com/polaralias/signalsynthesis/data
+- app/src/main/java/com/polaralias/signalsynthesis/domain
+- app/src/main/java/com/polaralias/signalsynthesis/ui
 
 ## Entry
 
@@ -86,7 +86,7 @@ Links:
 - gradle.properties
 - app/build.gradle.kts
 - app/src/main/AndroidManifest.xml
-- app/src/main/java/com/signalsynthesis/MainActivity.kt
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
 - app/src/main/res/values/strings.xml
 - app/src/main/res/values/themes.xml
 - app/proguard-rules.pro
@@ -171,23 +171,23 @@ Next Steps:
 - Start Phase 2 provider implementations and repository wiring.
 
 Links:
-- app/src/main/java/com/signalsynthesis/domain/model/AnalysisResult.kt
-- app/src/main/java/com/signalsynthesis/domain/model/CompanyProfile.kt
-- app/src/main/java/com/signalsynthesis/domain/model/DailyBar.kt
-- app/src/main/java/com/signalsynthesis/domain/model/EodStats.kt
-- app/src/main/java/com/signalsynthesis/domain/model/FinancialMetrics.kt
-- app/src/main/java/com/signalsynthesis/domain/model/IntradayBar.kt
-- app/src/main/java/com/signalsynthesis/domain/model/IntradayStats.kt
-- app/src/main/java/com/signalsynthesis/domain/model/Quote.kt
-- app/src/main/java/com/signalsynthesis/domain/model/SentimentData.kt
-- app/src/main/java/com/signalsynthesis/domain/model/TradeSetup.kt
-- app/src/main/java/com/signalsynthesis/domain/model/TradingIntent.kt
-- app/src/main/java/com/signalsynthesis/domain/provider/DailyProvider.kt
-- app/src/main/java/com/signalsynthesis/domain/provider/IntradayProvider.kt
-- app/src/main/java/com/signalsynthesis/domain/provider/MetricsProvider.kt
-- app/src/main/java/com/signalsynthesis/domain/provider/ProfileProvider.kt
-- app/src/main/java/com/signalsynthesis/domain/provider/QuoteProvider.kt
-- app/src/main/java/com/signalsynthesis/domain/provider/SentimentProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/AnalysisResult.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/CompanyProfile.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/DailyBar.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/EodStats.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/FinancialMetrics.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/IntradayBar.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/IntradayStats.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/Quote.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/SentimentData.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/TradeSetup.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/model/TradingIntent.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/provider/DailyProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/provider/IntradayProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/provider/MetricsProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/provider/ProfileProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/provider/QuoteProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/provider/SentimentProvider.kt
 
 ## Entry
 
@@ -216,12 +216,12 @@ Next Steps:
 - Validate repository behavior with a small test harness or unit tests.
 
 Links:
-- app/src/main/java/com/signalsynthesis/data/cache/TimedCache.kt
-- app/src/main/java/com/signalsynthesis/data/provider/ApiKeys.kt
-- app/src/main/java/com/signalsynthesis/data/provider/MockMarketDataProvider.kt
-- app/src/main/java/com/signalsynthesis/data/provider/ProviderBundle.kt
-- app/src/main/java/com/signalsynthesis/data/provider/ProviderFactory.kt
-- app/src/main/java/com/signalsynthesis/data/repository/MarketDataRepository.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/cache/TimedCache.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ApiKeys.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/MockMarketDataProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ProviderBundle.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ProviderFactory.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepository.kt
 
 ## Entry
 
@@ -251,9 +251,9 @@ Next Steps:
 Links:
 - app/build.gradle.kts
 - app/src/main/AndroidManifest.xml
-- app/src/main/java/com/signalsynthesis/data/provider/ProviderFactory.kt
-- app/src/main/java/com/signalsynthesis/data/provider/finnhub/FinnhubMarketDataProvider.kt
-- app/src/main/java/com/signalsynthesis/data/provider/finnhub/FinnhubService.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ProviderFactory.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/finnhub/FinnhubMarketDataProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/finnhub/FinnhubService.kt
 
 ## Entry
 
@@ -290,14 +290,14 @@ Next Steps:
 - Add enrichment logic for intraday and EOD statistics.
 
 Links:
-- app/src/main/java/com/signalsynthesis/data/provider/ApiKeys.kt
-- app/src/main/java/com/signalsynthesis/data/provider/ProviderFactory.kt
-- app/src/main/java/com/signalsynthesis/data/provider/polygon/PolygonService.kt
-- app/src/main/java/com/signalsynthesis/data/provider/polygon/PolygonMarketDataProvider.kt
-- app/src/main/java/com/signalsynthesis/data/provider/alpaca/AlpacaService.kt
-- app/src/main/java/com/signalsynthesis/data/provider/alpaca/AlpacaMarketDataProvider.kt
-- app/src/main/java/com/signalsynthesis/data/provider/fmp/FmpService.kt
-- app/src/main/java/com/signalsynthesis/data/provider/fmp/FmpMarketDataProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ApiKeys.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/ProviderFactory.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/polygon/PolygonService.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/polygon/PolygonMarketDataProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/alpaca/AlpacaService.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/alpaca/AlpacaMarketDataProvider.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/fmp/FmpService.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/provider/fmp/FmpMarketDataProvider.kt
 
 ## Entry
 
@@ -333,13 +333,13 @@ Next Steps:
 - Implement ranking and scoring logic to generate TradeSetup objects.
 
 Links:
-- app/src/main/java/com/signalsynthesis/domain/indicators/VwapIndicator.kt
-- app/src/main/java/com/signalsynthesis/domain/indicators/RsiIndicator.kt
-- app/src/main/java/com/signalsynthesis/domain/indicators/AtrIndicator.kt
-- app/src/main/java/com/signalsynthesis/domain/indicators/SmaIndicator.kt
-- app/src/main/java/com/signalsynthesis/domain/usecase/EnrichIntradayUseCase.kt
-- app/src/main/java/com/signalsynthesis/domain/usecase/EnrichEodUseCase.kt
-- app/src/main/java/com/signalsynthesis/domain/usecase/EnrichContextUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/indicators/VwapIndicator.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/indicators/RsiIndicator.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/indicators/AtrIndicator.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/indicators/SmaIndicator.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/EnrichIntradayUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/EnrichContextUseCase.kt
 
 ## Entry
 
@@ -386,7 +386,7 @@ Next Steps:
 - Build Compose screens for API key setup, analysis execution, and results display.
 
 Links:
-- app/src/main/java/com/signalsynthesis/domain/usecase/DiscoverCandidatesUseCase.kt
-- app/src/main/java/com/signalsynthesis/domain/usecase/FilterTradeableUseCase.kt
-- app/src/main/java/com/signalsynthesis/domain/usecase/RankSetupsUseCase.kt
-- app/src/main/java/com/signalsynthesis/domain/usecase/RunAnalysisUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/DiscoverCandidatesUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/FilterTradeableUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/RankSetupsUseCase.kt
+- app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCase.kt

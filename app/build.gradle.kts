@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.signalsynthesis"
+    namespace = "com.polaralias.signalsynthesis"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.signalsynthesis"
+        applicationId = "com.polaralias.signalsynthesis"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
