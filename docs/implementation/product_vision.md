@@ -229,37 +229,35 @@ Android app.
 In addition to matching the MCP server's capabilities, the Android app
 will include extended features as described:
 
--   **User-Provided LLM Integration:** AI remains a big part of the
-    solution. In the app, we will integrate an LLM (Large Language
-    Model) by allowing the user to plug in their own API key (for
-    services like OpenAI GPT-4 or others). With this, the app can offer
-    AI-driven insights or interactions *on top of* the core signal
-    generation logic. For example:
+-   **Foundational AI Integration:** AI is a key foundational element
+    of the application, turning API results from financial providers into
+    meaningful information and providing decision-making support. Users
+    should be offered visibility of the raw data, but the default view
+    must be the data reasoned on by an LLM.
 
--   *Explanations & Summaries:* After generating trade setups, the app
-    can formulate a prompt with those results and ask the LLM to
-    **explain in plain language** why certain stocks are recommended or
-    what the indicators mean, giving the user a narrative summary.
+-   *Synthesis & Decision Making:* Instead of just explaining results,
+    the LLM will analyze the gathered data (indicators, news,
+    fundamentals) to provide a synthesized recommendation and reasoning.
+    This goes beyond simple rule-based ranking; the LLM can weigh conflicting
+    signals and provide a more nuanced outlook, effectively acting as
+    an intelligent analyst.
 
--   *Q&A or Chat:* The app could include a chatbot-style interface where
-    the user asks questions (e.g. "Why is this stock flagged as High
-    Probability?" or "Show me other tech stocks with bullish signals")
-    and the LLM, given access to the analysis results or even the
-    ability to call the same analysis functions, can respond
-    intelligently. This might involve using a library or SDK to call the
-    LLM's API with the user's query and some context (few-shot examples
-    or the recent analysis data).
+-   *AI-First User Experience:* The primary interface will present the
+    AI's interpretation of the market and specific trade setups. The
+    raw technical data (charts, indicator values) remains accessible for
+    users who want to "deep dive," but the initial interaction is centered
+    on the AI's synthesized insights.
 
--   *Local AI Processing:* The wording *"runs seamlessly within the
-    app"* suggests the AI's logic should feel integrated. We will ensure
-    the LLM calls happen behind the scenes when needed (triggered by
-    user action or to generate notifications), and results are displayed
-    in the UI. Since the model itself likely runs on a cloud service via
-    API (given limited on-device AI capability for large models), the
-    "seamless" aspect is mostly about user experience. We will clearly
-    prompt the LLM with only user-authorized data and use the API key
-    securely. (All LLM interactions are optional and under user control,
-    as they supply the key.)
+-   *Q&A and Interactive Reasoning:* Users can interact with the AI to
+    ask follow-up questions about a setup (e.g., "What are the risks here?"
+    or "How does this compare to sector peers?"). The AI has access to the
+    analysis context to provide informed answers.
+
+-   *Seamless Integration:* While the core data processing happens locally,
+    the app seamlessly bridges this with the LLM service. Users still
+    provide their own API keys for privacy and control, but the app is
+    designed with the expectation that AI is the primary lens for consuming
+    market data.
 
 -   **Notifications for Market Events:** A key extension is to notify
     users when certain market conditions occur, such as a tracked stock
@@ -344,20 +342,16 @@ will include extended features as described:
     market status (maybe a few major indices or user-selected favorites)
     and provide an entry point to run the analysis.
 
--   The **Analysis Results Screen** will display the list of recommended
-    trade setups in an easy-to-read format. Each item might show the
-    stock ticker, confidence level (perhaps as a percentage or 0-100
-    gauge), and a couple of key reasons (e.g., "Above VWAP, Positive
-    Sentiment"). Tapping an item could expand to show full details: all
-    reasoning points, the exact indicator values (RSI value, SMA values,
-    etc.), and fundamental context (company info, market cap).
+-   The **Analysis Results Screen** will prioritize the **AI-Synthesized
+    Insights**. The list of setups will feature the AI's summary and
+    confidence assessment prominently.
 
--   If the user has provided an LLM key, we might include an **"AI
-    Insight"** section, where an AI-generated commentary on the analysis
-    appears (e.g., *"XYZ is looking bullish as it's trading above its
-    200-day average and has positive news sentiment. However, RSI is
-    very high, indicating it might be overbought in the short term."*).
-    This provides a natural language summary to complement the raw data.
+-   **AI vs. Raw Data Views:** The default detail view for a stock will
+    show the AI's full reasoning, risk assessment, and narrative. A
+    toggle or secondary tab will allow the user to inspect the **Raw Data**
+    (exact indicator values, price tables, raw news headlines) to verify
+    the AI's conclusions. This ensures transparency while keeping the
+    experience focused on meaningful information.
 
 -   A **Notifications/Alerts Screen** for configuring alerts as
     discussed, and possibly viewing a history of triggered alerts.
