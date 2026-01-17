@@ -9,26 +9,38 @@ class TimedCache<K, V>(
     private val entries = mutableMapOf<K, Entry<V>>()
 
     fun get(key: K): V? {
-        val entry = entries[key] ?: return null
-        val age = clockMillis() - entry.timestampMillis
-        if (age > ttlMillis) {
-            entries.remove(key)
-            return null
+        synchronized(entries) {
+            val entry = entries[key] ?: return null
+            val age = clockMillis() - entry.timestampMillis
+            if (age > ttlMillis) {
+                entries.remove(key)
+                return null
+            }
+            return entry.value
         }
-        return entry.value
     }
 
     fun put(key: K, value: V) {
-        entries[key] = Entry(value, clockMillis())
+        synchronized(entries) {
+            entries[key] = Entry(value, clockMillis())
+        }
     }
 
     fun remove(key: K) {
-        entries.remove(key)
+        synchronized(entries) {
+            entries.remove(key)
+        }
     }
 
     fun clear() {
-        entries.clear()
+        synchronized(entries) {
+            entries.clear()
+        }
     }
 
-    fun size(): Int = entries.size
+    fun size(): Int {
+        synchronized(entries) {
+            return entries.size
+        }
+    }
 }
