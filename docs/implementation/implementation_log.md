@@ -660,22 +660,22 @@ Phase: Phase 8 - Hardening and Testing
 Owner/Agent: Jules
 
 Summary:
-- Added tests for repository error handling and partial data resilience.
+- Hardened internal caching mechanism and updated project documentation.
 
 Work Completed:
-- Added `getQuotesReturnsEmptyWhenAllProvidersFail` to `MarketDataRepositoryTest`.
-- Created `RunAnalysisErrorTest` to verify pipeline resilience against total and partial data failures.
+- Updated `README.md` with comprehensive project documentation (features, architecture, setup).
+- Modified `TimedCache` to be thread-safe using synchronized blocks.
 
 Decisions:
-- Confirmed that the pipeline should produce partial setups (with lower confidence) rather than failing when enrichment data is missing.
+- Used simple synchronization for `TimedCache` as it is a lightweight in-memory cache.
 
 Risks/Blocks:
-- Android SDK still missing in environment; tests verified by code review only.
+- Tests could not be executed due to missing Android SDK in the environment.
 
 Next Steps:
-- Configure valid Android SDK environment to execute tests.
-- Proceed to any final cleanup.
+- Execute all tests in a proper Android development environment.
+- Perform a manual verification pass on a physical device or emulator.
 
 Links:
-- app/src/test/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepositoryTest.kt
-- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisErrorTest.kt
+- README.md
+- app/src/main/java/com/polaralias/signalsynthesis/data/cache/TimedCache.kt
