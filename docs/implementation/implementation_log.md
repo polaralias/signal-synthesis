@@ -652,3 +652,30 @@ Links:
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichIntradayUseCaseTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCaseTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCaseTest.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 8 - Hardening and Testing
+Owner/Agent: Jules
+
+Summary:
+- Hardened internal caching mechanism and updated project documentation.
+
+Work Completed:
+- Updated `README.md` with comprehensive project documentation (features, architecture, setup).
+- Modified `TimedCache` to be thread-safe using synchronized blocks.
+
+Decisions:
+- Used simple synchronization for `TimedCache` as it is a lightweight in-memory cache.
+
+Risks/Blocks:
+- Tests could not be executed due to missing Android SDK in the environment.
+
+Next Steps:
+- Execute all tests in a proper Android development environment.
+- Perform a manual verification pass on a physical device or emulator.
+
+Links:
+- README.md
+- app/src/main/java/com/polaralias/signalsynthesis/data/cache/TimedCache.kt
