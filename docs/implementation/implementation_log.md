@@ -620,3 +620,35 @@ Links:
 - app/src/test/java/com/polaralias/signalsynthesis/data/cache/TimedCacheTest.kt
 - app/src/test/java/com/polaralias/signalsynthesis/data/repository/MarketDataRepositoryTest.kt
 - app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Phase 8 - Hardening and Testing
+Owner/Agent: Jules
+
+Summary:
+- Added comprehensive unit and integration tests for all domain use cases.
+
+Work Completed:
+- Added `DiscoverCandidatesUseCaseTest`.
+- Added `EnrichIntradayUseCaseTest` with fake providers.
+- Added `EnrichEodUseCaseTest` with fake providers.
+- Added `RunAnalysisUseCaseTest` as a full pipeline integration test with complete mock data.
+
+Decisions:
+- Used integration-style testing for enrichment and pipeline use cases to verify component interaction with `MarketDataRepository`.
+- Created static mock providers within test classes to avoid dependency on complex mocking frameworks.
+
+Risks/Blocks:
+- Tests remain unverified in this environment due to missing Android SDK ("SDK location not found").
+
+Next Steps:
+- Execute all tests in a proper Android development environment.
+- Proceed to any remaining cleanup or documentation tasks.
+
+Links:
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/DiscoverCandidatesUseCaseTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichIntradayUseCaseTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCaseTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCaseTest.kt
