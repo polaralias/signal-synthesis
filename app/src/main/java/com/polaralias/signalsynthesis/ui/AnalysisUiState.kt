@@ -1,7 +1,9 @@
 package com.polaralias.signalsynthesis.ui
 
 import com.polaralias.signalsynthesis.data.provider.ApiKeys
+import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
+import com.polaralias.signalsynthesis.domain.model.MarketOverview
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import java.time.Instant
 
@@ -46,7 +48,21 @@ data class AnalysisUiState(
     val alertSymbolCount: Int = 0,
     val watchlist: List<String> = emptyList(),
     val history: List<AnalysisResult> = emptyList(),
-    val aiSummaries: Map<String, AiSummaryState> = emptyMap()
+    val appSettings: AppSettings = AppSettings(),
+    val aiThresholdSuggestion: AiThresholdSuggestion? = null,
+    val isSuggestingThresholds: Boolean = false,
+    val isPrefetching: Boolean = false,
+    val prefetchCount: Int = 0,
+    val aiSummaries: Map<String, AiSummaryState> = emptyMap(),
+    val marketOverview: MarketOverview? = null,
+    val isLoadingMarket: Boolean = false
+)
+
+data class AiThresholdSuggestion(
+    val vwapDipPercent: Double,
+    val rsiOversold: Double,
+    val rsiOverbought: Double,
+    val rationale: String
 )
 
 enum class AiSummaryStatus {

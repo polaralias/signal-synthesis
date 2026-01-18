@@ -20,7 +20,7 @@ class SynthesizeSetupUseCase(
         val sentiment = safeFetch { repository.getSentiment(setup.symbol) }
 
         val prompt = buildPrompt(setup, profile, metrics, sentiment)
-        val rawResponse = llmClient.generate(prompt, llmKey)
+        val rawResponse = llmClient.generate(prompt, apiKey = llmKey)
         return parseResponse(rawResponse)
     }
 

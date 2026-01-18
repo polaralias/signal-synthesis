@@ -1,0 +1,55 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:kspDebugUnitTestKotlin
+
+> Task :app:compileDebugUnitTestKotlin
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/ui/AnalysisViewModelTest.kt:161:13 Class 'FakeAiSummaryDao' is not abstract and does not implement abstract member public abstract suspend fun delete(summary: AiSummaryEntity): Unit defined in com.polaralias.signalsynthesis.data.db.dao.AiSummaryDao
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/ui/AnalysisViewModelTest.kt:163:9 'getAll' overrides nothing
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/ui/AnalysisViewModelTest.kt:163:9 Conflicting overloads: public open suspend fun getAll(): List<AiSummaryEntity> defined in com.polaralias.signalsynthesis.ui.AnalysisViewModelTest.FakeAiSummaryDao, public abstract fun getAll(): Flow<List<AiSummaryEntity>> defined in com.polaralias.signalsynthesis.data.db.dao.AiSummaryDao
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/ui/AnalysisViewModelTest.kt:165:9 'delete' overrides nothing
+
+> Task :app:compileDebugUnitTestKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugUnitTestKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > java.io.IOException: Unable to delete directory 'C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build\kotlin\compileDebugUnitTestKotlin\cacheable'
+       Failed to delete some children. This might happen because a process has files open or has its working directory set in the target directory.
+       - C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build\kotlin\compileDebugUnitTestKotlin\cacheable\caches-jvm\jvm\kotlin\dirty-output-classes.tab_i
+       - C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build\kotlin\compileDebugUnitTestKotlin\cacheable\caches-jvm\jvm\kotlin
+       - C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build\kotlin\compileDebugUnitTestKotlin\cacheable\caches-jvm\jvm
+       - C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build\kotlin\compileDebugUnitTestKotlin\cacheable\caches-jvm
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 30s
+24 actionable tasks: 3 executed, 21 up-to-date

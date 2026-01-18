@@ -10,6 +10,9 @@ import com.polaralias.signalsynthesis.data.worker.WorkScheduler
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.model.AiSynthesis
 import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
+import com.polaralias.signalsynthesis.data.repository.AiSummaryRepository
+import com.polaralias.signalsynthesis.data.settings.AppSettings
+import com.polaralias.signalsynthesis.data.storage.AppSettingsStorage
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
 import kotlinx.coroutines.flow.Flow
@@ -106,6 +109,8 @@ class AnalysisViewModelTest {
             workScheduler = FakeWorkScheduler(),
             llmClient = FakeLlmClient(),
             dbRepository = FakeDatabaseRepository(),
+            appSettingsStore = FakeAppSettingsStore(),
+            aiSummaryRepository = AiSummaryRepository(FakeAiSummaryDao()),
             clock = clock,
             ioDispatcher = testDispatcher
         )
@@ -139,8 +144,30 @@ class AnalysisViewModelTest {
         override fun scheduleAlerts(enabled: Boolean) {}
     }
 
+    private class FakeDatabaseRepository : DatabaseRepository {
+        override suspend fun addToWatchlist(symbol: String) {}
+        override suspend fun removeFromWatchlist(symbol: String) {}
+        override fun getWatchlist(): Flow<List<String>> = flowOf(emptyList())
+        override suspend fun saveHistory(result: AnalysisResult) {}
+        override fun getHistory(): Flow<List<AnalysisResult>> = flowOf(emptyList())
+        override suspend fun clearHistory() {}
+    }
+
+    private class FakeAppSettingsStore : AppSettingsStorage {
+        override suspend fun loadSettings(): AppSettings = AppSettings()
+        override suspend fun saveSettings(settings: AppSettings) {}
+    }
+
+    private class FakeAiSummaryDao : com.polaralias.signalsynthesis.data.db.dao.AiSummaryDao {
+        override suspend fun getBySymbol(symbol: String): com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity? = null
+        override fun getAll(): Flow<List<com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity>> = flowOf(emptyList())
+        override suspend fun insert(summary: com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity) {}
+        override suspend fun delete(summary: com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity) {}
+        override suspend fun clear() {}
+    }
+
     private class FakeLlmClient : LlmClient {
-        override suspend fun generate(prompt: String, apiKey: String): String {
+        override suspend fun generate(prompt: String, systemPrompt: String?, apiKey: String): String {
             return """
                 {
                   "summary": "Fake summary",
@@ -149,14 +176,5 @@ class AnalysisViewModelTest {
                 }
             """.trimIndent()
         }
-    }
-
-    private class FakeDatabaseRepository : DatabaseRepository {
-        override suspend fun addToWatchlist(symbol: String) {}
-        override suspend fun removeFromWatchlist(symbol: String) {}
-        override fun getWatchlist(): Flow<List<String>> = flowOf(emptyList())
-        override suspend fun saveHistory(result: AnalysisResult) {}
-        override fun getHistory(): Flow<List<AnalysisResult>> = flowOf(emptyList())
-        override suspend fun clearHistory() {}
     }
 }

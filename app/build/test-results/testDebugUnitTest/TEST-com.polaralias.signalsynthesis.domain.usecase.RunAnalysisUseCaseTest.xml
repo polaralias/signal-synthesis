@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCaseTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-01-18T10:49:27" hostname="LAPTOP" time="0.02">
+<testsuite name="com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCaseTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-01-18T14:48:44" hostname="LAPTOP" time="0.035">
   <properties/>
-  <testcase name="executeRunsFullPipeline" classname="com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCaseTest" time="0.02"/>
+  <testcase name="executeRunsFullPipeline" classname="com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCaseTest" time="0.035"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

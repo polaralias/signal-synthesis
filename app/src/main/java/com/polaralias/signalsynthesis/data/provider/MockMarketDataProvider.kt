@@ -34,7 +34,8 @@ class MockMarketDataProvider(
                 symbol = symbol,
                 price = price,
                 volume = 1_500_000L + index * 100_000L,
-                timestamp = now
+                timestamp = now,
+                changePercent = if (index % 2 == 0) 1.25 else -0.85
             )
         }.toMap()
     }

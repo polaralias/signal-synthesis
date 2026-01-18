@@ -135,7 +135,8 @@ class PolygonMarketDataProvider(
             symbol = symbol,
             price = price,
             volume = volume,
-            timestamp = timestamp
+            timestamp = timestamp,
+            changePercent = tickerData.todaysChangePerc
         )
     }
 

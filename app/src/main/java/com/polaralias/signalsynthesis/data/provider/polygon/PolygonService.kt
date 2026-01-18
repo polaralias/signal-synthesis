@@ -62,7 +62,8 @@ data class PolygonTickerSnapshot(
     val ticker: String? = null,
     val day: PolygonDayData? = null,
     val lastTrade: PolygonTradeData? = null,
-    val min: PolygonMinData? = null
+    val min: PolygonMinData? = null,
+    val todaysChangePerc: Double? = null
 )
 
 data class PolygonDayData(

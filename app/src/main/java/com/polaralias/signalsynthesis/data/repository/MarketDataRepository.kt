@@ -8,6 +8,8 @@ import com.polaralias.signalsynthesis.domain.model.FinancialMetrics
 import com.polaralias.signalsynthesis.domain.model.IntradayBar
 import com.polaralias.signalsynthesis.domain.model.Quote
 import com.polaralias.signalsynthesis.domain.model.SentimentData
+import com.polaralias.signalsynthesis.data.provider.RetryHelper
+import com.polaralias.signalsynthesis.util.Logger
 
 class MarketDataRepository(
     private val providers: ProviderBundle
@@ -106,21 +108,27 @@ class MarketDataRepository(
         return result
     }
 
-    private suspend fun <P, T> tryProviders(
+    private suspend fun <P : Any, T> tryProviders(
         providers: List<P>,
         fetch: suspend (P) -> T,
         isValid: (T) -> Boolean
     ): T? {
         for (provider in providers) {
+            val providerName = provider::class.simpleName ?: "Unknown"
             try {
-                val result = fetch(provider)
+                val result = RetryHelper.withRetry(providerName) {
+                    fetch(provider)
+                }
                 if (isValid(result)) {
+                    Logger.i("Repository", "$providerName returned valid results")
                     return result
                 }
-            } catch (_: Exception) {
-                // Fallback to the next provider.
+                Logger.w("Repository", "$providerName returned empty/invalid results")
+            } catch (e: Exception) {
+                Logger.w("Repository", "$providerName failed after retries", e)
             }
         }
+        Logger.e("Repository", "All providers failed to return valid data")
         return null
     }
 

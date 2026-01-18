@@ -20,12 +20,16 @@ import com.polaralias.signalsynthesis.data.ai.OpenAiService
 import com.polaralias.signalsynthesis.data.db.AppDatabase
 import com.polaralias.signalsynthesis.data.provider.ProviderFactory
 import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
+import com.polaralias.signalsynthesis.data.repository.AiSummaryRepository
 import com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepository
 import com.polaralias.signalsynthesis.data.storage.AlertSettingsStore
+import com.polaralias.signalsynthesis.data.storage.AppSettingsStore
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStore
 import com.polaralias.signalsynthesis.data.worker.WorkManagerScheduler
 import com.polaralias.signalsynthesis.ui.AnalysisViewModel
 import com.polaralias.signalsynthesis.ui.SignalSynthesisApp
+
+import com.polaralias.signalsynthesis.util.CrashReporter
 
 class MainActivity : ComponentActivity() {
     private val db by lazy {
@@ -38,6 +42,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CrashReporter.init(true)
         notificationSymbol.value = intent?.getStringExtra(EXTRA_SYMBOL)
         setContent {
             val symbol by notificationSymbol
@@ -78,6 +83,8 @@ private class AnalysisViewModelFactory(
             val llmService = OpenAiService.create()
             val llmClient = OpenAiLlmClient(llmService)
             val dbRepository = RoomDatabaseRepository(db.watchlistDao(), db.historyDao())
+            val appSettingsStore = AppSettingsStore(activity)
+            val aiSummaryRepository = AiSummaryRepository(db.aiSummaryDao())
             @Suppress("UNCHECKED_CAST")
             return AnalysisViewModel(
                 providerFactory = providerFactory,
@@ -85,7 +92,9 @@ private class AnalysisViewModelFactory(
                 alertStore = alertStore,
                 workScheduler = workScheduler,
                 llmClient = llmClient,
-                dbRepository = dbRepository
+                dbRepository = dbRepository,
+                appSettingsStore = appSettingsStore,
+                aiSummaryRepository = aiSummaryRepository
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

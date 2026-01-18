@@ -29,8 +29,23 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Analysis.route
+        startDestination = Screen.Dashboard.route
     ) {
+        composable(Screen.Dashboard.route) {
+            DashboardScreen(
+                uiState = uiState,
+                onIntentSelected = { intent ->
+                    viewModel.updateIntent(intent)
+                    navController.navigate(Screen.Analysis.route)
+                },
+                onRefreshMarket = viewModel::refreshMarketOverview,
+                onOpenSettings = { navController.navigate(Screen.Settings.route) },
+                onOpenResults = { navController.navigate(Screen.Results.route) },
+                onOpenDetail = { symbol ->
+                    navController.navigate(Screen.detailRoute(symbol))
+                }
+            )
+        }
         composable(Screen.Analysis.route) {
             AnalysisScreen(
                 uiState = uiState,
@@ -102,7 +117,11 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onBack = { navController.popBackStack() },
                 onEditKeys = { navController.navigate(Screen.Keys.route) },
                 onClearKeys = viewModel::clearKeys,
-                onToggleAlerts = viewModel::updateAlertsEnabled
+                onToggleAlerts = viewModel::updateAlertsEnabled,
+                onUpdateSettings = viewModel::updateAppSettings,
+                onSuggestAi = viewModel::suggestThresholdsWithAi,
+                onApplyAi = viewModel::applyAiThresholdSuggestion,
+                onDismissAi = viewModel::dismissAiSuggestion
             )
         }
     }
@@ -115,6 +134,7 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
     object Watchlist : Screen("watchlist")
     object History : Screen("history")
+    object Dashboard : Screen("dashboard")
 
     object Detail : Screen("detail/{symbol}") {
         const val ARG_SYMBOL = "symbol"

@@ -6,13 +6,13 @@ class OpenAiLlmClient(
     private val service: OpenAiService,
     private val model: String = DEFAULT_MODEL
 ) : LlmClient {
-    override suspend fun generate(prompt: String, apiKey: String): String {
+    override suspend fun generate(prompt: String, systemPrompt: String?, apiKey: String): String {
         val request = OpenAiChatRequest(
             model = model,
             messages = listOf(
                 OpenAiMessage(
                     role = ROLE_SYSTEM,
-                    content = "You are a senior trading analyst. Respond with JSON only."
+                    content = systemPrompt ?: "You are a senior trading analyst. Respond with JSON only."
                 ),
                 OpenAiMessage(
                     role = ROLE_USER,
