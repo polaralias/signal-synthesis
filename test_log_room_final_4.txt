@@ -1,0 +1,68 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:checkDebugAarMetadata
+> Task :app:packageDebugResources
+> Task :app:parseDebugLocalResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugResources
+> Task :app:processDebugResources
+
+> Task :app:kspDebugKotlin
+w: [ksp] C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/data/db/AppDatabase.kt:11: Schema export directory was not provided to the annotation processor so Room cannot export the schema. You can either provide `room.schemaLocation` annotation processor argument by applying the Room Gradle plugin (id 'androidx.room') OR set exportSchema to false.
+
+> Task :app:compileDebugKotlin
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:kspDebugUnitTestKotlin
+
+> Task :app:compileDebugUnitTestKotlin
+w: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCaseTest.kt:63:28 Parameter 'symbol' is never used
+w: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichIntradayUseCaseTest.kt:62:28 Parameter 'symbol' is never used
+w: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCaseTest.kt:66:36 Parameter 'symbol' is never used
+w: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCaseTest.kt:75:33 Parameter 'symbol' is never used
+
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+
+> Task :app:testDebugUnitTest
+
+com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest > history_clear FAILED
+    java.lang.IllegalArgumentException at RoomDatabaseRepositoryTest.kt:31
+        Caused by: java.lang.IllegalArgumentException at RoomDatabaseRepositoryTest.kt:31
+
+com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest > history_saveAndGet FAILED
+    java.lang.IllegalArgumentException at RoomDatabaseRepositoryTest.kt:31
+        Caused by: java.lang.IllegalArgumentException at RoomDatabaseRepositoryTest.kt:31
+
+com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest > watchlist_addAndRemove FAILED
+    java.lang.IllegalArgumentException at RoomDatabaseRepositoryTest.kt:31
+        Caused by: java.lang.IllegalArgumentException at RoomDatabaseRepositoryTest.kt:31
+
+39 tests completed, 3 failed
+
+> Task :app:testDebugUnitTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+BUILD FAILED in 1m 20s
+26 actionable tasks: 26 executed

@@ -10,7 +10,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.ZoneOffset
 
 class RunAnalysisUseCaseTest {
 
@@ -65,7 +67,7 @@ class RunAnalysisUseCaseTest {
         val bars = mutableListOf<IntradayBar>()
         val start = Instant.parse("2026-01-01T10:00:00Z")
         for (i in 0 until count) {
-            bars.add(IntradayBar(symbol, 150.0, 155.0, 145.0, 150.0, 1000, start.plusSeconds(i * 60L)))
+            bars.add(IntradayBar(start.plusSeconds(i * 60L), 150.0, 155.0, 145.0, 150.0, 1000))
         }
         return bars
     }
@@ -74,7 +76,7 @@ class RunAnalysisUseCaseTest {
         val bars = mutableListOf<DailyBar>()
         val start = Instant.parse("2025-01-01T10:00:00Z")
         for (i in 0 until count) {
-            bars.add(DailyBar(symbol, 150.0, 155.0, 145.0, 150.0, 1000000, start.plusSeconds(i * 86400L)))
+            bars.add(DailyBar(LocalDate.ofInstant(start.plusSeconds(i * 86400L), ZoneOffset.UTC), 150.0, 155.0, 145.0, 150.0, 1000000))
         }
         return bars
     }

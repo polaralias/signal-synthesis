@@ -11,7 +11,7 @@ class SmaIndicatorTest {
         val prices = (1..10).map { it.toDouble() }
         val sma = SmaIndicator.calculate(prices, period = 5)
 
-        assertEquals(8.0, sma, 1e-6)
+        assertEquals(8.0, sma!!, 1e-6)
     }
 
     @Test
@@ -39,7 +39,7 @@ class SmaIndicatorTest {
             periods = listOf(5, 10)
         )
 
-        assertEquals(8.0, result[5], 1e-6)
-        assertEquals(5.5, result[10], 1e-6)
+        assertEquals(8.0, result[5]!!, 1e-6)
+        assertEquals(5.5, result[10]!!, 1e-6)
     }
 }

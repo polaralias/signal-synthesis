@@ -30,7 +30,8 @@ fun SetupDetailScreen(
     uiState: AnalysisUiState,
     symbol: String,
     onBack: () -> Unit,
-    onRequestSummary: (String) -> Unit
+    onRequestSummary: (String) -> Unit,
+    onToggleWatchlist: (String) -> Unit
 ) {
     val setup = uiState.result?.setups?.firstOrNull { it.symbol == symbol }
     var showRawData by remember { mutableStateOf(false) }
@@ -49,6 +50,11 @@ fun SetupDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onToggleWatchlist(symbol) }) {
+                        Text(if (uiState.watchlist.contains(symbol)) "⭐" else "☆")
                     }
                 }
             )

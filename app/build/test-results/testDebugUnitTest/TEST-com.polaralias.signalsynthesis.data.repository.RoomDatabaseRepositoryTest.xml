@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-18T10:49:20" hostname="LAPTOP" time="6.604">
+  <properties/>
+  <testcase name="history_clear" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="6.364"/>
+  <testcase name="history_saveAndGet" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="0.109"/>
+  <testcase name="watchlist_addAndRemove" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="0.13"/>
+  <system-out><![CDATA[WARNING: No manifest file found at .\AndroidManifest.xml.
+Falling back to the Android OS resources only.
+To remove this warning, annotate your test class with @Config(manifest=Config.NONE).
+If you're using Android Gradle Plugin, add testOptions.unitTests.includeAndroidResources = true to your build.gradle
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

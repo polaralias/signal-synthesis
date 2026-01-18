@@ -65,13 +65,12 @@ class EnrichIntradayUseCaseTest {
         for (i in 0 until count) {
             bars.add(
                 IntradayBar(
-                    symbol = symbol,
+                    time = start.plusSeconds(i * 60L),
                     open = 100.0 + i,
                     high = 105.0 + i,
                     low = 95.0 + i,
                     close = 102.0 + i,
-                    volume = 1000,
-                    timestamp = start.plusSeconds(i * 60L)
+                    volume = 1000
                 )
             )
         }

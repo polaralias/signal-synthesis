@@ -29,7 +29,8 @@ import com.polaralias.signalsynthesis.domain.model.TradeSetup
 fun ResultsScreen(
     uiState: AnalysisUiState,
     onBack: () -> Unit,
-    onOpenDetail: (String) -> Unit
+    onOpenDetail: (String) -> Unit,
+    onToggleWatchlist: (String) -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -65,6 +66,8 @@ fun ResultsScreen(
                     setup = setup,
                     hasLlmKey = uiState.hasLlmKey,
                     aiSummary = uiState.aiSummaries[setup.symbol],
+                    isInWatchlist = uiState.watchlist.contains(setup.symbol),
+                    onToggleWatchlist = { onToggleWatchlist(setup.symbol) },
                     onOpen = { onOpenDetail(setup.symbol) }
                 )
             }
@@ -77,6 +80,8 @@ private fun SetupCard(
     setup: TradeSetup,
     hasLlmKey: Boolean,
     aiSummary: AiSummaryState?,
+    isInWatchlist: Boolean,
+    onToggleWatchlist: () -> Unit,
     onOpen: () -> Unit
 ) {
     Card(
@@ -91,7 +96,12 @@ private fun SetupCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(setup.symbol, style = MaterialTheme.typography.titleLarge)
-                Text(formatPercent(setup.confidence))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(formatPercent(setup.confidence))
+                    IconButton(onClick = onToggleWatchlist) {
+                        Text(if (isInWatchlist) "⭐" else "☆")
+                    }
+                }
             }
             Text(setup.setupType, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(6.dp))

@@ -1,4 +1,6 @@
 R_DEF: Internal format may change without notice
 local
+string alert_channel_description
+string alert_channel_name
 string app_name
 style Theme.SignalSynthesis

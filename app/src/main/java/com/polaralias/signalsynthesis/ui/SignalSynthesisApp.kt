@@ -39,7 +39,30 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onOpenKeys = { navController.navigate(Screen.Keys.route) },
                 onOpenResults = { navController.navigate(Screen.Results.route) },
                 onOpenSettings = { navController.navigate(Screen.Settings.route) },
+                onOpenWatchlist = { navController.navigate(Screen.Watchlist.route) },
+                onOpenHistory = { navController.navigate(Screen.History.route) },
                 onDismissError = viewModel::clearError
+            )
+        }
+        composable(Screen.Watchlist.route) {
+            WatchlistScreen(
+                uiState = uiState,
+                onBack = { navController.popBackStack() },
+                onOpenSymbol = { symbol ->
+                    navController.navigate(Screen.detailRoute(symbol))
+                },
+                onRemove = viewModel::toggleWatchlist
+            )
+        }
+        composable(Screen.History.route) {
+            HistoryScreen(
+                uiState = uiState,
+                onBack = { navController.popBackStack() },
+                onClearHistory = viewModel::clearHistory,
+                onViewResult = { result ->
+                    viewModel.showHistoricalResult(result)
+                    navController.navigate(Screen.Results.route)
+                }
             )
         }
         composable(Screen.Keys.route) {
@@ -56,7 +79,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onBack = { navController.popBackStack() },
                 onOpenDetail = { symbol ->
                     navController.navigate(Screen.detailRoute(symbol))
-                }
+                },
+                onToggleWatchlist = viewModel::toggleWatchlist
             )
         }
         composable(
@@ -68,7 +92,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 uiState = uiState,
                 symbol = Uri.decode(symbol),
                 onBack = { navController.popBackStack() },
-                onRequestSummary = viewModel::requestAiSummary
+                onRequestSummary = viewModel::requestAiSummary,
+                onToggleWatchlist = viewModel::toggleWatchlist
             )
         }
         composable(Screen.Settings.route) {
@@ -88,6 +113,8 @@ sealed class Screen(val route: String) {
     object Keys : Screen("keys")
     object Results : Screen("results")
     object Settings : Screen("settings")
+    object Watchlist : Screen("watchlist")
+    object History : Screen("history")
 
     object Detail : Screen("detail/{symbol}") {
         const val ARG_SYMBOL = "symbol"

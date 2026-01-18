@@ -679,3 +679,36 @@ Next Steps:
 Links:
 - README.md
 - app/src/main/java/com/polaralias/signalsynthesis/data/cache/TimedCache.kt
+
+## Entry
+
+Date: 2026-01-17
+Phase: Task 1 - Unit Test Verification and Fixing
+Owner/Agent: Antigravity
+
+Summary:
+- Successfully fixed all compilation errors and unit test failures, achieving 100% pass rate.
+
+Work Completed:
+- Updated `local.properties` with correct Android SDK path.
+- Fixed compilation errors in `MainActivity.kt`, `ApiKeyStore.kt`, and `SettingsScreen.kt`.
+- Resolved type mismatches in `AtrIndicatorTest.kt`, `RsiIndicatorTest.kt`, `SmaIndicatorTest.kt`, and `VwapIndicatorTest.kt`.
+- Corrected constructor arguments and missing imports in `EnrichEodUseCaseTest.kt`, `EnrichIntradayUseCaseTest.kt`, and `RunAnalysisUseCaseTest.kt`.
+- Fixed `FakeLlmClient` in `AnalysisViewModelTest.kt` to correctly implement `LlmClient` interface.
+- Resolved a logic issue in `AnalysisViewModelTest.kt` where Alpaca keys require both key and secret to be considered "present".
+
+Decisions:
+- Added non-null assertions (!!) in indicator tests where the production code returns nullable Doubles but tests expect non-null results for valid inputs.
+- Mocked LLM responses in `FakeLlmClient` using JSON format expected by `SynthesizeSetupUseCase`.
+
+Risks/Blocks:
+- None. All 32 unit tests are passing.
+
+Next Steps:
+- Proceed to Prompt 8: Implement Room Database for Watchlists and History.
+
+Links:
+- app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt
+- app/src/main/java/com/polaralias/signalsynthesis/data/storage/ApiKeyStore.kt
+- app/src/test/java/com/polaralias/signalsynthesis/ui/AnalysisViewModelTest.kt
+- app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RunAnalysisUseCaseTest.kt

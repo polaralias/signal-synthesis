@@ -9,7 +9,11 @@ import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.model.AiSynthesis
+import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
+import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -101,6 +105,7 @@ class AnalysisViewModelTest {
             alertStore = FakeAlertSettingsStore(),
             workScheduler = FakeWorkScheduler(),
             llmClient = FakeLlmClient(),
+            dbRepository = FakeDatabaseRepository(),
             clock = clock,
             ioDispatcher = testDispatcher
         )
@@ -116,7 +121,7 @@ class AnalysisViewModelTest {
 
     private class FakeApiKeyStore(private val initialHasKeys: Boolean) : ApiKeyStorage {
         override suspend fun loadApiKeys(): ApiKeys {
-            return if (initialHasKeys) ApiKeys(alpacaKey = "test") else ApiKeys()
+            return if (initialHasKeys) ApiKeys(alpacaKey = "test", alpacaSecret = "test") else ApiKeys()
         }
         override suspend fun loadLlmKey(): String? = null
         override suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?) {}
@@ -135,8 +140,23 @@ class AnalysisViewModelTest {
     }
 
     private class FakeLlmClient : LlmClient {
-        override suspend fun synthesizeSetup(setup: TradeSetup, context: String): AiSynthesis {
-            return AiSynthesis("summary", "risks", "verdict")
+        override suspend fun generate(prompt: String, apiKey: String): String {
+            return """
+                {
+                  "summary": "Fake summary",
+                  "risks": ["Fake risk"],
+                  "verdict": "Fake verdict"
+                }
+            """.trimIndent()
         }
+    }
+
+    private class FakeDatabaseRepository : DatabaseRepository {
+        override suspend fun addToWatchlist(symbol: String) {}
+        override suspend fun removeFromWatchlist(symbol: String) {}
+        override fun getWatchlist(): Flow<List<String>> = flowOf(emptyList())
+        override suspend fun saveHistory(result: AnalysisResult) {}
+        override fun getHistory(): Flow<List<AnalysisResult>> = flowOf(emptyList())
+        override suspend fun clearHistory() {}
     }
 }

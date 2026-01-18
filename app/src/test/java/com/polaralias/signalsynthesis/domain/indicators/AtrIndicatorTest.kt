@@ -23,7 +23,7 @@ class AtrIndicatorTest {
 
         val atr = AtrIndicator.calculateFromIntraday(bars, period = 14)
 
-        assertEquals(2.0, atr, 1e-6)
+        assertEquals(2.0, atr!!, 1e-6)
     }
 
     @Test

@@ -44,6 +44,8 @@ data class AnalysisUiState(
     val hasLlmKey: Boolean = false,
     val alertsEnabled: Boolean = false,
     val alertSymbolCount: Int = 0,
+    val watchlist: List<String> = emptyList(),
+    val history: List<AnalysisResult> = emptyList(),
     val aiSummaries: Map<String, AiSummaryState> = emptyMap()
 )
 

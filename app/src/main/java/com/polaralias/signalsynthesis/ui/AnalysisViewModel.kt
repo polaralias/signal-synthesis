@@ -8,9 +8,11 @@ import com.polaralias.signalsynthesis.data.storage.AlertSettingsStorage
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
-import com.polaralias.signalsynthesis.domain.model.TradingIntent
+import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
 import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCase
 import com.polaralias.signalsynthesis.domain.usecase.SynthesizeSetupUseCase
+import com.polaralias.signalsynthesis.domain.model.AnalysisResult
+import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,7 @@ class AnalysisViewModel(
     private val alertStore: AlertSettingsStorage,
     private val workScheduler: WorkScheduler,
     private val llmClient: LlmClient,
+    private val dbRepository: DatabaseRepository,
     private val clock: Clock = Clock.systemUTC(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
@@ -35,6 +38,8 @@ class AnalysisViewModel(
     init {
         refreshKeys()
         refreshAlerts()
+        observeWatchlist()
+        observeHistory()
     }
 
     fun updateIntent(intent: TradingIntent) {
@@ -89,6 +94,7 @@ class AnalysisViewModel(
                         lastRunAt = result.generatedAt
                     )
                 }
+                dbRepository.saveHistory(result)
                 val symbols = result.setups.map { it.symbol }.distinct()
                 alertStore.saveSymbols(symbols)
                 _uiState.update { it.copy(alertSymbolCount = symbols.size) }
@@ -100,6 +106,16 @@ class AnalysisViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun showHistoricalResult(result: AnalysisResult) {
+        _uiState.update {
+            it.copy(
+                result = result,
+                lastRunAt = result.generatedAt,
+                aiSummaries = emptyMap()
+            )
         }
     }
 
@@ -147,6 +163,39 @@ class AnalysisViewModel(
             val current = alertStore.loadSettings()
             alertStore.saveSettings(current.copy(enabled = enabled))
             workScheduler.scheduleAlerts(enabled)
+        }
+    }
+
+    fun toggleWatchlist(symbol: String) {
+        viewModelScope.launch(ioDispatcher) {
+            val current = _uiState.value.watchlist
+            if (current.contains(symbol)) {
+                dbRepository.removeFromWatchlist(symbol)
+            } else {
+                dbRepository.addToWatchlist(symbol)
+            }
+        }
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch(ioDispatcher) {
+            dbRepository.clearHistory()
+        }
+    }
+
+    private fun observeWatchlist() {
+        viewModelScope.launch(ioDispatcher) {
+            dbRepository.getWatchlist().collect { list ->
+                _uiState.update { it.copy(watchlist = list) }
+            }
+        }
+    }
+
+    private fun observeHistory() {
+        viewModelScope.launch(ioDispatcher) {
+            dbRepository.getHistory().collect { list ->
+                _uiState.update { it.copy(history = list) }
+            }
         }
     }
 

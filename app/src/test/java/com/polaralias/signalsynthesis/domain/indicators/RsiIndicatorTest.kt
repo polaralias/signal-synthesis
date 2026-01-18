@@ -11,7 +11,7 @@ class RsiIndicatorTest {
         val prices = (1..16).map { it.toDouble() }
         val rsi = RsiIndicator.calculate(prices, period = 14)
 
-        assertEquals(100.0, rsi, 1e-6)
+        assertEquals(100.0, rsi!!, 1e-6)
     }
 
     @Test
@@ -19,7 +19,7 @@ class RsiIndicatorTest {
         val prices = List(15) { 10.0 }
         val rsi = RsiIndicator.calculate(prices, period = 14)
 
-        assertEquals(50.0, rsi, 1e-6)
+        assertEquals(50.0, rsi!!, 1e-6)
     }
 
     @Test

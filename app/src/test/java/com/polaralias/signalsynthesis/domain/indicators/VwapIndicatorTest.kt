@@ -32,7 +32,7 @@ class VwapIndicatorTest {
         val expected = (9.0 * 100.0 + ((12.0 + 9.0 + 11.0) / 3.0) * 200.0) / 300.0
         val result = VwapIndicator.calculate(bars)
 
-        assertEquals(expected, result, 1e-6)
+        assertEquals(expected, result!!, 1e-6)
     }
 
     @Test
@@ -59,7 +59,7 @@ class VwapIndicatorTest {
         val expected = (9.0 * 100.0 + 11.0 * 200.0) / 300.0
         val result = VwapIndicator.calculateFromClose(bars)
 
-        assertEquals(expected, result, 1e-6)
+        assertEquals(expected, result!!, 1e-6)
     }
 
     @Test

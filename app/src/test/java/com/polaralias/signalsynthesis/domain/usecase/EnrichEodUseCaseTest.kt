@@ -9,6 +9,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneOffset
 
 class EnrichEodUseCaseTest {
 
@@ -64,13 +66,12 @@ class EnrichEodUseCaseTest {
         for (i in 0 until count) {
             bars.add(
                 DailyBar(
-                    symbol = symbol,
+                    date = LocalDate.ofInstant(start.plusSeconds(i * 86400L), ZoneOffset.UTC),
                     open = 100.0 + i,
                     high = 105.0 + i,
                     low = 95.0 + i,
                     close = 102.0 + i,
-                    volume = 1000000,
-                    timestamp = start.plusSeconds(i * 86400L)
+                    volume = 1000000
                 )
             )
         }

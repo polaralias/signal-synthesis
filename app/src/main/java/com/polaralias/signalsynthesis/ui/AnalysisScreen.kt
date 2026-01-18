@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -31,6 +32,8 @@ fun AnalysisScreen(
     onOpenKeys: () -> Unit,
     onOpenResults: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenWatchlist: () -> Unit,
+    onOpenHistory: () -> Unit,
     onDismissError: () -> Unit
 ) {
     Scaffold(
@@ -38,6 +41,12 @@ fun AnalysisScreen(
             TopAppBar(
                 title = { Text("Signal Synthesis") },
                 actions = {
+                    IconButton(onClick = onOpenWatchlist) {
+                        Text("⭐")
+                    }
+                    IconButton(onClick = onOpenHistory) {
+                        Text("🕒")
+                    }
                     OutlinedButton(onClick = onOpenSettings) {
                         Text("Settings")
                     }

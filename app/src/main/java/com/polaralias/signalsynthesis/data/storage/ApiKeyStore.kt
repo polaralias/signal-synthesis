@@ -41,15 +41,17 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
         preferences.getString(KEY_LLM, null)
     }
 
-    override suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?) = withContext(Dispatchers.IO) {
-        preferences.edit().apply {
-            putOrRemove(KEY_ALPACA, apiKeys.alpacaKey)
-            putOrRemove(KEY_ALPACA_SECRET, apiKeys.alpacaSecret)
-            putOrRemove(KEY_POLYGON, apiKeys.polygon)
-            putOrRemove(KEY_FINNHUB, apiKeys.finnhub)
-            putOrRemove(KEY_FMP, apiKeys.financialModelingPrep)
-            putOrRemove(KEY_LLM, llmKey)
-            apply()
+    override suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?) {
+        withContext(Dispatchers.IO) {
+            preferences.edit().apply {
+                putOrRemove(KEY_ALPACA, apiKeys.alpacaKey)
+                putOrRemove(KEY_ALPACA_SECRET, apiKeys.alpacaSecret)
+                putOrRemove(KEY_POLYGON, apiKeys.polygon)
+                putOrRemove(KEY_FINNHUB, apiKeys.finnhub)
+                putOrRemove(KEY_FMP, apiKeys.financialModelingPrep)
+                putOrRemove(KEY_LLM, llmKey)
+                apply()
+            }
         }
     }
 

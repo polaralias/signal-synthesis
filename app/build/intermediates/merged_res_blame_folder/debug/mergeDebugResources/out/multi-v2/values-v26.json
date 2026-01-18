@@ -1,10 +1,10 @@
 {
     "logs": [
         {
-            "outputFile": "com.signalsynthesis.app-mergeDebugResources-54:/values-v26/values-v26.xml",
+            "outputFile": "com.polaralias.signalsynthesis.app-mergeDebugResources-70:/values-v26/values-v26.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\james.DESKTOP-Q8VOBFS\\.gradle\\caches\\transforms-4\\876ac178210fce30f42ae758c6d036fa\\transformed\\appcompat-1.6.1\\res\\values-v26\\values-v26.xml",
+                    "source": "C:\\Users\\james.DESKTOP-Q8VOBFS\\.gradle\\caches\\transforms-4\\60a4ca374d76ab620d05addfd54e3fb7\\transformed\\appcompat-1.6.1\\res\\values-v26\\values-v26.xml",
                     "from": {
                         "startLines": "2,3,4,8,12,16",
                         "startColumns": "4,4,4,4,4,4",
