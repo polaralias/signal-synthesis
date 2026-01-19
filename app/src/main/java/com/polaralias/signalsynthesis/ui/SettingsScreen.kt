@@ -29,6 +29,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.domain.ai.LlmModel
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
@@ -50,6 +57,18 @@ fun SettingsScreen(
 ) {
     var showAiDialog by remember { mutableStateOf(false) }
     var aiPrompt by remember { mutableStateOf("") }
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onToggleAlerts(true)
+            com.polaralias.signalsynthesis.util.Logger.i("Settings", "Notification permission granted")
+        } else {
+            com.polaralias.signalsynthesis.util.Logger.w("Settings", "Notification permission denied")
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -308,7 +327,26 @@ fun SettingsScreen(
                 )
                 Switch(
                     checked = uiState.alertsEnabled,
-                    onCheckedChange = onToggleAlerts
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                val hasPermission = ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                ) == PackageManager.PERMISSION_GRANTED
+
+                                if (hasPermission) {
+                                    onToggleAlerts(true)
+                                } else {
+                                    permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            } else {
+                                onToggleAlerts(true)
+                            }
+                        } else {
+                            onToggleAlerts(false)
+                        }
+                    }
                 )
             }
             Text(
