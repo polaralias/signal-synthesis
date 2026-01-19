@@ -90,7 +90,10 @@ data class FinnhubMetricsResponse(
 data class FinnhubMetricData(
     @Json(name = "marketCapitalization") val marketCapitalization: Double? = null,
     @Json(name = "peTTM") val peTtm: Double? = null,
-    @Json(name = "epsTTM") val epsTtm: Double? = null
+    @Json(name = "epsTTM") val epsTtm: Double? = null,
+    @Json(name = "pbAnnual") val pbAnnual: Double? = null,
+    @Json(name = "dividendYieldIndicatedAnnual") val dividendYield: Double? = null,
+    @Json(name = "debtEquityAnnual") val debtEquity: Double? = null
 )
 
 data class FinnhubSentimentResponse(

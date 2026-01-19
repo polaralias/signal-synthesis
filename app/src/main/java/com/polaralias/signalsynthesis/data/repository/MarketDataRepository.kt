@@ -24,8 +24,12 @@ class MarketDataRepository(
     suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
         val key = quoteKey(symbols)
-        quoteCache.get(key)?.let { return it }
+        quoteCache.get(key)?.let { 
+            Logger.d("Repository", "Cache hit for quotes: ${symbols.take(3)}...")
+            return it 
+        }
         val result = tryProviders(
+            dataType = "Quotes",
             providers = providers.quoteProviders,
             fetch = { it.getQuotes(symbols) },
             isValid = { it.isNotEmpty() }
@@ -39,8 +43,12 @@ class MarketDataRepository(
     suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
         val key = "intraday:$symbol:$days"
-        intradayCache.get(key)?.let { return it }
+        intradayCache.get(key)?.let { 
+            Logger.d("Repository", "Cache hit for intraday: $symbol")
+            return it 
+        }
         val result = tryProviders(
+            dataType = "Intraday($symbol)",
             providers = providers.intradayProviders,
             fetch = { it.getIntraday(symbol, days) },
             isValid = { it.isNotEmpty() }
@@ -54,8 +62,12 @@ class MarketDataRepository(
     suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
         val key = "daily:$symbol:$days"
-        dailyCache.get(key)?.let { return it }
+        dailyCache.get(key)?.let { 
+            Logger.d("Repository", "Cache hit for daily: $symbol")
+            return it 
+        }
         val result = tryProviders(
+            dataType = "Daily($symbol)",
             providers = providers.dailyProviders,
             fetch = { it.getDaily(symbol, days) },
             isValid = { it.isNotEmpty() }
@@ -68,8 +80,12 @@ class MarketDataRepository(
 
     suspend fun getProfile(symbol: String): CompanyProfile? {
         if (symbol.isBlank()) return null
-        profileCache.get(symbol)?.let { return it }
+        profileCache.get(symbol)?.let { 
+            Logger.d("Repository", "Cache hit for profile: $symbol")
+            return it 
+        }
         val result = tryProviders(
+            dataType = "Profile($symbol)",
             providers = providers.profileProviders,
             fetch = { it.getProfile(symbol) },
             isValid = { it != null }
@@ -82,8 +98,12 @@ class MarketDataRepository(
 
     suspend fun getMetrics(symbol: String): FinancialMetrics? {
         if (symbol.isBlank()) return null
-        metricsCache.get(symbol)?.let { return it }
+        metricsCache.get(symbol)?.let { 
+            Logger.d("Repository", "Cache hit for metrics: $symbol")
+            return it 
+        }
         val result = tryProviders(
+            dataType = "Metrics($symbol)",
             providers = providers.metricsProviders,
             fetch = { it.getMetrics(symbol) },
             isValid = { it != null }
@@ -96,8 +116,12 @@ class MarketDataRepository(
 
     suspend fun getSentiment(symbol: String): SentimentData? {
         if (symbol.isBlank()) return null
-        sentimentCache.get(symbol)?.let { return it }
+        sentimentCache.get(symbol)?.let { 
+            Logger.d("Repository", "Cache hit for sentiment: $symbol")
+            return it 
+        }
         val result = tryProviders(
+            dataType = "Sentiment($symbol)",
             providers = providers.sentimentProviders,
             fetch = { it.getSentiment(symbol) },
             isValid = { it != null }
@@ -109,10 +133,12 @@ class MarketDataRepository(
     }
 
     private suspend fun <P : Any, T> tryProviders(
+        dataType: String,
         providers: List<P>,
         fetch: suspend (P) -> T,
         isValid: (T) -> Boolean
     ): T? {
+        Logger.i("Repository", "Fetching $dataType from ${providers.size} providers")
         for (provider in providers) {
             val providerName = provider::class.simpleName ?: "Unknown"
             try {
@@ -120,15 +146,15 @@ class MarketDataRepository(
                     fetch(provider)
                 }
                 if (isValid(result)) {
-                    Logger.i("Repository", "$providerName returned valid results")
+                    Logger.i("Repository", "SUCCESS: $dataType from $providerName")
                     return result
                 }
-                Logger.w("Repository", "$providerName returned empty/invalid results")
+                Logger.w("Repository", "EMPTY: $dataType from $providerName")
             } catch (e: Exception) {
-                Logger.w("Repository", "$providerName failed after retries", e)
+                Logger.w("Repository", "FAILED: $dataType from $providerName", e)
             }
         }
-        Logger.e("Repository", "All providers failed to return valid data")
+        Logger.e("Repository", "CRITICAL: All providers failed for $dataType")
         return null
     }
 

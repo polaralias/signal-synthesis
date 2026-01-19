@@ -32,14 +32,18 @@ class ProviderFactory(
         val fmpProvider = keys.financialModelingPrep?.takeIf { it.isNotBlank() }?.let {
             FmpMarketDataProvider(it)
         }
+
+        val twelveDataProvider = keys.twelveData?.takeIf { it.isNotBlank() }?.let {
+            com.polaralias.signalsynthesis.data.provider.twelvedata.TwelveDataMarketDataProvider(it)
+        }
         
         val mockProvider = if (includeMock || !hasKeys) MockMarketDataProvider() else null
 
         // Build provider lists with fallback ordering
         // For quotes and intraday: prefer Alpaca/Polygon (more real-time)
-        val quoteProviders = listOfNotNull(alpacaProvider, polygonProvider, finnhubProvider, fmpProvider, mockProvider)
-        val intradayProviders = listOfNotNull(alpacaProvider, polygonProvider, finnhubProvider, fmpProvider, mockProvider)
-        val dailyProviders = listOfNotNull(alpacaProvider, polygonProvider, finnhubProvider, fmpProvider, mockProvider)
+        val quoteProviders = listOfNotNull(alpacaProvider, polygonProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
+        val intradayProviders = listOfNotNull(alpacaProvider, polygonProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
+        val dailyProviders = listOfNotNull(alpacaProvider, polygonProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
         
         // For profiles: prefer FMP/Finnhub/Polygon (better fundamental data)
         val profileProviders = listOfNotNull(fmpProvider, finnhubProvider, polygonProvider, alpacaProvider, mockProvider)

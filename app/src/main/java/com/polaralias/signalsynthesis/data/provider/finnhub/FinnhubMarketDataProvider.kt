@@ -66,7 +66,10 @@ class FinnhubMarketDataProvider(
         return FinancialMetrics(
             marketCap = metric.marketCapitalization?.times(1_000_000)?.toLong(),
             peRatio = metric.peTtm,
-            eps = metric.epsTtm
+            eps = metric.epsTtm,
+            pbRatio = metric.pbAnnual,
+            dividendYield = metric.dividendYield?.div(100.0), // Finnhub yields are usually in percent (e.g. 1.5 for 1.5%)
+            debtToEquity = metric.debtEquity?.div(100.0) // Finnhub often returns these as percentages too
         )
     }
 

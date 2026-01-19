@@ -29,11 +29,15 @@ class RunAnalysisUseCase(
      * Run the complete analysis pipeline.
      * 
      * @param intent Trading intent (DAY_TRADE, SWING, LONG_TERM)
+     * @param risk User risk tolerance
      * @return AnalysisResult with counts and trade setups
      */
-    suspend fun execute(intent: TradingIntent): AnalysisResult {
+    suspend fun execute(
+        intent: TradingIntent,
+        risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE
+    ): AnalysisResult {
         // Step 1: Discover candidates
-        val candidates = discoverCandidates.execute(intent)
+        val candidates = discoverCandidates.execute(intent, risk)
         if (candidates.isEmpty()) {
             return AnalysisResult(
                 intent = intent,
@@ -46,7 +50,8 @@ class RunAnalysisUseCase(
         }
         
         // Step 2: Filter tradeable
-        val tradeable = filterTradeable.execute(candidates)
+        val minPrice = if (risk == com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE) 0.1 else 1.0
+        val tradeable = filterTradeable.execute(candidates, minPrice = minPrice)
         if (tradeable.isEmpty()) {
             return AnalysisResult(
                 intent = intent,
@@ -67,11 +72,6 @@ class RunAnalysisUseCase(
         // Step 5: Enrich with context data
         val contextData = enrichContext.execute(tradeable)
         
-        // Extract sentiment scores
-        val sentimentScores = contextData.mapValues { (_, context) ->
-            context.sentiment?.score ?: 0.0
-        }
-        
         // Step 6: Enrich with EOD stats (for swing and long-term only)
         val eodStats = if (intent != TradingIntent.DAY_TRADE) {
             enrichEod.execute(tradeable, days = 200)
@@ -85,7 +85,7 @@ class RunAnalysisUseCase(
             quotes = quotes,
             intradayStats = intradayStats,
             eodStats = eodStats,
-            sentimentScores = sentimentScores,
+            contextData = contextData,
             intent = intent
         )
         

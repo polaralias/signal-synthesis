@@ -5,10 +5,11 @@ data class ApiKeys(
     val alpacaSecret: String? = null,
     val polygon: String? = null,
     val finnhub: String? = null,
-    val financialModelingPrep: String? = null
+    val financialModelingPrep: String? = null,
+    val twelveData: String? = null
 ) {
     fun hasAny(): Boolean {
-        return listOf(polygon, finnhub, financialModelingPrep)
+        return listOf(polygon, finnhub, financialModelingPrep, twelveData)
             .any { !it.isNullOrBlank() } ||
                 (!alpacaKey.isNullOrBlank() && !alpacaSecret.isNullOrBlank())
     }

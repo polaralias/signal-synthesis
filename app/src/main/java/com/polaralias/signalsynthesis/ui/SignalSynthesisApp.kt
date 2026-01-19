@@ -110,6 +110,7 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 symbol = Uri.decode(symbol),
                 onBack = { navController.popBackStack() },
                 onRequestSummary = viewModel::requestAiSummary,
+                onRequestChartData = viewModel::requestChartData,
                 onToggleWatchlist = viewModel::toggleWatchlist
             )
         }
@@ -123,7 +124,13 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onUpdateSettings = viewModel::updateAppSettings,
                 onSuggestAi = viewModel::suggestThresholdsWithAi,
                 onApplyAi = viewModel::applyAiThresholdSuggestion,
-                onDismissAi = viewModel::dismissAiSuggestion
+                onDismissAi = viewModel::dismissAiSuggestion,
+                onOpenLogs = { navController.navigate(Screen.Logs.route) }
+            )
+        }
+        composable(Screen.Logs.route) {
+            LogViewerScreen(
+                onBack = { navController.popBackStack() }
             )
         }
     }
@@ -137,6 +144,7 @@ sealed class Screen(val route: String) {
     object Watchlist : Screen("watchlist")
     object History : Screen("history")
     object Dashboard : Screen("dashboard")
+    object Logs : Screen("logs")
 
     object Detail : Screen("detail/{symbol}") {
         const val ARG_SYMBOL = "symbol"

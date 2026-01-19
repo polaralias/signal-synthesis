@@ -56,8 +56,12 @@ fun WatchlistScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(uiState.watchlist) { symbol ->
+                    val intent = uiState.result?.setups?.find { it.symbol == symbol }?.intent
+                        ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }?.intent
+                    
                     WatchlistItem(
                         symbol = symbol,
+                        intent = intent,
                         onClick = { onOpenSymbol(symbol) },
                         onRemove = { onRemove(symbol) }
                     )
@@ -70,6 +74,7 @@ fun WatchlistScreen(
 @Composable
 private fun WatchlistItem(
     symbol: String,
+    intent: com.polaralias.signalsynthesis.domain.model.TradingIntent?,
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
@@ -83,7 +88,13 @@ private fun WatchlistItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(symbol, style = MaterialTheme.typography.titleMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(symbol, style = MaterialTheme.typography.titleMedium)
+                intent?.let {
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                    IntentBadge(it)
+                }
+            }
             IconButton(onClick = onRemove) {
                 Text("Remove")
             }

@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -36,4 +37,33 @@ fun SectionHeader(title: String) {
             color = MaterialTheme.colorScheme.primary
         )
     }
+}
+
+@Composable
+fun IntentBadge(intent: TradingIntent) {
+    androidx.compose.material3.Surface(
+        color = when (intent) {
+            TradingIntent.DAY_TRADE -> MaterialTheme.colorScheme.tertiaryContainer
+            TradingIntent.SWING -> MaterialTheme.colorScheme.secondaryContainer
+            TradingIntent.LONG_TERM -> MaterialTheme.colorScheme.primaryContainer
+        },
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+    ) {
+        Text(
+            text = formatIntent(intent),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            color = when (intent) {
+                TradingIntent.DAY_TRADE -> MaterialTheme.colorScheme.onTertiaryContainer
+                TradingIntent.SWING -> MaterialTheme.colorScheme.onSecondaryContainer
+                TradingIntent.LONG_TERM -> MaterialTheme.colorScheme.onPrimaryContainer
+            }
+        )
+    }
+}
+
+fun formatIntent(intent: TradingIntent): String = when (intent) {
+    TradingIntent.DAY_TRADE -> "Day Trade"
+    TradingIntent.SWING -> "Swing"
+    TradingIntent.LONG_TERM -> "Long Term"
 }

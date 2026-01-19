@@ -202,7 +202,11 @@ private fun RecentResultsSection(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(setup.symbol, fontWeight = FontWeight.Bold)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(setup.symbol, fontWeight = FontWeight.Bold)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IntentBadge(setup.intent)
+                            }
                             Text(setup.setupType, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
                         Text(formatPercent(setup.confidence), fontWeight = FontWeight.Bold)

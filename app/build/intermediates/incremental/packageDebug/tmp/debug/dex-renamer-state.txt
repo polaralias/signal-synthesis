@@ -1,11 +1,11 @@
-#Sun Jan 18 19:54:11 GMT 2026
+#Mon Jan 19 20:09:04 GMT 2026
 base.0=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes.dex
 base.1=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\0\\classes.dex
 base.10=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\7\\classes.dex
 base.11=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\8\\classes.dex
-base.12=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes2.dex
-base.13=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
-base.14=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\desugar_lib_dex\\debug\\l8DexDesugarLibDebug\\classes1000.dex
+base.12=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\desugar_lib_dex\\debug\\l8DexDesugarLibDebug\\classes1000.dex
+base.13=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes2.dex
+base.14=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeExtDexDebug\\classes3.dex
 base.2=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\10\\classes.dex
 base.3=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\11\\classes.dex
 base.4=C\:\\Users\\james.DESKTOP-Q8VOBFS\\Documents\\Development\\signal-synthesis\\app\\build\\intermediates\\dex\\debug\\mergeProjectDexDebug\\12\\classes.dex
@@ -18,9 +18,9 @@ path.0=classes.dex
 path.1=0/classes.dex
 path.10=7/classes.dex
 path.11=8/classes.dex
-path.12=classes2.dex
-path.13=classes3.dex
-path.14=classes1000.dex
+path.12=classes1000.dex
+path.13=classes2.dex
+path.14=classes3.dex
 path.2=10/classes.dex
 path.3=11/classes.dex
 path.4=12/classes.dex

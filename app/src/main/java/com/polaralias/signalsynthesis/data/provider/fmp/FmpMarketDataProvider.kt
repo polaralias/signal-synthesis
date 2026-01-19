@@ -86,11 +86,17 @@ class FmpMarketDataProvider(
         if (symbol.isBlank()) return null
         return try {
             val metrics = service.getKeyMetrics(symbol, limit = 1, apiKey = apiKey)
+            val quote = service.getQuote(symbol, apiKey).firstOrNull()
+            
             metrics.firstOrNull()?.let {
                 FinancialMetrics(
                     marketCap = it.marketCap,
                     peRatio = it.peRatio,
-                    eps = it.netIncomePerShare
+                    eps = it.netIncomePerShare,
+                    earningsDate = quote?.earningsAnnouncement,
+                    dividendYield = it.dividendYield,
+                    pbRatio = it.pbRatio,
+                    debtToEquity = it.debtToEquity
                 )
             }
         } catch (e: Exception) {

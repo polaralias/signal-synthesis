@@ -1,12 +1,19 @@
 package com.polaralias.signalsynthesis.domain.usecase
 
+import com.polaralias.signalsynthesis.domain.model.CompanyProfile
 import com.polaralias.signalsynthesis.domain.model.EodStats
+import com.polaralias.signalsynthesis.domain.model.FinancialMetrics
 import com.polaralias.signalsynthesis.domain.model.IntradayStats
 import com.polaralias.signalsynthesis.domain.model.Quote
+import com.polaralias.signalsynthesis.domain.model.SentimentData
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
+import com.polaralias.signalsynthesis.domain.usecase.SymbolContext
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 import kotlin.math.max
 import kotlin.math.min
 
@@ -49,7 +56,7 @@ class RankSetupsUseCase(
         quotes: Map<String, Quote>,
         intradayStats: Map<String, IntradayStats>,
         eodStats: Map<String, EodStats>,
-        sentimentScores: Map<String, Double>,
+        contextData: Map<String, SymbolContext>,
         intent: TradingIntent
     ): List<TradeSetup> {
         if (symbols.isEmpty()) return emptyList()
@@ -58,9 +65,9 @@ class RankSetupsUseCase(
             val quote = quotes[symbol] ?: return@mapNotNull null
             val stats = intradayStats[symbol]
             val eod = eodStats[symbol]
-            val sentiment = sentimentScores[symbol]
+            val context = contextData[symbol]
             
-            scoreSymbol(symbol, quote, stats, eod, sentiment, intent)
+            scoreSymbol(symbol, quote, stats, eod, context, intent)
         }
         
         // Sort by confidence descending
@@ -72,10 +79,11 @@ class RankSetupsUseCase(
         quote: Quote,
         intradayStats: IntradayStats?,
         eodStats: EodStats?,
-        sentimentScore: Double?,
+        context: SymbolContext?,
         intent: TradingIntent
     ): TradeSetup? {
         val price = quote.price
+        val sentimentScore = context?.sentiment?.score
         var score = 0.0
         val reasons = mutableListOf<String>()
         
@@ -121,10 +129,36 @@ class RankSetupsUseCase(
             }
             reasons.add("Positive sentiment ($label, ${String.format("%.2f", sentimentScore)})")
         }
+
+        // Check for upcoming earnings
+        var earningsPenalty = 0.0
+        val earningsDateStr = context?.metrics?.earningsDate
+        if (earningsDateStr != null) {
+            try {
+                // FMP format is typically "yyyy-MM-dd HH:mm:ss" or "yyyy-MM-dd"
+                val datePart = earningsDateStr.take(10)
+                val earningsDate = LocalDate.parse(datePart)
+                val today = LocalDate.now(clock)
+                val daysUntil = ChronoUnit.DAYS.between(today, earningsDate)
+                
+                if (daysUntil in 0..3) {
+                    val severity = when (intent) {
+                        TradingIntent.DAY_TRADE -> 0.2 // Minor risk for day traders
+                        TradingIntent.SWING -> 0.8 // Major risk for swing traders
+                        TradingIntent.LONG_TERM -> 0.4 // Moderate risk for long term
+                    }
+                    earningsPenalty = severity
+                    reasons.add("Upcoming earnings in $daysUntil days (High Volatility Risk)")
+                }
+            } catch (_: Exception) {
+                // Skip if date format is unexpected
+            }
+        }
         
         // Calculate confidence (normalized score)
         val maxScore = 4.0 // Maximum possible score
-        val confidence = min(1.0, max(0.1, score / maxScore))
+        val rawConfidence = score / maxScore
+        val confidence = min(1.0, max(0.1, rawConfidence - earningsPenalty))
         
         // Determine setup type
         val setupType = if (score > 2.0) "High Probability" else "Speculative"
@@ -150,7 +184,12 @@ class RankSetupsUseCase(
             confidence = confidence,
             reasons = reasons,
             validUntil = validUntil,
-            intent = intent
+            intent = intent,
+            intradayStats = intradayStats,
+            eodStats = eodStats,
+            profile = context?.profile,
+            metrics = context?.metrics,
+            sentiment = context?.sentiment
         )
     }
 }

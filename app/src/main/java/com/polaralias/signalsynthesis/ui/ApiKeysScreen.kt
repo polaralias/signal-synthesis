@@ -80,11 +80,21 @@ fun ApiKeysScreen(
                 label = { Text("FMP API Key") },
                 modifier = Modifier.fillMaxWidth()
             )
+            OutlinedTextField(
+                value = uiState.keys.twelveDataKey,
+                onValueChange = { onFieldChanged(KeyField.TWELVE_DATA, it) },
+                label = { Text("Twelve Data API Key") },
+                modifier = Modifier.fillMaxWidth()
+            )
             SectionHeader("AI Key")
+            val llmLabel = when (uiState.appSettings.llmProvider) {
+                com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI -> "OpenAI API Key"
+                com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI -> "Gemini API Key"
+            }
             OutlinedTextField(
                 value = uiState.keys.llmKey,
                 onValueChange = { onFieldChanged(KeyField.LLM, it) },
-                label = { Text("LLM API Key") },
+                label = { Text(llmLabel) },
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )

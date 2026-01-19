@@ -11,6 +11,7 @@ import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.storage.AppSettingsStorage
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
+import com.polaralias.signalsynthesis.data.ai.LlmClientFactory
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.usecase.PrefetchAiSummariesUseCase
 import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCase
@@ -28,13 +29,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.Clock
+import java.time.ZoneId
 
 class AnalysisViewModel(
     private val providerFactory: MarketDataProviderFactory,
     private val keyStore: ApiKeyStorage,
     private val alertStore: AlertSettingsStorage,
     private val workScheduler: WorkScheduler,
-    private val llmClient: LlmClient,
+    private val llmClientFactory: LlmClientFactory,
     private val dbRepository: DatabaseRepository,
     private val appSettingsStore: AppSettingsStorage,
     private val aiSummaryRepository: AiSummaryRepository,
@@ -65,6 +67,7 @@ class AnalysisViewModel(
                 KeyField.POLYGON -> state.keys.copy(polygonKey = value)
                 KeyField.FINNHUB -> state.keys.copy(finnhubKey = value)
                 KeyField.FMP -> state.keys.copy(fmpKey = value)
+                KeyField.TWELVE_DATA -> state.keys.copy(twelveDataKey = value)
                 KeyField.LLM -> state.keys.copy(llmKey = value)
             }
             state.copy(keys = keys)
@@ -99,7 +102,8 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val useCase = buildUseCase(apiKeys)
-                val result = useCase.execute(_uiState.value.intent)
+                val state = _uiState.value
+                val result = useCase.execute(state.intent, risk = state.appSettings.riskTolerance)
                 Logger.event("analysis_completed", mapOf("setups" to result.setups.size))
                 _uiState.update {
                     it.copy(
@@ -186,7 +190,13 @@ class AnalysisViewModel(
                 }
 
                 val useCase = buildSynthesisUseCase(state.keys.toApiKeys())
-                val synthesis = useCase.execute(setup, llmKey)
+                val synthesis = useCase.execute(
+                    setup = setup,
+                    llmKey = llmKey,
+                    reasoningDepth = state.appSettings.reasoningDepth,
+                    outputLength = state.appSettings.outputLength,
+                    verbosity = state.appSettings.verbosity
+                )
                 
                 // Save to cache
                 aiSummaryRepository.saveSummary(symbol, synthesis)
@@ -212,6 +222,62 @@ class AnalysisViewModel(
         }
     }
 
+    fun requestChartData(symbol: String) {
+        val state = _uiState.value
+        val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } ?: return
+        val existing = state.chartData[symbol]
+        if (existing?.status == ChartStatus.LOADING || existing?.status == ChartStatus.READY) return
+
+        updateChartData(symbol, ChartState(status = ChartStatus.LOADING))
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val apiKeys = _uiState.value.keys.toApiKeys()
+                val bundle = providerFactory.build(apiKeys)
+                val repository = MarketDataRepository(bundle)
+
+                val points = when (setup.intent) {
+                    TradingIntent.DAY_TRADE -> {
+                        repository.getIntraday(symbol, days = 2).map { 
+                            PricePoint(it.time, it.close) 
+                        }
+                    }
+                    TradingIntent.SWING, TradingIntent.LONG_TERM -> {
+                        repository.getDaily(symbol, days = 200).map { 
+                            PricePoint(it.date.atStartOfDay(ZoneId.systemDefault()).toInstant(), it.close) 
+                        }
+                    }
+                }
+
+                if (points.isNotEmpty()) {
+                    updateChartData(
+                        symbol,
+                        ChartState(
+                            status = ChartStatus.READY,
+                            points = points
+                        )
+                    )
+                } else {
+                    updateChartData(
+                        symbol,
+                        ChartState(
+                            status = ChartStatus.ERROR,
+                            errorMessage = "No price data returned from providers."
+                        )
+                    )
+                }
+            } catch (ex: Exception) {
+                Logger.e("ViewModel", "Failed to fetch chart data for $symbol", ex)
+                updateChartData(
+                    symbol,
+                    ChartState(
+                        status = ChartStatus.ERROR,
+                        errorMessage = ex.message ?: "Failed to load chart data."
+                    )
+                )
+            }
+        }
+    }
+
     fun suggestThresholdsWithAi(prompt: String) {
         val llmKey = _uiState.value.keys.llmKey
         if (llmKey.isBlank()) return
@@ -219,20 +285,19 @@ class AnalysisViewModel(
         _uiState.update { it.copy(isSuggestingThresholds = true) }
         viewModelScope.launch(ioDispatcher) {
             try {
-                val systemPrompt = """
-                    You are a financial alert threshold optimizer. Based on the user's input, suggest optimal values for:
-                    1. VWAP Dip %: How far below VWAP price should be to trigger an alert (typical 0.5 to 5.0).
-                    2. RSI Oversold: Threshold for oversold (typical 20 to 40).
-                    3. RSI Overbought: Threshold for overbought (typical 60 to 80).
-                    
-                    Return ONLY a JSON object with fields: vwapDipPercent, rsiOversold, rsiOverbought, rationale.
-                    Rationale should be a concise sentence explaining the choice based on their context.
-                """.trimIndent()
+                val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.THRESHOLD_SUGGESTION_SYSTEM.trimIndent()
 
-                val response = llmClient.generate(
+                val currentModel = _uiState.value.appSettings.llmModel
+                val client = llmClientFactory.create(currentModel)
+                
+                val settings = _uiState.value.appSettings
+                val response = client.generate(
                     prompt = "User context: $prompt",
                     systemPrompt = systemPrompt,
-                    apiKey = llmKey
+                    apiKey = llmKey,
+                    reasoningDepth = settings.reasoningDepth,
+                    outputLength = settings.outputLength,
+                    verbosity = settings.verbosity
                 )
 
                 val suggestion = parseAiThresholdSuggestion(response)
@@ -400,12 +465,19 @@ class AnalysisViewModel(
     ): SynthesizeSetupUseCase {
         val bundle = providerFactory.build(apiKeys)
         val repository = MarketDataRepository(bundle)
-        return SynthesizeSetupUseCase(repository, llmClient)
+        val client = llmClientFactory.create(_uiState.value.appSettings.llmModel)
+        return SynthesizeSetupUseCase(repository, client)
     }
 
     private fun updateAiSummary(symbol: String, summary: AiSummaryState) {
         _uiState.update { state ->
             state.copy(aiSummaries = state.aiSummaries + (symbol to summary))
+        }
+    }
+
+    private fun updateChartData(symbol: String, chartState: ChartState) {
+        _uiState.update { state ->
+            state.copy(chartData = state.chartData + (symbol to chartState))
         }
     }
 
@@ -433,5 +505,6 @@ enum class KeyField {
     POLYGON,
     FINNHUB,
     FMP,
+    TWELVE_DATA,
     LLM
 }

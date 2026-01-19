@@ -89,10 +89,15 @@ class MockMarketDataProvider(
     }
 
     override suspend fun getMetrics(symbol: String): FinancialMetrics? {
+        val nextEarnings = LocalDate.now(clock).plusDays(5).toString()
         return FinancialMetrics(
             marketCap = 125_000_000_000L,
             peRatio = 22.5,
-            eps = 3.2
+            eps = 3.2,
+            earningsDate = nextEarnings,
+            dividendYield = 0.015,
+            pbRatio = 3.8,
+            debtToEquity = 0.45
         )
     }
 

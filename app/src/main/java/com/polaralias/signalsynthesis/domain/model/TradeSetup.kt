@@ -11,5 +11,10 @@ data class TradeSetup(
     val confidence: Double,
     val reasons: List<String>,
     val validUntil: Instant,
-    val intent: TradingIntent
+    val intent: TradingIntent,
+    val intradayStats: IntradayStats? = null,
+    val eodStats: EodStats? = null,
+    val profile: CompanyProfile? = null,
+    val metrics: FinancialMetrics? = null,
+    val sentiment: SentimentData? = null
 )

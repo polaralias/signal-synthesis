@@ -15,8 +15,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.work.WorkManager
 import androidx.room.Room
-import com.polaralias.signalsynthesis.data.ai.OpenAiLlmClient
-import com.polaralias.signalsynthesis.data.ai.OpenAiService
 import com.polaralias.signalsynthesis.data.db.AppDatabase
 import com.polaralias.signalsynthesis.data.provider.ProviderFactory
 import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
@@ -80,8 +78,7 @@ private class AnalysisViewModelFactory(
             val alertStore = AlertSettingsStore(activity)
             val workManager = WorkManager.getInstance(activity)
             val workScheduler = WorkManagerScheduler(workManager)
-            val llmService = OpenAiService.create()
-            val llmClient = OpenAiLlmClient(llmService)
+            val llmClientFactory = com.polaralias.signalsynthesis.data.ai.LlmClientFactory()
             val dbRepository = RoomDatabaseRepository(db.watchlistDao(), db.historyDao())
             val appSettingsStore = AppSettingsStore(activity)
             val aiSummaryRepository = AiSummaryRepository(db.aiSummaryDao())
@@ -91,7 +88,7 @@ private class AnalysisViewModelFactory(
                 keyStore = keyStore,
                 alertStore = alertStore,
                 workScheduler = workScheduler,
-                llmClient = llmClient,
+                llmClientFactory = llmClientFactory,
                 dbRepository = dbRepository,
                 appSettingsStore = appSettingsStore,
                 aiSummaryRepository = aiSummaryRepository

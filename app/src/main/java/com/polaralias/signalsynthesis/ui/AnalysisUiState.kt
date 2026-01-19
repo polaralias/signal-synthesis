@@ -13,6 +13,7 @@ data class ApiKeyUiState(
     val polygonKey: String = "",
     val finnhubKey: String = "",
     val fmpKey: String = "",
+    val twelveDataKey: String = "",
     val llmKey: String = ""
 ) {
     fun toApiKeys(): ApiKeys = ApiKeys(
@@ -20,7 +21,8 @@ data class ApiKeyUiState(
         alpacaSecret = alpacaSecret.ifBlank { null },
         polygon = polygonKey.ifBlank { null },
         finnhub = finnhubKey.ifBlank { null },
-        financialModelingPrep = fmpKey.ifBlank { null }
+        financialModelingPrep = fmpKey.ifBlank { null },
+        twelveData = twelveDataKey.ifBlank { null }
     )
 
     companion object {
@@ -30,6 +32,7 @@ data class ApiKeyUiState(
             polygonKey = apiKeys.polygon.orEmpty(),
             finnhubKey = apiKeys.finnhub.orEmpty(),
             fmpKey = apiKeys.financialModelingPrep.orEmpty(),
+            twelveDataKey = apiKeys.twelveData.orEmpty(),
             llmKey = llmKey.orEmpty()
         )
     }
@@ -55,7 +58,26 @@ data class AnalysisUiState(
     val prefetchCount: Int = 0,
     val aiSummaries: Map<String, AiSummaryState> = emptyMap(),
     val marketOverview: MarketOverview? = null,
-    val isLoadingMarket: Boolean = false
+    val isLoadingMarket: Boolean = false,
+    val chartData: Map<String, ChartState> = emptyMap()
+)
+
+data class PricePoint(
+    val timestamp: Instant,
+    val price: Double
+)
+
+enum class ChartStatus {
+    IDLE,
+    LOADING,
+    READY,
+    ERROR
+}
+
+data class ChartState(
+    val status: ChartStatus = ChartStatus.IDLE,
+    val points: List<PricePoint> = emptyList(),
+    val errorMessage: String? = null
 )
 
 data class AiThresholdSuggestion(

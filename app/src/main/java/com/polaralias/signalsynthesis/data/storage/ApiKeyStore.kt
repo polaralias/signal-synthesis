@@ -33,7 +33,8 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
             alpacaSecret = preferences.getString(KEY_ALPACA_SECRET, null),
             polygon = preferences.getString(KEY_POLYGON, null),
             finnhub = preferences.getString(KEY_FINNHUB, null),
-            financialModelingPrep = preferences.getString(KEY_FMP, null)
+            financialModelingPrep = preferences.getString(KEY_FMP, null),
+            twelveData = preferences.getString(KEY_TWELVE_DATA, null)
         )
     }
 
@@ -49,6 +50,7 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
                 putOrRemove(KEY_POLYGON, apiKeys.polygon)
                 putOrRemove(KEY_FINNHUB, apiKeys.finnhub)
                 putOrRemove(KEY_FMP, apiKeys.financialModelingPrep)
+                putOrRemove(KEY_TWELVE_DATA, apiKeys.twelveData)
                 putOrRemove(KEY_LLM, llmKey)
                 apply()
             }
@@ -74,6 +76,7 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
         private const val KEY_POLYGON = "polygon_key"
         private const val KEY_FINNHUB = "finnhub_key"
         private const val KEY_FMP = "fmp_key"
+        private const val KEY_TWELVE_DATA = "twelve_data_key"
         private const val KEY_LLM = "llm_key"
     }
 }

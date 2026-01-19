@@ -7,6 +7,7 @@ import com.polaralias.signalsynthesis.domain.model.CompanyProfile
 import com.polaralias.signalsynthesis.domain.model.FinancialMetrics
 import com.polaralias.signalsynthesis.domain.model.SentimentData
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
+import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -14,61 +15,81 @@ class SynthesizeSetupUseCase(
     private val repository: MarketDataRepository,
     private val llmClient: LlmClient
 ) {
-    suspend fun execute(setup: TradeSetup, llmKey: String): AiSynthesis {
-        val profile = safeFetch { repository.getProfile(setup.symbol) }
-        val metrics = safeFetch { repository.getMetrics(setup.symbol) }
-        val sentiment = safeFetch { repository.getSentiment(setup.symbol) }
-
-        val prompt = buildPrompt(setup, profile, metrics, sentiment)
-        val rawResponse = llmClient.generate(prompt, apiKey = llmKey)
-        return parseResponse(rawResponse)
+    suspend fun execute(
+        setup: TradeSetup,
+        llmKey: String,
+        reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth = com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.BALANCED,
+        outputLength: com.polaralias.signalsynthesis.domain.ai.OutputLength = com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD,
+        verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM
+    ): AiSynthesis {
+        val prompt = buildPrompt(setup)
+        Logger.i("LLM", "Sending synthesis request for ${setup.symbol}")
+        Logger.d("LLM", "Prompt: $prompt")
+        
+        try {
+            val rawResponse = llmClient.generate(
+                prompt = prompt,
+                apiKey = llmKey,
+                reasoningDepth = reasoningDepth,
+                outputLength = outputLength,
+                verbosity = verbosity
+            )
+            Logger.i("LLM", "Received synthesis response for ${setup.symbol}")
+            Logger.d("LLM", "Response: $rawResponse")
+            return parseResponse(rawResponse)
+        } catch (e: Exception) {
+            Logger.e("LLM", "Failed to generate synthesis for ${setup.symbol}", e)
+            throw e
+        }
     }
 
-    private fun buildPrompt(
-        setup: TradeSetup,
-        profile: CompanyProfile?,
-        metrics: FinancialMetrics?,
-        sentiment: SentimentData?
-    ): String {
+    private fun buildPrompt(setup: TradeSetup): String {
         val contextLines = mutableListOf<String>()
-        profile?.let {
+        setup.profile?.let {
             contextLines.add("Company: ${it.name}")
             contextLines.add("Sector: ${it.sector ?: "Unknown"}")
             contextLines.add("Industry: ${it.industry ?: "Unknown"}")
             contextLines.add("Description: ${it.description ?: "N/A"}")
         }
-        metrics?.let {
+        setup.metrics?.let {
             contextLines.add("Market cap: ${it.marketCap ?: "N/A"}")
             contextLines.add("PE ratio: ${it.peRatio ?: "N/A"}")
             contextLines.add("EPS: ${it.eps ?: "N/A"}")
+            contextLines.add("Upcoming Earnings: ${it.earningsDate ?: "N/A"}")
+            contextLines.add("Dividend Yield: ${it.dividendYield ?: "N/A"}")
+            contextLines.add("P/B Ratio: ${it.pbRatio ?: "N/A"}")
+            contextLines.add("Debt-to-Equity: ${it.debtToEquity ?: "N/A"}")
         }
-        sentiment?.let {
+        setup.sentiment?.let {
             contextLines.add("Sentiment score: ${it.score ?: "N/A"}")
             contextLines.add("Sentiment label: ${it.label ?: "N/A"}")
         }
 
+        val technicalLines = mutableListOf<String>()
+        setup.intradayStats?.let {
+            it.rsi14?.let { rsi -> technicalLines.add("RSI (14): ${String.format("%.2f", rsi)}") }
+            it.vwap?.let { vwap -> technicalLines.add("VWAP: ${String.format("%.2f", vwap)}") }
+            it.atr14?.let { atr -> technicalLines.add("ATR (14): ${String.format("%.2f", atr)}") }
+        }
+        setup.eodStats?.let {
+            it.sma50?.let { sma -> technicalLines.add("SMA (50): ${String.format("%.2f", sma)}") }
+            it.sma200?.let { sma -> technicalLines.add("SMA (200): ${String.format("%.2f", sma)}") }
+        }
+
         val reasons = if (setup.reasons.isEmpty()) "None" else setup.reasons.joinToString("; ")
 
-        return """
-            Act as a senior trading analyst. Review the following setup and return JSON only.
-            Output schema:
-            {
-              "summary": "string",
-              "risks": ["string"],
-              "verdict": "string"
-            }
-
-            Ticker: ${setup.symbol}
-            Setup: ${setup.setupType}
-            Intent: ${setup.intent}
-            Trigger: ${setup.triggerPrice}
-            Stop: ${setup.stopLoss}
-            Target: ${setup.targetPrice}
-            Confidence: ${setup.confidence}
-            Reasons: $reasons
-            Context:
-            ${contextLines.joinToString("\n")}
-        """.trimIndent()
+        return com.polaralias.signalsynthesis.domain.ai.AiPrompts.SETUP_SYNTHESIS_TEMPLATE
+            .replace("{symbol}", setup.symbol)
+            .replace("{setupType}", setup.setupType)
+            .replace("{intent}", setup.intent.name)
+            .replace("{triggerPrice}", setup.triggerPrice.toString())
+            .replace("{stopLoss}", setup.stopLoss.toString())
+            .replace("{targetPrice}", setup.targetPrice.toString())
+            .replace("{confidence}", setup.confidence.toString())
+            .replace("{reasons}", reasons)
+            .replace("{technicalIndicators}", technicalLines.joinToString("\n"))
+            .replace("{context}", contextLines.joinToString("\n"))
+            .trimIndent()
     }
 
     private fun parseResponse(raw: String): AiSynthesis {

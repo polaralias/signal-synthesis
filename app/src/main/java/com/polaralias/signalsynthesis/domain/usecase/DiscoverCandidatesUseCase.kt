@@ -11,19 +11,33 @@ import com.polaralias.signalsynthesis.domain.model.TradingIntent
 class DiscoverCandidatesUseCase {
     
     /**
-     * Discover candidate symbols based on trading intent.
+     * Discover candidate symbols based on trading intent and risk tolerance.
      * 
      * @param intent The trading intent (DAY_TRADE, SWING, LONG_TERM)
+     * @param risk The user's risk tolerance
      * @return List of symbol candidates
      */
-    fun execute(intent: TradingIntent): List<String> {
-        // Start with a curated list of highly liquid stocks
-        // These represent major market movers with good volume
-        return when (intent) {
-            TradingIntent.DAY_TRADE -> dayTradeCandidates()
-            TradingIntent.SWING -> swingTradeCandidates()
-            TradingIntent.LONG_TERM -> longTermCandidates()
+    fun execute(
+        intent: com.polaralias.signalsynthesis.domain.model.TradingIntent,
+        risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE
+    ): List<String> {
+        val baseList = when (intent) {
+            com.polaralias.signalsynthesis.domain.model.TradingIntent.DAY_TRADE -> dayTradeCandidates()
+            com.polaralias.signalsynthesis.domain.model.TradingIntent.SWING -> swingTradeCandidates()
+            com.polaralias.signalsynthesis.domain.model.TradingIntent.LONG_TERM -> longTermCandidates()
         }
+
+        return when (risk) {
+            com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> {
+                // Filter out some of the more volatile names
+                baseList.filterNot { it in listOf("TSLA", "AMD", "NVDA", "NFLX") }
+            }
+            com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> baseList
+            com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> {
+                // Add some speculative/small cap names
+                baseList + listOf("RIOT", "MARA", "PLTR", "SOFI", "AMC", "GME")
+            }
+        }.distinct()
     }
     
     /**
