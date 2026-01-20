@@ -18,7 +18,7 @@ class RunAnalysisUseCase(
     private val repository: MarketDataRepository,
     private val clock: Clock = Clock.systemUTC()
 ) {
-    private val discoverCandidates = DiscoverCandidatesUseCase()
+    private val discoverCandidates = DiscoverCandidatesUseCase(repository)
     private val filterTradeable = FilterTradeableUseCase(repository)
     private val enrichIntraday = EnrichIntradayUseCase(repository)
     private val enrichContext = EnrichContextUseCase(repository)
@@ -30,14 +30,17 @@ class RunAnalysisUseCase(
      * 
      * @param intent Trading intent (DAY_TRADE, SWING, LONG_TERM)
      * @param risk User risk tolerance
+     * @param customTickers User-supplied list of tickers
      * @return AnalysisResult with counts and trade setups
      */
     suspend fun execute(
         intent: TradingIntent,
-        risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE
+        risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE,
+        customTickers: List<String> = emptyList(),
+        screenerThresholds: Map<String, Double> = emptyMap()
     ): AnalysisResult {
         // Step 1: Discover candidates
-        val candidates = discoverCandidates.execute(intent, risk)
+        val candidates = discoverCandidates.execute(intent, risk, customTickers, screenerThresholds)
         if (candidates.isEmpty()) {
             return AnalysisResult(
                 intent = intent,
@@ -86,7 +89,8 @@ class RunAnalysisUseCase(
             intradayStats = intradayStats,
             eodStats = eodStats,
             contextData = contextData,
-            intent = intent
+            intent = intent,
+            customTickers = customTickers
         )
         
         return AnalysisResult(

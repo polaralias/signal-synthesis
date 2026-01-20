@@ -125,7 +125,14 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onSuggestAi = viewModel::suggestThresholdsWithAi,
                 onApplyAi = viewModel::applyAiThresholdSuggestion,
                 onDismissAi = viewModel::dismissAiSuggestion,
-                onOpenLogs = { navController.navigate(Screen.Logs.route) }
+                onOpenLogs = { navController.navigate(Screen.Logs.route) },
+                onAddCustomTicker = viewModel::addCustomTicker,
+                onRemoveCustomTicker = viewModel::removeCustomTicker,
+                onSearchTickers = viewModel::searchTickers,
+                onClearTickerSearch = viewModel::clearTickerSearch,
+                onSuggestScreenerAi = viewModel::suggestScreenerWithAi,
+                onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
+                onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion
             )
         }
         composable(Screen.Logs.route) {

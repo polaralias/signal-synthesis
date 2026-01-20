@@ -16,5 +16,6 @@ data class TradeSetup(
     val eodStats: EodStats? = null,
     val profile: CompanyProfile? = null,
     val metrics: FinancialMetrics? = null,
-    val sentiment: SentimentData? = null
+    val sentiment: SentimentData? = null,
+    val isUserAdded: Boolean = false
 )

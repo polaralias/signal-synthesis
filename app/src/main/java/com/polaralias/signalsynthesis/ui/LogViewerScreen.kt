@@ -45,26 +45,26 @@ import java.time.format.DateTimeFormatter
 fun LogViewerScreen(
     onBack: () -> Unit
 ) {
-    val logs by Logger.logs.collectAsState()
+    val activities by com.polaralias.signalsynthesis.util.ActivityLogger.activities.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("System Logs") },
+                title = { Text("Activity Logs") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { Logger.clear() }) {
+                    IconButton(onClick = { com.polaralias.signalsynthesis.util.ActivityLogger.clear() }) {
                         Text("Clear")
                     }
                 }
             )
         }
     ) { paddingValues ->
-        if (logs.isEmpty()) {
+        if (activities.isEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -73,7 +73,7 @@ fun LogViewerScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    "No logs recorded yet.",
+                    "No activity recorded yet.",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -85,8 +85,8 @@ fun LogViewerScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(logs) { entry ->
-                    LogItem(entry)
+                items(activities) { entry ->
+                    ActivityItem(entry)
                 }
             }
         }
@@ -94,13 +94,10 @@ fun LogViewerScreen(
 }
 
 @Composable
-private fun LogItem(entry: LogEntry) {
-    val color = when (entry.level) {
-        LogLevel.DEBUG -> Color.Gray
-        LogLevel.INFO -> Color(0xFF2196F3)
-        LogLevel.WARN -> Color(0xFFFF9800)
-        LogLevel.ERROR -> Color(0xFFF44336)
-        LogLevel.EVENT -> Color(0xFF9C27B0)
+private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntry) {
+    val color = when (entry.type) {
+        com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST -> Color(0xFF2196F3)
+        com.polaralias.signalsynthesis.util.ActivityType.LLM_REQUEST -> Color(0xFF9C27B0)
     }
 
     Surface(
@@ -120,7 +117,7 @@ private fun LogItem(entry: LogEntry) {
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = entry.level.name.take(1),
+                        text = if (entry.type == com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST) "API" else "LLM",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
@@ -131,7 +128,7 @@ private fun LogItem(entry: LogEntry) {
                     text = entry.tag,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = color
+                    color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -140,33 +137,33 @@ private fun LogItem(entry: LogEntry) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text("Input:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
             Text(
-                text = entry.message,
-                style = MaterialTheme.typography.bodySmall.copy(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface
+                text = entry.input,
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                maxLines = 3
             )
-            entry.throwable?.let { stackTrace ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    color = Color.Black.copy(alpha = 0.05f),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stackTrace,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 10.sp
-                        ),
-                        modifier = Modifier.padding(8.dp),
-                        color = MaterialTheme.colorScheme.error,
-                        maxLines = 10
-                    )
-                }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text("Output:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = entry.output,
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                maxLines = 5,
+                color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+            )
+
+            if (entry.durationMs > 0) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "${entry.durationMs}ms",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.align(Alignment.End)
+                )
             }
         }
     }

@@ -46,6 +46,17 @@ interface FmpService {
         @Query("apikey") apiKey: String
     ): List<FmpNewsSentiment>
 
+        @Query("limit") limit: Int = 100,
+        @Query("apikey") apiKey: String
+    ): List<FmpScreenerResult>
+
+    @GET("v3/search")
+    suspend fun searchTickers(
+        @Query("query") query: String,
+        @Query("limit") limit: Int = 10,
+        @Query("apikey") apiKey: String
+    ): List<FmpSearchResult>
+
     companion object {
         private const val BASE_URL = "https://financialmodelingprep.com/api/"
 
@@ -62,6 +73,20 @@ interface FmpService {
         }
     }
 }
+
+data class FmpScreenerResult(
+    val symbol: String? = null,
+    val companyName: String? = null,
+    val price: Double? = null
+)
+
+data class FmpSearchResult(
+    val symbol: String? = null,
+    val name: String? = null,
+    val currency: String? = null,
+    val stockExchange: String? = null,
+    val exchangeShortName: String? = null
+)
 
 data class FmpQuote(
     val symbol: String? = null,

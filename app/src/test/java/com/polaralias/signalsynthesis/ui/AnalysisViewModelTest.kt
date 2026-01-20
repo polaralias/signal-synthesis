@@ -98,6 +98,15 @@ class AnalysisViewModelTest {
         assertNotNull(state.result)
     }
 
+    @Test
+    fun updateCustomTickersUpdatesState() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        viewModel.updateCustomTickers("AAPL, MSFT")
+
+        val state = viewModel.uiState.value
+        assertEquals("AAPL, MSFT", state.customTickers)
+    }
+
     private fun createViewModel(
         hasKeys: Boolean = false
     ): AnalysisViewModel {
@@ -107,7 +116,7 @@ class AnalysisViewModelTest {
             keyStore = keyStore,
             alertStore = FakeAlertSettingsStore(),
             workScheduler = FakeWorkScheduler(),
-            llmClient = FakeLlmClient(),
+            llmClientFactory = FakeLlmClientFactory(),
             dbRepository = FakeDatabaseRepository(),
             appSettingsStore = FakeAppSettingsStore(),
             aiSummaryRepository = AiSummaryRepository(FakeAiSummaryDao()),
@@ -119,7 +128,7 @@ class AnalysisViewModelTest {
     private class FakeProviderFactory : MarketDataProviderFactory {
         override fun build(keys: ApiKeys): ProviderBundle {
             return ProviderBundle(
-                emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList()
+                emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList(), emptyList()
             )
         }
     }
@@ -166,8 +175,21 @@ class AnalysisViewModelTest {
         override suspend fun clear() {}
     }
 
+    private class FakeLlmClientFactory : com.polaralias.signalsynthesis.data.ai.LlmClientFactory() {
+        override fun create(model: com.polaralias.signalsynthesis.domain.ai.LlmModel): LlmClient {
+            return FakeLlmClient()
+        }
+    }
+
     private class FakeLlmClient : LlmClient {
-        override suspend fun generate(prompt: String, systemPrompt: String?, apiKey: String): String {
+        override suspend fun generate(
+            prompt: String,
+            systemPrompt: String?,
+            apiKey: String,
+            reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth,
+            outputLength: com.polaralias.signalsynthesis.domain.ai.OutputLength,
+            verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity
+        ): String {
             return """
                 {
                   "summary": "Fake summary",

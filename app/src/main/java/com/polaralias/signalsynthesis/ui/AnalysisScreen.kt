@@ -79,17 +79,32 @@ fun AnalysisScreen(
                 )
             }
 
+
             SectionHeader("Keys")
             if (!uiState.hasAnyApiKeys) {
-                Text(
-                    text = "Add provider keys before running analysis.",
-                    color = MaterialTheme.colorScheme.error
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.Card(
+                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "MOCK MODE ACTIVE",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = "No API keys configured. Using simulated data for demonstration.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onOpenKeys) {
-                    Text("Configure Keys")
+                    Text(if (uiState.hasAnyApiKeys) "Configure Keys" else "Add Keys")
                 }
                 OutlinedButton(onClick = onOpenSettings) {
                     Text("Settings")

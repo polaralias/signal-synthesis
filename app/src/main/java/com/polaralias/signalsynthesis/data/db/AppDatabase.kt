@@ -9,7 +9,7 @@ import com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity
 import com.polaralias.signalsynthesis.data.db.entity.HistoryEntity
 import com.polaralias.signalsynthesis.data.db.entity.WatchlistEntity
 
-@Database(entities = [WatchlistEntity::class, HistoryEntity::class, AiSummaryEntity::class], version = 1)
+@Database(entities = [WatchlistEntity::class, HistoryEntity::class, AiSummaryEntity::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun watchlistDao(): WatchlistDao
     abstract fun historyDao(): HistoryDao

@@ -8,18 +8,25 @@ import com.polaralias.signalsynthesis.domain.model.TradingIntent
  * In the initial implementation, this returns a curated list of high-liquidity symbols.
  * Future versions may integrate with a screener API or dynamic discovery logic.
  */
-class DiscoverCandidatesUseCase {
+import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
+
+class DiscoverCandidatesUseCase(
+    private val repository: MarketDataRepository
+) {
     
     /**
      * Discover candidate symbols based on trading intent and risk tolerance.
      * 
      * @param intent The trading intent (DAY_TRADE, SWING, LONG_TERM)
      * @param risk The user's risk tolerance
+     * @param customTickers User-supplied list of tickers to include
      * @return List of symbol candidates
      */
-    fun execute(
+    suspend fun execute(
         intent: com.polaralias.signalsynthesis.domain.model.TradingIntent,
-        risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE
+        risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE,
+        customTickers: List<String> = emptyList(),
+        screenerThresholds: Map<String, Double> = emptyMap()
     ): List<String> {
         val baseList = when (intent) {
             com.polaralias.signalsynthesis.domain.model.TradingIntent.DAY_TRADE -> dayTradeCandidates()
@@ -27,17 +34,36 @@ class DiscoverCandidatesUseCase {
             com.polaralias.signalsynthesis.domain.model.TradingIntent.LONG_TERM -> longTermCandidates()
         }
 
-        return when (risk) {
+        val riskFiltered = when (risk) {
             com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> {
-                // Filter out some of the more volatile names
                 baseList.filterNot { it in listOf("TSLA", "AMD", "NVDA", "NFLX") }
             }
             com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> baseList
             com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> {
-                // Add some speculative/small cap names
                 baseList + listOf("RIOT", "MARA", "PLTR", "SOFI", "AMC", "GME")
             }
-        }.distinct()
+        }
+
+        // Fetch from Screener
+        val (minVol, minPrice) = when (risk) {
+            com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> 2_000_000L to (screenerThresholds["conservative"] ?: 20.0)
+            com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> 1_000_000L to (screenerThresholds["moderate"] ?: 10.0)
+            com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> 500_000L to (screenerThresholds["aggressive"] ?: 2.0)
+        }
+        
+        val screened = try {
+            repository.screenStocks(
+                minPrice = minPrice, 
+                maxPrice = null,
+                minVolume = minVol, 
+                sector = null,
+                limit = 20
+            )
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        return (riskFiltered + screened + customTickers).distinct()
     }
     
     /**

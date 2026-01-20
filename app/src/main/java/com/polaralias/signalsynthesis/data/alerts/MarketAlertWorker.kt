@@ -12,6 +12,13 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.polaralias.signalsynthesis.MainActivity
 import com.polaralias.signalsynthesis.R
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.Constraints
+import java.util.concurrent.TimeUnit
 import com.polaralias.signalsynthesis.data.provider.ProviderFactory
 import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
 import com.polaralias.signalsynthesis.data.storage.AlertSettingsStore
@@ -58,13 +65,36 @@ class MarketAlertWorker(
             }
         }
 
-        if (alerts.isEmpty()) return Result.success()
+        if (alerts.isNotEmpty()) {
+            ensureChannel()
+            for (event in alerts) {
+                NotificationManagerCompat.from(applicationContext).notify(
+                    event.notificationId,
+                    buildNotification(event)
+                )
+            }
+        }
 
-        ensureChannel()
-        for (event in alerts) {
-            NotificationManagerCompat.from(applicationContext).notify(
-                event.notificationId,
-                buildNotification(event)
+        // Handle high-frequency rescheduling
+        val isHighFreq = inputData.getBoolean("isHighFreq", false)
+        val intervalMinutes = inputData.getInt("intervalMinutes", 15)
+        
+        if (isHighFreq && settings.enabled) {
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
+                
+            val nextRequest = OneTimeWorkRequestBuilder<MarketAlertWorker>()
+                .setConstraints(constraints)
+                .setInputData(inputData)
+                .setInitialDelay(intervalMinutes.toLong(), TimeUnit.MINUTES)
+                .addTag(WORK_TAG)
+                .build()
+                
+            WorkManager.getInstance(applicationContext).enqueueUniqueWork(
+                WORK_NAME,
+                ExistingWorkPolicy.REPLACE,
+                nextRequest
             )
         }
 

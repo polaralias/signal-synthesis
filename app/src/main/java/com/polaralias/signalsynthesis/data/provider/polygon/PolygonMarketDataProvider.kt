@@ -27,7 +27,27 @@ class PolygonMarketDataProvider(
     DailyProvider,
     ProfileProvider,
     MetricsProvider,
-    SentimentProvider {
+    SentimentProvider,
+    com.polaralias.signalsynthesis.domain.provider.ScreenerProvider {
+
+    override suspend fun screenStocks(
+        minPrice: Double?,
+        maxPrice: Double?,
+        minVolume: Long?,
+        sector: String?,
+        limit: Int
+    ): List<String> {
+        return try {
+            val response = service.listTickers(
+                type = "CS", // Common Set
+                limit = limit,
+                apiKey = apiKey
+            )
+            response.results?.mapNotNull { it.ticker } ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()

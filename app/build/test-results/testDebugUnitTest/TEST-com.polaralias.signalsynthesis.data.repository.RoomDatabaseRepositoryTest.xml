@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-18T14:48:42" hostname="LAPTOP" time="2.295">
+<testsuite name="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:27" hostname="LAPTOP" time="2.258">
   <properties/>
-  <testcase name="history_clear" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="1.926"/>
-  <testcase name="history_saveAndGet" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="0.208"/>
-  <testcase name="watchlist_addAndRemove" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="0.16"/>
+  <testcase name="history_clear" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="1.899"/>
+  <testcase name="history_saveAndGet" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="0.176"/>
+  <testcase name="watchlist_addAndRemove" classname="com.polaralias.signalsynthesis.data.repository.RoomDatabaseRepositoryTest" time="0.183"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

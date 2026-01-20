@@ -29,7 +29,47 @@ class FmpMarketDataProvider(
     DailyProvider,
     ProfileProvider,
     MetricsProvider,
-    SentimentProvider {
+    SentimentProvider,
+    com.polaralias.signalsynthesis.domain.provider.ScreenerProvider,
+    com.polaralias.signalsynthesis.domain.provider.SearchProvider {
+
+    override suspend fun searchSymbols(query: String, limit: Int): List<com.polaralias.signalsynthesis.domain.provider.SearchResult> {
+        if (query.isBlank()) return emptyList()
+        return try {
+            val results = service.searchTickers(query, limit, apiKey)
+            results.map {
+                com.polaralias.signalsynthesis.domain.provider.SearchResult(
+                    symbol = it.symbol ?: "",
+                    name = it.name ?: "",
+                    exchange = it.exchangeShortName ?: it.stockExchange
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    override suspend fun screenStocks(
+        minPrice: Double?,
+        maxPrice: Double?,
+        minVolume: Long?,
+        sector: String?,
+        limit: Int
+    ): List<String> {
+        return try {
+            val results = service.stockScreener(
+                priceMin = minPrice,
+                priceMax = maxPrice,
+                volumeMin = minVolume,
+                sector = sector,
+                limit = limit,
+                apiKey = apiKey
+            )
+            results.mapNotNull { it.symbol }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()

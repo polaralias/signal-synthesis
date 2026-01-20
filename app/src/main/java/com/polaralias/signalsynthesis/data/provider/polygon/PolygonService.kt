@@ -36,6 +36,15 @@ interface PolygonService {
         @Query("apiKey") apiKey: String
     ): PolygonTickerDetailsResponse
 
+    @GET("v3/reference/tickers")
+    suspend fun listTickers(
+        @Query("market") market: String = "stocks",
+        @Query("active") active: Boolean = true,
+        @Query("type") type: String? = "CS",
+        @Query("limit") limit: Int = 100,
+        @Query("apiKey") apiKey: String
+    ): PolygonTickersResponse
+
     companion object {
         private const val BASE_URL = "https://api.polygon.io/"
 
@@ -52,6 +61,22 @@ interface PolygonService {
         }
     }
 }
+
+data class PolygonTickersResponse(
+    val status: String? = null,
+    val results: List<PolygonTickerResult>? = null,
+    val count: Int? = null
+)
+
+data class PolygonTickerResult(
+    val ticker: String? = null,
+    val name: String? = null,
+    val market: String? = null,
+    val locale: String? = null,
+    val type: String? = null,
+    val active: Boolean? = null,
+    val currency_name: String? = null
+)
 
 data class PolygonSnapshotResponse(
     val status: String? = null,

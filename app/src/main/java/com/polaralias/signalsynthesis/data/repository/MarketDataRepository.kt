@@ -9,11 +9,21 @@ import com.polaralias.signalsynthesis.domain.model.IntradayBar
 import com.polaralias.signalsynthesis.domain.model.Quote
 import com.polaralias.signalsynthesis.domain.model.SentimentData
 import com.polaralias.signalsynthesis.data.provider.RetryHelper
+import com.polaralias.signalsynthesis.domain.provider.SearchResult
 import com.polaralias.signalsynthesis.util.Logger
 
 class MarketDataRepository(
     private val providers: ProviderBundle
 ) {
+    suspend fun searchSymbols(query: String): List<SearchResult> {
+        if (query.isBlank()) return emptyList()
+        return tryProviders(
+            dataType = "Search($query)",
+            providers = providers.searchProviders,
+            fetch = { it.searchSymbols(query) },
+            isValid = { it.isNotEmpty() }
+        ) ?: emptyList()
+    }
     private val quoteCache = TimedCache<String, Map<String, Quote>>(QUOTE_TTL_MILLIS)
     private val intradayCache = TimedCache<String, List<IntradayBar>>(INTRADAY_TTL_MILLIS)
     private val dailyCache = TimedCache<String, List<DailyBar>>(DAILY_TTL_MILLIS)
@@ -132,6 +142,22 @@ class MarketDataRepository(
         return result
     }
 
+    suspend fun screenStocks(
+        minPrice: Double?,
+        maxPrice: Double?,
+        minVolume: Long?,
+        sector: String?,
+        limit: Int
+    ): List<String> {
+        val result = tryProviders(
+            dataType = "Screener",
+            providers = providers.screenerProviders,
+            fetch = { it.screenStocks(minPrice, maxPrice, minVolume, sector, limit) },
+            isValid = { it.isNotEmpty() }
+        )
+        return result ?: emptyList()
+    }
+
     private suspend fun <P : Any, T> tryProviders(
         dataType: String,
         providers: List<P>,
@@ -139,6 +165,7 @@ class MarketDataRepository(
         isValid: (T) -> Boolean
     ): T? {
         Logger.i("Repository", "Fetching $dataType from ${providers.size} providers")
+        val startTime = System.currentTimeMillis()
         for (provider in providers) {
             val providerName = provider::class.simpleName ?: "Unknown"
             try {
@@ -146,11 +173,14 @@ class MarketDataRepository(
                     fetch(provider)
                 }
                 if (isValid(result)) {
+                    val duration = System.currentTimeMillis() - startTime
+                    com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, dataType, "Success", true, duration)
                     Logger.i("Repository", "SUCCESS: $dataType from $providerName")
                     return result
                 }
                 Logger.w("Repository", "EMPTY: $dataType from $providerName")
             } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, dataType, e.message ?: "Failed", false, 0)
                 Logger.w("Repository", "FAILED: $dataType from $providerName", e)
             }
         }

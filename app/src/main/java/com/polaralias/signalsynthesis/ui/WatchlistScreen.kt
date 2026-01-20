@@ -1,5 +1,4 @@
 package com.polaralias.signalsynthesis.ui
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -56,12 +55,13 @@ fun WatchlistScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(uiState.watchlist) { symbol ->
-                    val intent = uiState.result?.setups?.find { it.symbol == symbol }?.intent
-                        ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }?.intent
+                    val setup = uiState.result?.setups?.find { it.symbol == symbol }
+                        ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }
                     
                     WatchlistItem(
                         symbol = symbol,
-                        intent = intent,
+                        intent = setup?.intent,
+                        isUserAdded = setup?.isUserAdded ?: false,
                         onClick = { onOpenSymbol(symbol) },
                         onRemove = { onRemove(symbol) }
                     )
@@ -75,6 +75,7 @@ fun WatchlistScreen(
 private fun WatchlistItem(
     symbol: String,
     intent: com.polaralias.signalsynthesis.domain.model.TradingIntent?,
+    isUserAdded: Boolean,
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
@@ -90,6 +91,10 @@ private fun WatchlistItem(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(symbol, style = MaterialTheme.typography.titleMedium)
+                if (isUserAdded) {
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
+                    Text("👤", style = MaterialTheme.typography.labelSmall)
+                }
                 intent?.let {
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                     IntentBadge(it)

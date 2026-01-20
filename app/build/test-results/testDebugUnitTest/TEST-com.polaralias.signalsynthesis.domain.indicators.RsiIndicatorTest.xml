@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-18T14:48:44" hostname="LAPTOP" time="0.006">
+<testsuite name="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:29" hostname="LAPTOP" time="0.002">
   <properties/>
-  <testcase name="calculateReturns100ForAllGains" classname="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" time="0.004"/>
+  <testcase name="calculateReturns100ForAllGains" classname="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" time="0.001"/>
   <testcase name="calculateReturnsNullForInsufficientData" classname="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" time="0.0"/>
-  <testcase name="calculateReturns50ForFlatSeries" classname="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" time="0.001"/>
+  <testcase name="calculateReturns50ForFlatSeries" classname="com.polaralias.signalsynthesis.domain.indicators.RsiIndicatorTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

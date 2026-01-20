@@ -6,6 +6,7 @@ import com.polaralias.signalsynthesis.domain.provider.MetricsProvider
 import com.polaralias.signalsynthesis.domain.provider.ProfileProvider
 import com.polaralias.signalsynthesis.domain.provider.QuoteProvider
 import com.polaralias.signalsynthesis.domain.provider.SentimentProvider
+import com.polaralias.signalsynthesis.domain.provider.ScreenerProvider
 
 data class ProviderBundle(
     val quoteProviders: List<QuoteProvider>,
@@ -13,7 +14,9 @@ data class ProviderBundle(
     val dailyProviders: List<DailyProvider>,
     val profileProviders: List<ProfileProvider>,
     val metricsProviders: List<MetricsProvider>,
-    val sentimentProviders: List<SentimentProvider>
+    val sentimentProviders: List<SentimentProvider>,
+    val screenerProviders: List<ScreenerProvider> = emptyList(),
+    val searchProviders: List<com.polaralias.signalsynthesis.domain.provider.SearchProvider> = emptyList()
 ) {
     fun isEmpty(): Boolean {
         return quoteProviders.isEmpty() &&
@@ -21,7 +24,9 @@ data class ProviderBundle(
             dailyProviders.isEmpty() &&
             profileProviders.isEmpty() &&
             metricsProviders.isEmpty() &&
-            sentimentProviders.isEmpty()
+            sentimentProviders.isEmpty() &&
+            screenerProviders.isEmpty() &&
+            searchProviders.isEmpty()
     }
 
     companion object {
@@ -32,7 +37,9 @@ data class ProviderBundle(
                 dailyProviders = emptyList(),
                 profileProviders = emptyList(),
                 metricsProviders = emptyList(),
-                sentimentProviders = emptyList()
+                sentimentProviders = emptyList(),
+                screenerProviders = emptyList(),
+                searchProviders = emptyList()
             )
         }
     }

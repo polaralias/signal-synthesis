@@ -24,7 +24,19 @@ class MockMarketDataProvider(
     DailyProvider,
     ProfileProvider,
     MetricsProvider,
-    SentimentProvider {
+    SentimentProvider,
+    com.polaralias.signalsynthesis.domain.provider.ScreenerProvider {
+
+    override suspend fun screenStocks(
+        minPrice: Double?,
+        maxPrice: Double?,
+        minVolume: Long?,
+        sector: String?,
+        limit: Int
+    ): List<String> {
+        // Return a static list of popular tickers for mock data
+        return listOf("AAPL", "NVDA", "AMD", "TSLA", "MSFT", "PLTR", "SOFI", "COIN")
+    }
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         val now = Instant.now(clock)

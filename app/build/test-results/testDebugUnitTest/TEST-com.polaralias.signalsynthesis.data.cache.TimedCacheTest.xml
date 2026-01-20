@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-01-18T14:48:30" hostname="LAPTOP" time="0.042">
+<testsuite name="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:16" hostname="LAPTOP" time="0.029">
   <properties/>
-  <testcase name="removeDeletesSpecificKey" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.02"/>
-  <testcase name="getReturnsNullAfterExpiration" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.005"/>
+  <testcase name="removeDeletesSpecificKey" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.017"/>
+  <testcase name="getReturnsNullAfterExpiration" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.003"/>
   <testcase name="putThenGetReturnsValue" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.001"/>
-  <testcase name="getReturnsNullForMissingKey" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.0"/>
-  <testcase name="clearRemovesAllEntries" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.0"/>
+  <testcase name="getReturnsNullForMissingKey" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.001"/>
+  <testcase name="clearRemovesAllEntries" classname="com.polaralias.signalsynthesis.data.cache.TimedCacheTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

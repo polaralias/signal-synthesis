@@ -40,6 +40,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.polaralias.signalsynthesis.util.UsageTracker.init(this)
         CrashReporter.init(true)
         notificationSymbol.value = intent?.getStringExtra(EXTRA_SYMBOL)
         setContent {

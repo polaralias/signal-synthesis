@@ -54,7 +54,15 @@ fun SetupDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(symbol) },
+                title = { 
+                    androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(symbol)
+                        if (setup?.isUserAdded == true) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("👤", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Text("Back")

@@ -18,7 +18,11 @@ data class AppSettings(
     val reasoningDepth: ReasoningDepth = ReasoningDepth.BALANCED,
     val outputLength: OutputLength = OutputLength.STANDARD,
     val verbosity: Verbosity = Verbosity.MEDIUM,
-    val riskTolerance: RiskTolerance = RiskTolerance.MODERATE
+    val riskTolerance: RiskTolerance = RiskTolerance.MODERATE,
+    val screenerConservativeThreshold: Double = 5.0, // e.g. Max Price for conservative
+    val screenerModerateThreshold: Double = 20.0,
+    val screenerAggressiveThreshold: Double = 100.0,
+    val screenerMinVolume: Long = 1_000_000L
 )
 
 enum class RiskTolerance { CONSERVATIVE, MODERATE, AGGRESSIVE }

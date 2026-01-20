@@ -204,6 +204,10 @@ private fun RecentResultsSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(setup.symbol, fontWeight = FontWeight.Bold)
+                                if (setup.isUserAdded) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("👤", style = MaterialTheme.typography.labelSmall)
+                                }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 IntentBadge(setup.intent)
                             }

@@ -38,6 +38,11 @@ data class ApiKeyUiState(
     }
 }
 
+data class TickerEntry(
+    val symbol: String,
+    val isUserAdded: Boolean
+)
+
 data class AnalysisUiState(
     val intent: TradingIntent = TradingIntent.DAY_TRADE,
     val isLoading: Boolean = false,
@@ -54,12 +59,26 @@ data class AnalysisUiState(
     val appSettings: AppSettings = AppSettings(),
     val aiThresholdSuggestion: AiThresholdSuggestion? = null,
     val isSuggestingThresholds: Boolean = false,
+    val aiScreenerSuggestion: AiScreenerSuggestion? = null,
+    val isSuggestingScreener: Boolean = false,
     val isPrefetching: Boolean = false,
     val prefetchCount: Int = 0,
     val aiSummaries: Map<String, AiSummaryState> = emptyMap(),
     val marketOverview: MarketOverview? = null,
     val isLoadingMarket: Boolean = false,
-    val chartData: Map<String, ChartState> = emptyMap()
+    val chartData: Map<String, ChartState> = emptyMap(),
+    val customTickers: List<TickerEntry> = emptyList(),
+    val tickerSearchResults: List<com.polaralias.signalsynthesis.domain.provider.SearchResult> = emptyList(),
+    val isSearchingTickers: Boolean = false,
+    val monthlyApiUsage: Int = 0,
+    val monthlyProviderUsage: Map<String, Int> = emptyMap()
+)
+
+data class AiScreenerSuggestion(
+    val conservativeLimit: Double,
+    val moderateLimit: Double,
+    val aggressiveLimit: Double,
+    val rationale: String
 )
 
 data class PricePoint(

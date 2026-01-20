@@ -54,13 +54,17 @@ class ProviderFactory(
         // For sentiment: prefer FMP/Finnhub (only ones with sentiment)
         val sentimentProviders = listOfNotNull(fmpProvider, finnhubProvider, mockProvider)
 
+        // For screener: prefer FMP (native screener) > Polygon (tickers list) > Mock
+        val screenerProviders = listOfNotNull(fmpProvider, polygonProvider, mockProvider)
+
         return ProviderBundle(
             quoteProviders = quoteProviders,
             intradayProviders = intradayProviders,
             dailyProviders = dailyProviders,
             profileProviders = profileProviders,
             metricsProviders = metricsProviders,
-            sentimentProviders = sentimentProviders
+            sentimentProviders = sentimentProviders,
+            screenerProviders = screenerProviders
         )
     }
 }

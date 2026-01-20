@@ -53,6 +53,7 @@ class AnalysisViewModel(
         observeHistory()
         observeAppSettings()
         refreshMarketOverview()
+        observeMonthlyUsage()
     }
 
     fun updateIntent(intent: TradingIntent) {
@@ -90,6 +91,29 @@ class AnalysisViewModel(
         }
     }
 
+    fun addCustomTicker(symbol: String) {
+        val upper = symbol.trim().uppercase()
+        if (upper.isBlank()) return
+        val current = _uiState.value.customTickers
+        if (current.any { it.symbol == upper }) return
+        
+        val newList = current + TickerEntry(upper, true)
+        _uiState.update { it.copy(customTickers = newList) }
+        saveCustomTickers(newList.map { it.symbol })
+    }
+
+    fun removeCustomTicker(symbol: String) {
+        val newList = _uiState.value.customTickers.filter { it.symbol != symbol }
+        _uiState.update { it.copy(customTickers = newList) }
+        saveCustomTickers(newList.map { it.symbol })
+    }
+
+    private fun saveCustomTickers(tickers: List<String>) {
+        viewModelScope.launch(ioDispatcher) {
+            (appSettingsStore as? AppSettingsStore)?.saveCustomTickers(tickers)
+        }
+    }
+
     fun runAnalysis() {
         val apiKeys = _uiState.value.keys.toApiKeys()
         if (!apiKeys.hasAny()) {
@@ -103,7 +127,23 @@ class AnalysisViewModel(
             try {
                 val useCase = buildUseCase(apiKeys)
                 val state = _uiState.value
-                val result = useCase.execute(state.intent, risk = state.appSettings.riskTolerance)
+                val customTickerList = state.customTickers.map { it.symbol }
+                
+                Logger.event("analysis_input", mapOf(
+                    "custom_tickers_count" to customTickerList.size,
+                    "provider_screener_enabled" to (state.hasAnyApiKeys)
+                ))
+
+                val result = useCase.execute(
+                    intent = state.intent,
+                    risk = state.appSettings.riskTolerance,
+                    customTickers = customTickerList,
+                    screenerThresholds = mapOf(
+                        "conservative" to state.appSettings.screenerConservativeThreshold,
+                        "moderate" to state.appSettings.screenerModerateThreshold,
+                        "aggressive" to state.appSettings.screenerAggressiveThreshold
+                    )
+                )
                 Logger.event("analysis_completed", mapOf("setups" to result.setups.size))
                 _uiState.update {
                     it.copy(
@@ -291,6 +331,7 @@ class AnalysisViewModel(
                 val client = llmClientFactory.create(currentModel)
                 
                 val settings = _uiState.value.appSettings
+                val startTime = System.currentTimeMillis()
                 val response = client.generate(
                     prompt = "User context: $prompt",
                     systemPrompt = systemPrompt,
@@ -299,13 +340,77 @@ class AnalysisViewModel(
                     outputLength = settings.outputLength,
                     verbosity = settings.verbosity
                 )
+                val duration = System.currentTimeMillis() - startTime
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, response, true, duration)
 
                 val suggestion = parseAiThresholdSuggestion(response)
                 _uiState.update { it.copy(aiThresholdSuggestion = suggestion, isSuggestingThresholds = false) }
             } catch (ex: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, ex.message ?: "Failed", false, 0)
                 _uiState.update { it.copy(isSuggestingThresholds = false, errorMessage = "AI suggestion failed: ${ex.message}") }
             }
         }
+    }
+
+    fun suggestScreenerWithAi(prompt: String) {
+        val llmKey = _uiState.value.keys.llmKey
+        if (llmKey.isBlank()) return
+
+        _uiState.update { it.copy(isSuggestingScreener = true) }
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val systemPrompt = """
+                    You are a stock market expert. Based on the user's trading style, suggest price thresholds for Conservative, Moderate, and Aggressive stock screening.
+                    Conservative: Low volatility, steady stocks (usually lower price/market cap limits or higher quality).
+                    Moderate: Balanced risk.
+                    Aggressive: High risk/reward, potentially low-priced or high-volatility stocks.
+                    
+                    Return a JSON object:
+                    {
+                      "conservativeLimit": double,
+                      "moderateLimit": double,
+                      "aggressiveLimit": double,
+                      "rationale": "short explanation"
+                    }
+                """.trimIndent()
+
+                val settings = _uiState.value.appSettings
+                val client = llmClientFactory.create(settings.llmModel)
+                val startTime = System.currentTimeMillis()
+                val response = client.generate(
+                    prompt = "User context: $prompt",
+                    systemPrompt = systemPrompt,
+                    apiKey = llmKey,
+                    reasoningDepth = settings.reasoningDepth,
+                    outputLength = settings.outputLength,
+                    verbosity = settings.verbosity
+                )
+                val duration = System.currentTimeMillis() - startTime
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, response, true, duration)
+
+                val suggestion = parseAiScreenerSuggestion(response)
+                _uiState.update { it.copy(aiScreenerSuggestion = suggestion, isSuggestingScreener = false) }
+            } catch (ex: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, ex.message ?: "Failed", false, 0)
+                _uiState.update { it.copy(isSuggestingScreener = false, errorMessage = "AI suggestion failed: ${ex.message}") }
+            }
+        }
+    }
+
+    fun applyAiScreenerSuggestion() {
+        _uiState.value.aiScreenerSuggestion?.let { suggestion ->
+            val updated = _uiState.value.appSettings.copy(
+                screenerConservativeThreshold = suggestion.conservativeLimit,
+                screenerModerateThreshold = suggestion.moderateLimit,
+                screenerAggressiveThreshold = suggestion.aggressiveLimit
+            )
+            updateAppSettings(updated)
+            _uiState.update { it.copy(aiScreenerSuggestion = null) }
+        }
+    }
+
+    fun dismissAiScreenerSuggestion() {
+        _uiState.update { it.copy(aiScreenerSuggestion = null) }
     }
 
     fun applyAiThresholdSuggestion() {
@@ -321,6 +426,7 @@ class AnalysisViewModel(
     }
 
     fun updateAppSettings(settings: AppSettings) {
+        val oldInterval = _uiState.value.appSettings.alertCheckIntervalMinutes
         viewModelScope.launch(ioDispatcher) {
             appSettingsStore.saveSettings(settings)
             
@@ -332,7 +438,35 @@ class AnalysisViewModel(
             ))
             
             _uiState.update { it.copy(appSettings = settings) }
+            
+            if (_uiState.value.alertsEnabled && oldInterval != settings.alertCheckIntervalMinutes) {
+                workScheduler.scheduleAlerts(true, settings.alertCheckIntervalMinutes)
+            }
         }
+    }
+
+    fun searchTickers(query: String) {
+        if (query.length < 2) {
+            _uiState.update { it.copy(tickerSearchResults = emptyList()) }
+            return
+        }
+        
+        _uiState.update { it.copy(isSearchingTickers = true) }
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val apiKeys = _uiState.value.keys.toApiKeys()
+                val bundle = providerFactory.build(apiKeys)
+                val repository = MarketDataRepository(bundle)
+                val results = repository.searchSymbols(query)
+                _uiState.update { it.copy(tickerSearchResults = results, isSearchingTickers = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isSearchingTickers = false) }
+            }
+        }
+    }
+
+    fun clearTickerSearch() {
+        _uiState.update { it.copy(tickerSearchResults = emptyList()) }
     }
 
     fun dismissAiSuggestion() {
@@ -348,7 +482,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val current = alertStore.loadSettings()
             alertStore.saveSettings(current.copy(enabled = enabled))
-            workScheduler.scheduleAlerts(enabled)
+            workScheduler.scheduleAlerts(enabled, _uiState.value.appSettings.alertCheckIntervalMinutes)
         }
     }
 
@@ -484,18 +618,57 @@ class AnalysisViewModel(
     private fun observeAppSettings() {
         viewModelScope.launch(ioDispatcher) {
             val settings = appSettingsStore.loadSettings()
-            _uiState.update { it.copy(appSettings = settings) }
+            val custom = (appSettingsStore as? AppSettingsStore)?.loadCustomTickers() ?: emptyList()
+            _uiState.update { 
+                it.copy(
+                    appSettings = settings,
+                    customTickers = custom.map { TickerEntry(it, true) }
+                ) 
+            }
+        }
+    }
+
+    private fun observeMonthlyUsage() {
+        viewModelScope.launch {
+            com.polaralias.signalsynthesis.util.UsageTracker.monthlyApiCount.collect { count ->
+                _uiState.update { it.copy(monthlyApiUsage = count) }
+            }
+        }
+        viewModelScope.launch {
+            com.polaralias.signalsynthesis.util.UsageTracker.monthlyProviderUsage.collect { usage ->
+                _uiState.update { it.copy(monthlyProviderUsage = usage) }
+            }
         }
     }
 
     private fun parseAiThresholdSuggestion(json: String): AiThresholdSuggestion {
-        // Very basic manual parsing for demonstration. In a real app, use Moshi/Gson.
-        val vwap = Regex("\"vwapDipPercent\":\\s*([0-9.]+)").find(json)?.groupValues?.get(1)?.toDouble() ?: 1.0
-        val oversold = Regex("\"rsiOversold\":\\s*([0-9.]+)").find(json)?.groupValues?.get(1)?.toDouble() ?: 30.0
-        val overbought = Regex("\"rsiOverbought\":\\s*([0-9.]+)").find(json)?.groupValues?.get(1)?.toDouble() ?: 70.0
-        val rationale = Regex("\"rationale\":\\s*\"([^\"]+)\"").find(json)?.groupValues?.get(1) ?: "Suggested based on your input."
-        
-        return AiThresholdSuggestion(vwap, oversold, overbought, rationale)
+        try {
+            val moshi = com.squareup.moshi.Moshi.Builder()
+                .add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+                .build()
+            val adapter = moshi.adapter(AiThresholdSuggestion::class.java)
+            
+            val validJson = json.replace(Regex("```json|```"), "").trim()
+            return adapter.fromJson(validJson) ?: AiThresholdSuggestion(1.0, 30.0, 70.0, "Could not parse suggestion.")
+        } catch (e: Exception) {
+            Logger.e("AnalysisViewModel", "Failed to parse AI suggestion", e)
+            return AiThresholdSuggestion(1.0, 30.0, 70.0, "Failed to parse AI suggestion.")
+        }
+    }
+
+    private fun parseAiScreenerSuggestion(json: String): AiScreenerSuggestion {
+        try {
+            val moshi = com.squareup.moshi.Moshi.Builder()
+                .add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+                .build()
+            val adapter = moshi.adapter(AiScreenerSuggestion::class.java)
+            
+            val validJson = json.replace(Regex("```json|```"), "").trim()
+            return adapter.fromJson(validJson) ?: AiScreenerSuggestion(5.0, 20.0, 100.0, "Could not parse suggestion.")
+        } catch (e: Exception) {
+            Logger.e("AnalysisViewModel", "Failed to parse AI screener suggestion", e)
+            return AiScreenerSuggestion(5.0, 20.0, 100.0, "Failed to parse AI suggestion.")
+        }
     }
 }
 

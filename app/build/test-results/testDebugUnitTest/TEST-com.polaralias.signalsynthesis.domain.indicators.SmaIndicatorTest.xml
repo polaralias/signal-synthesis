@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-18T14:48:44" hostname="LAPTOP" time="0.004">
+<testsuite name="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:29" hostname="LAPTOP" time="0.012">
   <properties/>
-  <testcase name="calculateMultipleReturnsExpectedPeriods" classname="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" time="0.003"/>
-  <testcase name="calculateReturnsAverageOfLastPeriod" classname="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" time="0.0"/>
-  <testcase name="calculateReturnsNullForInsufficientData" classname="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" time="0.001"/>
+  <testcase name="calculateMultipleReturnsExpectedPeriods" classname="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" time="0.011"/>
+  <testcase name="calculateReturnsAverageOfLastPeriod" classname="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" time="0.001"/>
+  <testcase name="calculateReturnsNullForInsufficientData" classname="com.polaralias.signalsynthesis.domain.indicators.SmaIndicatorTest" time="0.0"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

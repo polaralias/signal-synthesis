@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-18T14:48:44" hostname="LAPTOP" time="0.003">
+<testsuite name="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:29" hostname="LAPTOP" time="0.007">
   <properties/>
   <testcase name="calculateFromCloseUsesClosePrice" classname="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" time="0.002"/>
-  <testcase name="calculateReturnsNullForEmptyBars" classname="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" time="0.001"/>
-  <testcase name="calculateUsesTypicalPrice" classname="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" time="0.0"/>
+  <testcase name="calculateReturnsNullForEmptyBars" classname="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" time="0.0"/>
+  <testcase name="calculateUsesTypicalPrice" classname="com.polaralias.signalsynthesis.domain.indicators.VwapIndicatorTest" time="0.005"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>
