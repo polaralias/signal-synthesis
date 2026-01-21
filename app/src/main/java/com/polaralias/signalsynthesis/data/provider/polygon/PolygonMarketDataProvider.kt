@@ -37,96 +37,76 @@ class PolygonMarketDataProvider(
         sector: String?,
         limit: Int
     ): List<String> {
-        return try {
-            val response = service.listTickers(
-                type = "CS", // Common Set
-                limit = limit,
-                apiKey = apiKey
-            )
-            response.results?.mapNotNull { it.ticker } ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val response = service.listTickers(
+            type = "CS", // Common Set
+            limit = limit,
+            apiKey = apiKey
+        )
+        return response.results?.mapNotNull { it.ticker } ?: emptyList()
     }
+
+    override suspend fun getTopGainers(limit: Int): List<String> = emptyList()
+    override suspend fun getTopLosers(limit: Int): List<String> = emptyList()
+    override suspend fun getMostActive(limit: Int): List<String> = emptyList()
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
         return symbols.mapNotNull { symbol ->
-            try {
-                val response = service.getSnapshot(symbol, apiKey)
-                response.toQuote()
-            } catch (e: Exception) {
-                null
-            }
+            val response = service.getSnapshot(symbol, apiKey)
+            response.toQuote()
         }.associateBy { it.symbol }
     }
 
     override suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val (from, to) = getDateRange(days)
-            val response = service.getAggregates(
-                ticker = symbol,
-                multiplier = 5,
-                timespan = "minute",
-                from = from,
-                to = to,
-                apiKey = apiKey
-            )
-            response.toIntradayBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val (from, to) = getDateRange(days)
+        val response = service.getAggregates(
+            ticker = symbol,
+            multiplier = 5,
+            timespan = "minute",
+            from = from,
+            to = to,
+            apiKey = apiKey
+        )
+        return response.toIntradayBars()
     }
 
     override suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val (from, to) = getDateRange(days)
-            val response = service.getAggregates(
-                ticker = symbol,
-                multiplier = 1,
-                timespan = "day",
-                from = from,
-                to = to,
-                apiKey = apiKey
-            )
-            response.toDailyBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val (from, to) = getDateRange(days)
+        val response = service.getAggregates(
+            ticker = symbol,
+            multiplier = 1,
+            timespan = "day",
+            from = from,
+            to = to,
+            apiKey = apiKey
+        )
+        return response.toDailyBars()
     }
 
     override suspend fun getProfile(symbol: String): CompanyProfile? {
         if (symbol.isBlank()) return null
-        return try {
-            val response = service.getTickerDetails(symbol, apiKey)
-            response.results?.let {
-                CompanyProfile(
-                    name = it.name ?: symbol,
-                    sector = it.sic_description,
-                    industry = it.type,
-                    description = it.description
-                )
-            }
-        } catch (e: Exception) {
-            null
+        val response = service.getTickerDetails(symbol, apiKey)
+        return response.results?.let {
+            CompanyProfile(
+                name = it.name ?: symbol,
+                sector = it.sic_description,
+                industry = it.type,
+                description = it.description
+            )
         }
     }
 
     override suspend fun getMetrics(symbol: String): FinancialMetrics? {
         if (symbol.isBlank()) return null
-        return try {
-            val response = service.getTickerDetails(symbol, apiKey)
-            response.results?.let {
-                FinancialMetrics(
-                    marketCap = it.market_cap?.toLong(),
-                    peRatio = null, // Polygon doesn't provide PE ratio in ticker details
-                    eps = null // Polygon doesn't provide EPS in ticker details
-                )
-            }
-        } catch (e: Exception) {
-            null
+        val response = service.getTickerDetails(symbol, apiKey)
+        return response.results?.let {
+            FinancialMetrics(
+                marketCap = it.market_cap?.toLong(),
+                peRatio = null, // Polygon doesn't provide PE ratio in ticker details
+                eps = null // Polygon doesn't provide EPS in ticker details
+            )
         }
     }
 

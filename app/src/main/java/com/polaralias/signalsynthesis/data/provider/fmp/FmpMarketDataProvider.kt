@@ -35,17 +35,13 @@ class FmpMarketDataProvider(
 
     override suspend fun searchSymbols(query: String, limit: Int): List<com.polaralias.signalsynthesis.domain.provider.SearchResult> {
         if (query.isBlank()) return emptyList()
-        return try {
-            val results = service.searchTickers(query, limit, apiKey)
-            results.map {
-                com.polaralias.signalsynthesis.domain.provider.SearchResult(
-                    symbol = it.symbol ?: "",
-                    name = it.name ?: "",
-                    exchange = it.exchangeShortName ?: it.stockExchange
-                )
-            }
-        } catch (e: Exception) {
-            emptyList()
+        val results = service.searchTickers(query, limit, apiKey)
+        return results.map {
+            com.polaralias.signalsynthesis.domain.provider.SearchResult(
+                symbol = it.symbol ?: "",
+                name = it.name ?: "",
+                exchange = it.exchangeShortName ?: it.stockExchange
+            )
         }
     }
 
@@ -56,115 +52,99 @@ class FmpMarketDataProvider(
         sector: String?,
         limit: Int
     ): List<String> {
-        return try {
-            val results = service.stockScreener(
-                priceMin = minPrice,
-                priceMax = maxPrice,
-                volumeMin = minVolume,
-                sector = sector,
-                limit = limit,
-                apiKey = apiKey
-            )
-            results.mapNotNull { it.symbol }
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val results = service.stockScreener(
+            priceMin = minPrice,
+            priceMax = maxPrice,
+            volumeMin = minVolume,
+            sector = sector,
+            limit = limit,
+            apiKey = apiKey
+        )
+        return results.mapNotNull { it.symbol }
+    }
+
+    override suspend fun getTopGainers(limit: Int): List<String> {
+        return service.getTopGainers(apiKey).take(limit).mapNotNull { it.symbol }
+    }
+
+    override suspend fun getTopLosers(limit: Int): List<String> {
+        return service.getTopLosers(apiKey).take(limit).mapNotNull { it.symbol }
+    }
+
+    override suspend fun getMostActive(limit: Int): List<String> {
+        return service.getMostActive(apiKey).take(limit).mapNotNull { it.symbol }
     }
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
         return symbols.mapNotNull { symbol ->
-            try {
-                val quotes = service.getQuote(symbol, apiKey)
-                quotes.firstOrNull()?.toQuote()
-            } catch (e: Exception) {
-                null
-            }
+            val quotes = service.getQuote(symbol, apiKey)
+            quotes.firstOrNull()?.toQuote()
         }.associateBy { it.symbol }
     }
 
     override suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val (from, to) = getDateRange(days)
-            val bars = service.getHistoricalChart("5min", symbol, from, to, apiKey)
-            bars.toIntradayBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val (from, to) = getDateRange(days)
+        val bars = service.getHistoricalChart("5min", symbol, from, to, apiKey)
+        return bars.toIntradayBars()
     }
 
     override suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val (from, to) = getDateRange(days)
-            val bars = service.getHistoricalChart("1day", symbol, from, to, apiKey)
-            bars.toDailyBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val (from, to) = getDateRange(days)
+        val bars = service.getHistoricalChart("1day", symbol, from, to, apiKey)
+        return bars.toDailyBars()
     }
 
     override suspend fun getProfile(symbol: String): CompanyProfile? {
         if (symbol.isBlank()) return null
-        return try {
-            val profiles = service.getProfile(symbol, apiKey)
-            profiles.firstOrNull()?.let {
-                CompanyProfile(
-                    name = it.companyName ?: symbol,
-                    sector = it.sector,
-                    industry = it.industry,
-                    description = it.description
-                )
-            }
-        } catch (e: Exception) {
-            null
+        val profiles = service.getProfile(symbol, apiKey)
+        return profiles.firstOrNull()?.let {
+            CompanyProfile(
+                name = it.companyName ?: symbol,
+                sector = it.sector,
+                industry = it.industry,
+                description = it.description
+            )
         }
     }
 
     override suspend fun getMetrics(symbol: String): FinancialMetrics? {
         if (symbol.isBlank()) return null
-        return try {
-            val metrics = service.getKeyMetrics(symbol, limit = 1, apiKey = apiKey)
-            val quote = service.getQuote(symbol, apiKey).firstOrNull()
-            
-            metrics.firstOrNull()?.let {
-                FinancialMetrics(
-                    marketCap = it.marketCap,
-                    peRatio = it.peRatio,
-                    eps = it.netIncomePerShare,
-                    earningsDate = quote?.earningsAnnouncement,
-                    dividendYield = it.dividendYield,
-                    pbRatio = it.pbRatio,
-                    debtToEquity = it.debtToEquity
-                )
-            }
-        } catch (e: Exception) {
-            null
+        val metrics = service.getKeyMetrics(symbol, limit = 1, apiKey = apiKey)
+        val quote = service.getQuote(symbol, apiKey).firstOrNull()
+        
+        return metrics.firstOrNull()?.let {
+            FinancialMetrics(
+                marketCap = it.marketCap,
+                peRatio = it.peRatio,
+                eps = it.netIncomePerShare,
+                earningsDate = quote?.earningsAnnouncement,
+                dividendYield = it.dividendYield,
+                pbRatio = it.pbRatio,
+                debtToEquity = it.debtToEquity
+            )
         }
     }
 
     override suspend fun getSentiment(symbol: String): SentimentData? {
         if (symbol.isBlank()) return null
-        return try {
-            val sentiments = service.getNewsSentiment(symbol, page = 0, apiKey = apiKey)
-            if (sentiments.isEmpty()) return null
-            
-            // Aggregate sentiment from recent news
-            val scores = sentiments.mapNotNull { it.sentimentScore }
-            if (scores.isEmpty()) return null
-            
-            val avgScore = scores.average()
-            // Normalize from FMP's scale (typically 0-1) to our scale (-1 to 1)
-            val normalizedScore = (avgScore - 0.5) * 2.0
-            
-            SentimentData(
-                score = normalizedScore.coerceIn(-1.0, 1.0),
-                label = normalizedScore.toLabel()
-            )
-        } catch (e: Exception) {
-            null
-        }
+        val sentiments = service.getNewsSentiment(symbol, page = 0, apiKey = apiKey)
+        if (sentiments.isEmpty()) return null
+        
+        // Aggregate sentiment from recent news
+        val scores = sentiments.mapNotNull { it.sentimentScore }
+        if (scores.isEmpty()) return null
+        
+        val avgScore = scores.average()
+        // Normalize from FMP's scale (typically 0-1) to our scale (-1 to 1)
+        val normalizedScore = (avgScore - 0.5) * 2.0
+        
+        return SentimentData(
+            score = normalizedScore.coerceIn(-1.0, 1.0),
+            label = normalizedScore.toLabel()
+        )
     }
 
     private fun getDateRange(days: Int): Pair<String, String> {

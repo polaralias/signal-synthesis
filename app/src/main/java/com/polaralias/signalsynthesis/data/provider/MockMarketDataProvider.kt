@@ -38,6 +38,18 @@ class MockMarketDataProvider(
         return listOf("AAPL", "NVDA", "AMD", "TSLA", "MSFT", "PLTR", "SOFI", "COIN")
     }
 
+    override suspend fun getTopGainers(limit: Int): List<String> {
+        return listOf("GME", "AMC", "RIOT", "MARA", "COIN").take(limit)
+    }
+
+    override suspend fun getTopLosers(limit: Int): List<String> {
+        return listOf("INTC", "WBA", "DIS", "BA", "BA").take(limit)
+    }
+
+    override suspend fun getMostActive(limit: Int): List<String> {
+        return listOf("TSLA", "NVDA", "AAPL", "AMD", "PLTR").take(limit)
+    }
+
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         val now = Instant.now(clock)
         return symbols.mapIndexed { index, symbol ->

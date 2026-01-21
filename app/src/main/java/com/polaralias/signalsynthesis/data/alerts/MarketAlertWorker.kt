@@ -1,13 +1,8 @@
 package com.polaralias.signalsynthesis.data.alerts
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
-import android.os.Build
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.app.TaskStackBuilder
+import com.polaralias.signalsynthesis.util.NotificationHelper
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.polaralias.signalsynthesis.MainActivity
@@ -55,22 +50,23 @@ class MarketAlertWorker(
             val rsi = RsiIndicator.calculateFromIntraday(bars)
 
             if (vwap != null && quote.price < vwap * (1.0 - settings.vwapDipPercent / 100.0)) {
-                alerts.add(AlertEvent(symbol, "Price below VWAP", quote.price, vwap))
+                alerts.add(AlertEvent(symbol, "Investment Signal", "Price below VWAP (Value Found)", quote.price, vwap))
             }
             if (rsi != null && rsi <= settings.rsiOversold) {
-                alerts.add(AlertEvent(symbol, "RSI oversold (${rsi.roundToInt()})", quote.price, vwap))
+                alerts.add(AlertEvent(symbol, "Buy Opportunity", "RSI oversold (${rsi.roundToInt()})", quote.price, vwap))
             }
             if (rsi != null && rsi >= settings.rsiOverbought) {
-                alerts.add(AlertEvent(symbol, "RSI overbought (${rsi.roundToInt()})", quote.price, vwap))
+                alerts.add(AlertEvent(symbol, "Sell Warning", "RSI overbought (${rsi.roundToInt()})", quote.price, vwap))
             }
         }
 
         if (alerts.isNotEmpty()) {
-            ensureChannel()
             for (event in alerts) {
-                NotificationManagerCompat.from(applicationContext).notify(
-                    event.notificationId,
-                    buildNotification(event)
+                NotificationHelper.showMarketAlert(
+                    context = applicationContext,
+                    symbol = event.symbol,
+                    title = "${event.category}: ${event.symbol}",
+                    message = event.longText
                 )
             }
         }
@@ -101,59 +97,20 @@ class MarketAlertWorker(
         return Result.success()
     }
 
-    private fun buildNotification(event: AlertEvent) =
-        NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .setContentTitle("${event.symbol} alert")
-            .setContentText(event.reason)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(event.longText))
-            .setAutoCancel(true)
-            .setContentIntent(buildPendingIntent(event.symbol))
-            .build()
-
-    private fun buildPendingIntent(symbol: String) =
-        TaskStackBuilder.create(applicationContext)
-            .addNextIntentWithParentStack(
-                Intent(applicationContext, MainActivity::class.java).apply {
-                    putExtra(MainActivity.EXTRA_SYMBOL, symbol)
-                }
-            )
-            .getPendingIntent(symbol.hashCode(), pendingIntentFlags())
-
-    private fun ensureChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val manager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            applicationContext.getString(R.string.alert_channel_name),
-            NotificationManager.IMPORTANCE_DEFAULT
-        ).apply {
-            description = applicationContext.getString(R.string.alert_channel_description)
-        }
-        manager.createNotificationChannel(channel)
-    }
-
-    private fun pendingIntentFlags(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
-        } else {
-            android.app.PendingIntent.FLAG_UPDATE_CURRENT
-        }
-    }
 
     data class AlertEvent(
         val symbol: String,
+        val category: String,
         val reason: String,
         val price: Double,
         val vwap: Double?
     ) {
-        val notificationId: Int = (symbol + reason).hashCode()
         val longText: String = buildString {
-            append(reason)
-            append(". Price ")
+            append("$reason. ")
+            append("Current price ")
             append(formatPrice(price))
             if (vwap != null) {
-                append(", VWAP ")
+                append(", VWAP reference ")
                 append(formatPrice(vwap))
             }
         }
@@ -162,7 +119,6 @@ class MarketAlertWorker(
     companion object {
         const val WORK_NAME = "market_alerts"
         const val WORK_TAG = "market_alerts_tag"
-        const val CHANNEL_ID = "market_alerts_channel"
     }
 }
 

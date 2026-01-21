@@ -2,6 +2,15 @@ package com.polaralias.signalsynthesis.domain.model
 
 import java.time.Instant
 
+enum class TickerSource {
+    PREDEFINED,
+    SCREENER,
+    CUSTOM,
+    LIVE_GAINER,
+    LIVE_LOSER,
+    LIVE_ACTIVE
+}
+
 data class TradeSetup(
     val symbol: String,
     val setupType: String,
@@ -17,5 +26,5 @@ data class TradeSetup(
     val profile: CompanyProfile? = null,
     val metrics: FinancialMetrics? = null,
     val sentiment: SentimentData? = null,
-    val isUserAdded: Boolean = false
+    val source: TickerSource = TickerSource.PREDEFINED
 )

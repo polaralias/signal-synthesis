@@ -25,34 +25,22 @@ class TwelveDataMarketDataProvider(
         // Twelve Data free tier usually processes one symbol at a time for the quote endpoint
         // unless using complex batching. We'll iterate for simplicity/safety.
         return symbols.mapNotNull { symbol ->
-            try {
-                val q = service.getQuote(symbol, apiKey)
-                q.toQuote()
-            } catch (e: Exception) {
-                null
-            }
+            val q = service.getQuote(symbol, apiKey)
+            q.toQuote()
         }.associateBy { it.symbol }
     }
 
     override suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            // outputsize is approximate here, e.g. 2 days * 78 bars/day (for 5min)
-            val response = service.getTimeSeries(symbol, "5min", days * 100, apiKey)
-            response.values.toIntradayBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        // outputsize is approximate here, e.g. 2 days * 78 bars/day (for 5min)
+        val response = service.getTimeSeries(symbol, "5min", days * 100, apiKey)
+        return response.values.toIntradayBars()
     }
 
     override suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val response = service.getTimeSeries(symbol, "1day", days, apiKey)
-            response.values.toDailyBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val response = service.getTimeSeries(symbol, "1day", days, apiKey)
+        return response.values.toDailyBars()
     }
 
     private fun TwelveDataQuote.toQuote(): Quote? {

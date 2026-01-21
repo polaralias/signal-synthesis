@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="alert_channel_description">Notifications for triggered signal conditions.</string>
-    <string name="alert_channel_name">Market Alerts</string>
-    <string name="app_name">Signal Synthesis</string>
-    <style name="Theme.SignalSynthesis" parent="Theme.Material3.DayNight.NoActionBar"/>
-</resources>

@@ -46,6 +46,12 @@ interface FmpService {
         @Query("apikey") apiKey: String
     ): List<FmpNewsSentiment>
 
+    @GET("v3/stock-screener")
+    suspend fun stockScreener(
+        @Query("priceMoreThan") priceMin: Double? = null,
+        @Query("priceLowerThan") priceMax: Double? = null,
+        @Query("volumeMoreThan") volumeMin: Long? = null,
+        @Query("sector") sector: String? = null,
         @Query("limit") limit: Int = 100,
         @Query("apikey") apiKey: String
     ): List<FmpScreenerResult>
@@ -56,6 +62,21 @@ interface FmpService {
         @Query("limit") limit: Int = 10,
         @Query("apikey") apiKey: String
     ): List<FmpSearchResult>
+    
+    @GET("v3/stock_market/gainers")
+    suspend fun getTopGainers(
+        @Query("apikey") apiKey: String
+    ): List<FmpQuote>
+
+    @GET("v3/stock_market/losers")
+    suspend fun getTopLosers(
+        @Query("apikey") apiKey: String
+    ): List<FmpQuote>
+
+    @GET("v3/stock_market/actives")
+    suspend fun getMostActive(
+        @Query("apikey") apiKey: String
+    ): List<FmpQuote>
 
     companion object {
         private const val BASE_URL = "https://financialmodelingprep.com/api/"

@@ -6,7 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -17,8 +17,7 @@ import androidx.navigation.navArgument
 @Composable
 fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = null) {
     val navController = rememberNavController()
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle(lifecycleOwner = lifecycleOwner)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val lastHandledSymbol = remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(initialSymbol) {
@@ -52,6 +51,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
             AnalysisScreen(
                 uiState = uiState,
                 onIntentSelected = viewModel::updateIntent,
+                onAssetClassSelected = viewModel::updateAssetClass,
+                onDiscoveryModeSelected = viewModel::updateDiscoveryMode,
                 onRunAnalysis = viewModel::runAnalysis,
                 onOpenKeys = { navController.navigate(Screen.Keys.route) },
                 onOpenResults = { navController.navigate(Screen.Results.route) },

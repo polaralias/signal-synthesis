@@ -33,60 +33,44 @@ class AlpacaMarketDataProvider(
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
         return symbols.mapNotNull { symbol ->
-            try {
-                val response = service.getLatestQuote(symbol)
-                response.toQuote()
-            } catch (e: Exception) {
-                null
-            }
+            val response = service.getLatestQuote(symbol)
+            response.toQuote()
         }.associateBy { it.symbol }
     }
 
     override suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val (start, end) = getDateTimeRange(days)
-            val response = service.getBars(
-                symbol = symbol,
-                timeframe = "5Min",
-                start = start,
-                end = end
-            )
-            response.toIntradayBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val (start, end) = getDateTimeRange(days)
+        val response = service.getBars(
+            symbol = symbol,
+            timeframe = "5Min",
+            start = start,
+            end = end
+        )
+        return response.toIntradayBars()
     }
 
     override suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
-        return try {
-            val (start, end) = getDateTimeRange(days)
-            val response = service.getBars(
-                symbol = symbol,
-                timeframe = "1Day",
-                start = start,
-                end = end
-            )
-            response.toDailyBars()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        val (start, end) = getDateTimeRange(days)
+        val response = service.getBars(
+            symbol = symbol,
+            timeframe = "1Day",
+            start = start,
+            end = end
+        )
+        return response.toDailyBars()
     }
 
     override suspend fun getProfile(symbol: String): CompanyProfile? {
         if (symbol.isBlank()) return null
-        return try {
-            val response = service.getAsset(symbol)
-            CompanyProfile(
-                name = response.name ?: symbol,
-                sector = null,
-                industry = response.assetClass,
-                description = null
-            )
-        } catch (e: Exception) {
-            null
-        }
+        val response = service.getAsset(symbol)
+        return CompanyProfile(
+            name = response.name ?: symbol,
+            sector = null,
+            industry = response.assetClass,
+            description = null
+        )
     }
 
     override suspend fun getMetrics(symbol: String): FinancialMetrics? {

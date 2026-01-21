@@ -14,7 +14,15 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
-fun formatPrice(value: Double): String = "$" + String.format("%.2f", value)
+fun formatPrice(value: Double): String {
+    return if (value < 1.0 && value > 0) {
+        "$" + String.format("%.5f", value)
+    } else if (value < 10.0) {
+        "$" + String.format("%.4f", value)
+    } else {
+        "$" + String.format("%.2f", value)
+    }
+}
 
 fun formatPercent(value: Double): String = "${(value * 100.0).roundToInt()}%"
 
@@ -62,8 +70,46 @@ fun IntentBadge(intent: TradingIntent) {
     }
 }
 
+@Composable
+fun SourceBadge(source: com.polaralias.signalsynthesis.domain.model.TickerSource) {
+    androidx.compose.material3.Surface(
+        color = when (source) {
+            com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> MaterialTheme.colorScheme.surfaceVariant
+            com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> MaterialTheme.colorScheme.tertiaryContainer
+            com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> MaterialTheme.colorScheme.primaryContainer
+            com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> androidx.compose.ui.graphics.Color(0xFF4CAF50) // Green
+            com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> androidx.compose.ui.graphics.Color(0xFFF44336) // Red
+            com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> MaterialTheme.colorScheme.secondaryContainer
+        },
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+    ) {
+        Text(
+            text = formatTickerSource(source),
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+            color = when (source) {
+                com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> MaterialTheme.colorScheme.onSurfaceVariant
+                com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> MaterialTheme.colorScheme.onTertiaryContainer
+                com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> MaterialTheme.colorScheme.onPrimaryContainer
+                com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> androidx.compose.ui.graphics.Color.White
+                com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> androidx.compose.ui.graphics.Color.White
+                com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> MaterialTheme.colorScheme.onSecondaryContainer
+            }
+        )
+    }
+}
+
 fun formatIntent(intent: TradingIntent): String = when (intent) {
     TradingIntent.DAY_TRADE -> "Day Trade"
     TradingIntent.SWING -> "Swing"
     TradingIntent.LONG_TERM -> "Long Term"
+}
+
+fun formatTickerSource(source: com.polaralias.signalsynthesis.domain.model.TickerSource): String = when (source) {
+    com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> "Static"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> "Screener"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> "Custom"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> "📈 Gainer"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> "📉 Loser"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> "🔥 Active"
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Divider
@@ -57,9 +58,9 @@ fun SetupDetailScreen(
                 title = { 
                     androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(symbol)
-                        if (setup?.isUserAdded == true) {
+                        setup?.let {
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("👤", style = MaterialTheme.typography.labelSmall)
+                            SourceBadge(it.source)
                         }
                     }
                 },
@@ -147,7 +148,10 @@ fun SetupDetailScreen(
                     }
                 }
                 ChartStatus.READY -> {
-                    ChartView(points = chartState.points)
+                    ChartView(
+                        points = chartState.points,
+                        vwap = setup.intradayStats?.vwap
+                    )
                 }
                 ChartStatus.ERROR -> {
                     Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {

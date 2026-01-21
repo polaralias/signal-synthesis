@@ -28,6 +28,8 @@ import com.polaralias.signalsynthesis.domain.model.TradingIntent
 fun AnalysisScreen(
     uiState: AnalysisUiState,
     onIntentSelected: (TradingIntent) -> Unit,
+    onAssetClassSelected: (com.polaralias.signalsynthesis.data.settings.AssetClass) -> Unit,
+    onDiscoveryModeSelected: (com.polaralias.signalsynthesis.data.settings.DiscoveryMode) -> Unit,
     onRunAnalysis: () -> Unit,
     onOpenKeys: () -> Unit,
     onOpenResults: () -> Unit,
@@ -60,6 +62,48 @@ fun AnalysisScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            SectionHeader("Asset Class")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AssetChip(
+                    label = "Stocks",
+                    selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
+                    onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS) }
+                )
+                AssetChip(
+                    label = "Forex",
+                    selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX,
+                    onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX) }
+                )
+                AssetChip(
+                    label = "Metals",
+                    selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.METALS,
+                    onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.METALS) }
+                )
+                AssetChip(
+                    label = "All",
+                    selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL,
+                    onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            SectionHeader("Discovery Mode")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AssetChip(
+                    label = "Curated",
+                    selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
+                    onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED) }
+                )
+                AssetChip(
+                    label = "Live Scanner",
+                    selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER,
+                    onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             SectionHeader("Intent")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 IntentChip(
@@ -79,6 +123,30 @@ fun AnalysisScreen(
                 )
             }
 
+            if (uiState.blacklistedProviders.isNotEmpty()) {
+                androidx.compose.material3.Surface(
+                    onClick = onOpenKeys,
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Text("🚫")
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                "Providers Paused",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        Text(
+                            "One or more market data providers are temporarily paused due to authentication errors. Tap to check your API keys.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
 
             SectionHeader("Keys")
             if (!uiState.hasAnyApiKeys) {
@@ -151,6 +219,15 @@ fun AnalysisScreen(
 
 @Composable
 private fun IntentChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label) }
+    )
+}
+
+@Composable
+private fun AssetChip(label: String, selected: Boolean, onClick: () -> Unit) {
     FilterChip(
         selected = selected,
         onClick = onClick,

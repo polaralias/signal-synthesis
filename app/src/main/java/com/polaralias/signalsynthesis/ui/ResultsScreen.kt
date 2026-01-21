@@ -113,10 +113,8 @@ private fun SetupCard(
             ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(setup.symbol, style = MaterialTheme.typography.titleLarge)
-                if (setup.isUserAdded) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("👤", style = MaterialTheme.typography.labelSmall)
-                }
+                Spacer(modifier = Modifier.width(8.dp))
+                SourceBadge(setup.source)
                 Spacer(modifier = Modifier.width(8.dp))
                 IntentBadge(setup.intent)
             }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -61,7 +62,7 @@ fun WatchlistScreen(
                     WatchlistItem(
                         symbol = symbol,
                         intent = setup?.intent,
-                        isUserAdded = setup?.isUserAdded ?: false,
+                        source = setup?.source ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED,
                         onClick = { onOpenSymbol(symbol) },
                         onRemove = { onRemove(symbol) }
                     )
@@ -75,7 +76,7 @@ fun WatchlistScreen(
 private fun WatchlistItem(
     symbol: String,
     intent: com.polaralias.signalsynthesis.domain.model.TradingIntent?,
-    isUserAdded: Boolean,
+    source: com.polaralias.signalsynthesis.domain.model.TickerSource,
     onClick: () -> Unit,
     onRemove: () -> Unit
 ) {
@@ -91,12 +92,10 @@ private fun WatchlistItem(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(symbol, style = MaterialTheme.typography.titleMedium)
-                if (isUserAdded) {
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(4.dp))
-                    Text("👤", style = MaterialTheme.typography.labelSmall)
-                }
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                SourceBadge(source)
                 intent?.let {
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
                     IntentBadge(it)
                 }
             }

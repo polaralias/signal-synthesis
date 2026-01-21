@@ -22,7 +22,13 @@ data class AppSettings(
     val screenerConservativeThreshold: Double = 5.0, // e.g. Max Price for conservative
     val screenerModerateThreshold: Double = 20.0,
     val screenerAggressiveThreshold: Double = 100.0,
-    val screenerMinVolume: Long = 1_000_000L
+    val screenerMinVolume: Long = 1_000_000L,
+    val preferredAssetClass: AssetClass = AssetClass.STOCKS,
+    val discoveryMode: DiscoveryMode = DiscoveryMode.CURATED
 )
 
 enum class RiskTolerance { CONSERVATIVE, MODERATE, AGGRESSIVE }
+
+enum class AssetClass { STOCKS, FOREX, METALS, ALL }
+
+enum class DiscoveryMode { CURATED, LIVE_SCANNER }

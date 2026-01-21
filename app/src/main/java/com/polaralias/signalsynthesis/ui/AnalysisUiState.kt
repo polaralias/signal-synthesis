@@ -40,7 +40,7 @@ data class ApiKeyUiState(
 
 data class TickerEntry(
     val symbol: String,
-    val isUserAdded: Boolean
+    val source: com.polaralias.signalsynthesis.domain.model.TickerSource = com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM
 )
 
 data class AnalysisUiState(
@@ -71,13 +71,16 @@ data class AnalysisUiState(
     val tickerSearchResults: List<com.polaralias.signalsynthesis.domain.provider.SearchResult> = emptyList(),
     val isSearchingTickers: Boolean = false,
     val monthlyApiUsage: Int = 0,
-    val monthlyProviderUsage: Map<String, Int> = emptyMap()
+    val monthlyProviderUsage: Map<String, Int> = emptyMap(),
+    val blacklistedProviders: List<String> = emptyList(),
+    val assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS
 )
 
 data class AiScreenerSuggestion(
     val conservativeLimit: Double,
     val moderateLimit: Double,
     val aggressiveLimit: Double,
+    val minVolume: Long,
     val rationale: String
 )
 

@@ -36,12 +36,16 @@ class RunAnalysisUseCase(
     suspend fun execute(
         intent: TradingIntent,
         risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE,
+        assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
+        discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
         customTickers: List<String> = emptyList(),
         screenerThresholds: Map<String, Double> = emptyMap()
     ): AnalysisResult {
         // Step 1: Discover candidates
-        val candidates = discoverCandidates.execute(intent, risk, customTickers, screenerThresholds)
-        if (candidates.isEmpty()) {
+        val candidateMap = discoverCandidates.execute(intent, risk, assetClass, discoveryMode, customTickers, screenerThresholds)
+        val symbols = candidateMap.keys.toList()
+        
+        if (symbols.isEmpty()) {
             return AnalysisResult(
                 intent = intent,
                 totalCandidates = 0,
@@ -54,11 +58,11 @@ class RunAnalysisUseCase(
         
         // Step 2: Filter tradeable
         val minPrice = if (risk == com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE) 0.1 else 1.0
-        val tradeable = filterTradeable.execute(candidates, minPrice = minPrice)
+        val tradeable = filterTradeable.execute(symbols, minPrice = minPrice)
         if (tradeable.isEmpty()) {
             return AnalysisResult(
                 intent = intent,
-                totalCandidates = candidates.size,
+                totalCandidates = symbols.size,
                 tradeableCount = 0,
                 setupCount = 0,
                 setups = emptyList(),
@@ -83,19 +87,21 @@ class RunAnalysisUseCase(
         }
         
         // Step 7: Rank and generate setups
-        val setups = rankSetups.execute(
+        val rawSetups = rankSetups.execute(
             symbols = tradeable,
             quotes = quotes,
             intradayStats = intradayStats,
             eodStats = eodStats,
             contextData = contextData,
-            intent = intent,
-            customTickers = customTickers
+            intent = intent
         )
+
+        // Enrich setups with source information
+        val setups = rawSetups.map { it.copy(source = candidateMap[it.symbol] ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
         
         return AnalysisResult(
             intent = intent,
-            totalCandidates = candidates.size,
+            totalCandidates = symbols.size,
             tradeableCount = tradeable.size,
             setupCount = setups.size,
             setups = setups,

@@ -40,9 +40,23 @@ import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.domain.ai.LlmModel
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import kotlin.math.roundToInt
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyColumn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun SettingsScreen(
+    uiState: AnalysisUiState,
+    onBack: () -> Unit,
+    onEditKeys: () -> Unit,
+    onClearKeys: () -> Unit,
+    onUpdateSettings: (AppSettings) -> Unit,
+    onToggleAlerts: (Boolean) -> Unit,
+    onSuggestAi: (String) -> Unit,
+    onApplyAi: () -> Unit,
     onDismissAi: () -> Unit,
     onOpenLogs: () -> Unit,
     onAddCustomTicker: (String) -> Unit,
@@ -100,6 +114,8 @@ import kotlin.math.roundToInt
             )
         }
     ) { paddingValues ->
+        Column(
+            modifier = Modifier
                 .padding(paddingValues)
                 .verticalScroll(androidx.compose.foundation.rememberScrollState())
                 .padding(16.dp)
@@ -491,10 +507,26 @@ import kotlin.math.roundToInt
                 onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerAggressiveThreshold = it)) }
             )
 
+            SettingsSlider(
+                label = "Min Volume",
+                value = uiState.appSettings.screenerMinVolume.toDouble(),
+                range = 100000f..5000000f,
+                steps = 49,
+                format = { 
+                    val vol = it.toLong()
+                    if (vol >= 1_000_000) String.format("%.1fM", vol / 1_000_000.0)
+                    else String.format("%dK", vol / 1_000)
+                },
+                onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerMinVolume = it.toLong())) }
+            )
+
             if (uiState.aiScreenerSuggestion != null) {
                 AiSuggestionCard(
                     title = "AI Screener Suggestions",
-                    suggestionText = "Cons: $${uiState.aiScreenerSuggestion.conservativeLimit.roundToInt()}\nMod: $${uiState.aiScreenerSuggestion.moderateLimit.roundToInt()}\nAggr: $${uiState.aiScreenerSuggestion.aggressiveLimit.roundToInt()}",
+                    suggestionText = "Cons: $${uiState.aiScreenerSuggestion.conservativeLimit.roundToInt()}\n" +
+                                     "Mod: $${uiState.aiScreenerSuggestion.moderateLimit.roundToInt()}\n" +
+                                     "Aggr: $${uiState.aiScreenerSuggestion.aggressiveLimit.roundToInt()}\n" +
+                                     "Min Vol: ${String.format("%.1fM", uiState.aiScreenerSuggestion.minVolume / 1_000_000.0)}",
                     rationale = uiState.aiScreenerSuggestion.rationale,
                     onApply = onApplyScreenerAi,
                     onDismiss = onDismissScreenerAi
@@ -559,13 +591,13 @@ import kotlin.math.roundToInt
                         tonalElevation = 8.dp,
                         shadowElevation = 4.dp
                     ) {
-                        androidx.compose.foundation.lazy.LazyColumn {
-                            androidx.compose.foundation.lazy.items(uiState.tickerSearchResults) { result ->
+                        LazyColumn {
+                            items(uiState.tickerSearchResults) { result ->
                                 androidx.compose.material3.ListItem(
                                     headlineContent = { Text(result.symbol) },
                                     supportingContent = { Text(result.name) },
                                     overlineContent = { if (result.exchange != null) Text(result.exchange) },
-                                    modifier = androidx.compose.foundation.clickable {
+                                    modifier = Modifier.clickable {
                                         onAddCustomTicker(result.symbol)
                                         newTicker = ""
                                         onClearTickerSearch()
@@ -588,7 +620,7 @@ import kotlin.math.roundToInt
                                 Text("✕")
                             }
                         },
-                        overlineContent = { if (ticker.isUserAdded) Text("User Added", color = MaterialTheme.colorScheme.primary) }
+                        overlineContent = { SourceBadge(ticker.source) }
                     )
                 }
             }

@@ -8,6 +8,7 @@ import com.polaralias.signalsynthesis.domain.model.FinancialMetrics
 import com.polaralias.signalsynthesis.domain.model.IntradayBar
 import com.polaralias.signalsynthesis.domain.model.Quote
 import com.polaralias.signalsynthesis.domain.model.SentimentData
+import com.polaralias.signalsynthesis.data.provider.ProviderStatusManager
 import com.polaralias.signalsynthesis.data.provider.RetryHelper
 import com.polaralias.signalsynthesis.domain.provider.SearchResult
 import com.polaralias.signalsynthesis.util.Logger
@@ -15,6 +16,7 @@ import com.polaralias.signalsynthesis.util.Logger
 class MarketDataRepository(
     private val providers: ProviderBundle
 ) {
+
     suspend fun searchSymbols(query: String): List<SearchResult> {
         if (query.isBlank()) return emptyList()
         return tryProviders(
@@ -158,15 +160,50 @@ class MarketDataRepository(
         return result ?: emptyList()
     }
 
+    suspend fun getTopGainers(limit: Int = 10): List<String> {
+        return tryProviders(
+            dataType = "Gainers",
+            providers = providers.screenerProviders,
+            fetch = { it.getTopGainers(limit) },
+            isValid = { it.isNotEmpty() }
+        ) ?: emptyList()
+    }
+
+    suspend fun getTopLosers(limit: Int = 10): List<String> {
+        return tryProviders(
+            dataType = "Losers",
+            providers = providers.screenerProviders,
+            fetch = { it.getTopLosers(limit) },
+            isValid = { it.isNotEmpty() }
+        ) ?: emptyList()
+    }
+
+    suspend fun getMostActive(limit: Int = 10): List<String> {
+        return tryProviders(
+            dataType = "Actives",
+            providers = providers.screenerProviders,
+            fetch = { it.getMostActive(limit) },
+            isValid = { it.isNotEmpty() }
+        ) ?: emptyList()
+    }
+
     private suspend fun <P : Any, T> tryProviders(
         dataType: String,
         providers: List<P>,
         fetch: suspend (P) -> T,
         isValid: (T) -> Boolean
     ): T? {
-        Logger.i("Repository", "Fetching $dataType from ${providers.size} providers")
+        val filteredProviders = providers.filter { provider ->
+            val providerName = provider::class.simpleName ?: "Unknown"
+            !ProviderStatusManager.isBlacklisted(providerName)
+        }
+
+        if (filteredProviders.isEmpty() && providers.isNotEmpty()) {
+            Logger.w("Repository", "All providers for $dataType are currently blacklisted due to errors")
+        }
+
         val startTime = System.currentTimeMillis()
-        for (provider in providers) {
+        for (provider in filteredProviders) {
             val providerName = provider::class.simpleName ?: "Unknown"
             try {
                 val result = RetryHelper.withRetry(providerName) {
@@ -175,16 +212,24 @@ class MarketDataRepository(
                 if (isValid(result)) {
                     val duration = System.currentTimeMillis() - startTime
                     com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, dataType, "Success", true, duration)
-                    Logger.i("Repository", "SUCCESS: $dataType from $providerName")
+                    Logger.d("Repository", "SUCCESS: $dataType from $providerName")
                     return result
                 }
-                Logger.w("Repository", "EMPTY: $dataType from $providerName")
+                Logger.d("Repository", "EMPTY: $dataType from $providerName")
             } catch (e: Exception) {
-                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, dataType, e.message ?: "Failed", false, 0)
-                Logger.w("Repository", "FAILED: $dataType from $providerName", e)
+                val errorMessage = e.message ?: "Unknown error"
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, dataType, errorMessage, false, 0)
+                
+                // Handle 403 Forbidden - Blacklist for 10 minutes
+                if (errorMessage.contains("403") || (e is retrofit2.HttpException && e.code() == 403)) {
+                    Logger.e("Repository", "PROVIDER BLOCKED: $providerName returned 403 Forbidden. Blacklisting for 10 minutes.")
+                    ProviderStatusManager.blacklistProvider(providerName, ENFORCED_COOLDOWN_MS)
+                    Logger.event("provider_blacklisted", mapOf("provider" to providerName, "reason" to "403 Forbidden"))
+                } else {
+                    Logger.w("Repository", "FAILED: $dataType from $providerName: $errorMessage")
+                }
             }
         }
-        Logger.e("Repository", "CRITICAL: All providers failed for $dataType")
         return null
     }
 
@@ -199,5 +244,6 @@ class MarketDataRepository(
         private const val PROFILE_TTL_MILLIS = 24 * 60 * 60_000L
         private const val METRICS_TTL_MILLIS = 24 * 60 * 60_000L
         private const val SENTIMENT_TTL_MILLIS = 15 * 60_000L
+        private const val ENFORCED_COOLDOWN_MS = 10 * 60 * 1000L // 10 minutes
     }
 }

@@ -9,17 +9,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,13 +46,34 @@ fun ApiKeysScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (uiState.blacklistedProviders.isNotEmpty()) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            "⚠️ Provider Blocked",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            "One or more providers returned a 403 Forbidden error and are temporarily paused (10min). Please check your API keys.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+
             Text("Provide your data provider keys. Keys are stored locally.")
-            OutlinedTextField(
+            
+            ApiKeyField(
                 value = uiState.keys.alpacaKey,
                 onValueChange = { onFieldChanged(KeyField.ALPACA_KEY, it) },
-                label = { Text("Alpaca API Key") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Alpaca API Key",
+                isBlacklisted = uiState.blacklistedProviders.contains("AlpacaMarketDataProvider")
             )
+            
             OutlinedTextField(
                 value = uiState.keys.alpacaSecret,
                 onValueChange = { onFieldChanged(KeyField.ALPACA_SECRET, it) },
@@ -62,34 +81,39 @@ fun ApiKeysScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
+
+            ApiKeyField(
                 value = uiState.keys.polygonKey,
                 onValueChange = { onFieldChanged(KeyField.POLYGON, it) },
-                label = { Text("Polygon API Key") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Polygon API Key",
+                isBlacklisted = uiState.blacklistedProviders.contains("PolygonMarketDataProvider")
             )
-            OutlinedTextField(
+
+            ApiKeyField(
                 value = uiState.keys.finnhubKey,
                 onValueChange = { onFieldChanged(KeyField.FINNHUB, it) },
-                label = { Text("Finnhub API Key") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Finnhub API Key",
+                isBlacklisted = uiState.blacklistedProviders.contains("FinnhubMarketDataProvider")
             )
-            OutlinedTextField(
+
+            ApiKeyField(
                 value = uiState.keys.fmpKey,
                 onValueChange = { onFieldChanged(KeyField.FMP, it) },
-                label = { Text("FMP API Key") },
-                modifier = Modifier.fillMaxWidth()
+                label = "FMP API Key",
+                isBlacklisted = uiState.blacklistedProviders.contains("FmpMarketDataProvider")
             )
-            OutlinedTextField(
+
+            ApiKeyField(
                 value = uiState.keys.twelveDataKey,
                 onValueChange = { onFieldChanged(KeyField.TWELVE_DATA, it) },
-                label = { Text("Twelve Data API Key") },
-                modifier = Modifier.fillMaxWidth()
+                label = "Twelve Data API Key",
+                isBlacklisted = uiState.blacklistedProviders.contains("TwelveDataMarketDataProvider")
             )
+
             SectionHeader("AI Key")
             val llmLabel = when (uiState.appSettings.llmProvider) {
-                com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI -> "OpenAI API Key"
-                com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI -> "Gemini API Key"
+                LlmProvider.OPENAI -> "OpenAI API Key"
+                LlmProvider.GEMINI -> "Gemini API Key"
             }
             OutlinedTextField(
                 value = uiState.keys.llmKey,
@@ -104,6 +128,35 @@ fun ApiKeysScreen(
                     Text("Save Keys")
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ApiKeyField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    isBlacklisted: Boolean
+) {
+    Column {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            label = { Text(label) },
+            isError = isBlacklisted,
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = if (isBlacklisted) {
+                { Text("🚫", modifier = Modifier.padding(end = 8.dp)) }
+            } else null
+        )
+        if (isBlacklisted) {
+            Text(
+                "Provider temporarily paused due to authentication errors.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+            )
         }
     }
 }

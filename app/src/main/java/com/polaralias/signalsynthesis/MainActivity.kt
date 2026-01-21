@@ -40,12 +40,20 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.polaralias.signalsynthesis.data.provider.ProviderStatusManager.initialize(this)
         com.polaralias.signalsynthesis.util.UsageTracker.init(this)
+        com.polaralias.signalsynthesis.data.provider.ProviderStatusManager.onBlacklisted = { providerName ->
+            com.polaralias.signalsynthesis.util.NotificationHelper.showBlacklistNotification(this, providerName)
+        }
         CrashReporter.init(true)
         notificationSymbol.value = intent?.getStringExtra(EXTRA_SYMBOL)
         setContent {
-            val symbol by notificationSymbol
-            AppContent(viewModel = viewModel, initialSymbol = symbol)
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.lifecycle.compose.LocalLifecycleOwner provides this
+            ) {
+                val symbol by notificationSymbol
+                AppContent(viewModel = viewModel, initialSymbol = symbol)
+            }
         }
     }
 
@@ -92,7 +100,8 @@ private class AnalysisViewModelFactory(
                 llmClientFactory = llmClientFactory,
                 dbRepository = dbRepository,
                 appSettingsStore = appSettingsStore,
-                aiSummaryRepository = aiSummaryRepository
+                aiSummaryRepository = aiSummaryRepository,
+                application = activity.application
             ) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

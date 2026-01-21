@@ -25,45 +25,94 @@ class DiscoverCandidatesUseCase(
     suspend fun execute(
         intent: com.polaralias.signalsynthesis.domain.model.TradingIntent,
         risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE,
+        assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
+        discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
         customTickers: List<String> = emptyList(),
         screenerThresholds: Map<String, Double> = emptyMap()
-    ): List<String> {
-        val baseList = when (intent) {
-            com.polaralias.signalsynthesis.domain.model.TradingIntent.DAY_TRADE -> dayTradeCandidates()
-            com.polaralias.signalsynthesis.domain.model.TradingIntent.SWING -> swingTradeCandidates()
-            com.polaralias.signalsynthesis.domain.model.TradingIntent.LONG_TERM -> longTermCandidates()
-        }
+    ): Map<String, com.polaralias.signalsynthesis.domain.model.TickerSource> {
+        val candidates = mutableMapOf<String, com.polaralias.signalsynthesis.domain.model.TickerSource>()
 
-        val riskFiltered = when (risk) {
-            com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> {
-                baseList.filterNot { it in listOf("TSLA", "AMD", "NVDA", "NFLX") }
-            }
-            com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> baseList
-            com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> {
-                baseList + listOf("RIOT", "MARA", "PLTR", "SOFI", "AMC", "GME")
-            }
-        }
+        // Add custom tickers first (highest priority)
+        customTickers.forEach { candidates[it] = com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM }
 
-        // Fetch from Screener
-        val (minVol, minPrice) = when (risk) {
-            com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> 2_000_000L to (screenerThresholds["conservative"] ?: 20.0)
-            com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> 1_000_000L to (screenerThresholds["moderate"] ?: 10.0)
-            com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> 500_000L to (screenerThresholds["aggressive"] ?: 2.0)
+        if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
+            forexCandidates().forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
         }
         
-        val screened = try {
-            repository.screenStocks(
-                minPrice = minPrice, 
-                maxPrice = null,
-                minVolume = minVol, 
-                sector = null,
-                limit = 20
-            )
-        } catch (e: Exception) {
-            emptyList()
+        if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.METALS || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
+            metalsCandidates().forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
         }
 
-        return (riskFiltered + screened + customTickers).distinct()
+        if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
+            
+            if (discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER) {
+                // Fetch dynamic market movers
+                val gainers = repository.getTopGainers(limit = 10)
+                val losers = repository.getTopLosers(limit = 10)
+                val actives = repository.getMostActive(limit = 10)
+                
+                gainers.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER) }
+                losers.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER) }
+                actives.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE) }
+            } else {
+                // Use curated lists
+                val baseList = when (intent) {
+                    com.polaralias.signalsynthesis.domain.model.TradingIntent.DAY_TRADE -> dayTradeCandidates()
+                    com.polaralias.signalsynthesis.domain.model.TradingIntent.SWING -> swingTradeCandidates()
+                    com.polaralias.signalsynthesis.domain.model.TradingIntent.LONG_TERM -> longTermCandidates()
+                }
+
+                val riskFiltered = when (risk) {
+                    com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> {
+                        baseList.filterNot { it in listOf("TSLA", "AMD", "NVDA", "NFLX") }
+                    }
+                    com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> baseList
+                    com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> {
+                        baseList + listOf("RIOT", "MARA", "PLTR", "SOFI", "AMC", "GME")
+                    }
+                }
+                
+                riskFiltered.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
+            }
+
+            // Fetch from Screener (Always, for additional signals)
+            val (minVol, minPrice) = when (risk) {
+                com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> 2_000_000L to (screenerThresholds["conservative"] ?: 20.0)
+                com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> 1_000_000L to (screenerThresholds["moderate"] ?: 10.0)
+                com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> 500_000L to (screenerThresholds["aggressive"] ?: 2.0)
+            }
+            
+            val screened = try {
+                repository.screenStocks(
+                    minPrice = minPrice, 
+                    maxPrice = null,
+                    minVolume = minVol, 
+                    sector = null,
+                    limit = 20
+                )
+            } catch (e: Exception) {
+                emptyList()
+            }
+            
+            screened.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER) }
+        }
+
+        return candidates
+    }
+
+    private fun forexCandidates(): List<String> {
+        return listOf(
+            "EUR/USD", "GBP/USD", "USD/JPY", "USD/CAD", "AUD/USD",
+            "EUR/GBP", "EUR/JPY", "GBP/JPY", "NZD/USD", "USD/CHF"
+        )
+    }
+
+    private fun metalsCandidates(): List<String> {
+        return listOf(
+            "XAU/USD", "XAG/USD", "PA/USD", "PL/USD", // Spot Metals
+            "GOLD", "SILVER", "PLATINUM", "PALLADIUM", // Alternate names for some providers
+            "GLD", "SLV", "IAU", "PPLT" // Liquid ETFs
+        )
     }
     
     /**

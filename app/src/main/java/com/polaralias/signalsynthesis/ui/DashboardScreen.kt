@@ -54,10 +54,35 @@ fun DashboardScreen(
         ) {
             // Market Overview Section
             MarketSection(
-                indices = uiState.marketOverview?.indices ?: emptyList(),
+                indexQuotes = uiState.marketOverview?.indices ?: emptyList(),
                 lastUpdated = uiState.marketOverview?.lastUpdated,
                 isLoading = uiState.isLoadingMarket
             )
+
+            // Provider Blacklist Warning
+            if (uiState.blacklistedProviders.isNotEmpty()) {
+                Surface(
+                    onClick = onOpenSettings,
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🚫", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                "Providers Paused",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        Text(
+                            "One or more market data providers are temporarily paused due to authentication errors. Tap to check your API keys.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
 
             // Quick Analysis Section
             QuickAnalysisSection(onIntentSelected = onIntentSelected)
@@ -83,7 +108,7 @@ fun DashboardScreen(
 
 @Composable
 private fun MarketSection(
-    indices: List<IndexQuote>,
+    indexQuotes: List<IndexQuote>,
     lastUpdated: java.time.Instant?,
     isLoading: Boolean
 ) {
@@ -105,14 +130,14 @@ private fun MarketSection(
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        if (indices.isEmpty() && !isLoading) {
+        if (indexQuotes.isEmpty() && !isLoading) {
             Text("Market data unavailable.", style = MaterialTheme.typography.bodyMedium)
         } else {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 8.dp)
             ) {
-                items(indices) { index ->
+                items(indexQuotes) { index ->
                     IndexCard(index)
                 }
             }
@@ -204,10 +229,8 @@ private fun RecentResultsSection(
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(setup.symbol, fontWeight = FontWeight.Bold)
-                                if (setup.isUserAdded) {
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("👤", style = MaterialTheme.typography.labelSmall)
-                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                SourceBadge(setup.source)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 IntentBadge(setup.intent)
                             }

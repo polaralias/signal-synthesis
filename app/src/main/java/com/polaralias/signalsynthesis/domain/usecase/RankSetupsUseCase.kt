@@ -57,8 +57,7 @@ class RankSetupsUseCase(
         intradayStats: Map<String, IntradayStats>,
         eodStats: Map<String, EodStats>,
         contextData: Map<String, SymbolContext>,
-        intent: TradingIntent,
-        customTickers: List<String> = emptyList()
+        intent: TradingIntent
     ): List<TradeSetup> {
         if (symbols.isEmpty()) return emptyList()
         
@@ -68,7 +67,7 @@ class RankSetupsUseCase(
             val eod = eodStats[symbol]
             val context = contextData[symbol]
             
-            scoreSymbol(symbol, quote, stats, eod, context, intent, symbol in customTickers)
+            scoreSymbol(symbol, quote, stats, eod, context, intent)
         }
         
         // Sort by confidence descending
@@ -81,8 +80,7 @@ class RankSetupsUseCase(
         intradayStats: IntradayStats?,
         eodStats: EodStats?,
         context: SymbolContext?,
-        intent: TradingIntent,
-        isUserAdded: Boolean = false
+        intent: TradingIntent
     ): TradeSetup? {
         val price = quote.price
         val sentimentScore = context?.sentiment?.score
@@ -191,8 +189,7 @@ class RankSetupsUseCase(
             eodStats = eodStats,
             profile = context?.profile,
             metrics = context?.metrics,
-            sentiment = context?.sentiment,
-            isUserAdded = isUserAdded
+            sentiment = context?.sentiment
         )
     }
 }

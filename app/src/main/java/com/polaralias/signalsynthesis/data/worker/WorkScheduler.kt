@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
 
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.ExistingWorkPolicy
 
 interface WorkScheduler {
     fun scheduleAlerts(enabled: Boolean, intervalMinutes: Int = 15)

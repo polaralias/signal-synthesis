@@ -10,6 +10,7 @@ import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
 import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.storage.AppSettingsStorage
+import com.polaralias.signalsynthesis.data.storage.AppSettingsStore
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
 import com.polaralias.signalsynthesis.data.ai.LlmClientFactory
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
@@ -40,6 +41,7 @@ class AnalysisViewModel(
     private val dbRepository: DatabaseRepository,
     private val appSettingsStore: AppSettingsStorage,
     private val aiSummaryRepository: AiSummaryRepository,
+    private val application: android.app.Application,
     private val clock: Clock = Clock.systemUTC(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
@@ -54,10 +56,20 @@ class AnalysisViewModel(
         observeAppSettings()
         refreshMarketOverview()
         observeMonthlyUsage()
+        observeProviderBlacklist()
     }
 
     fun updateIntent(intent: TradingIntent) {
         _uiState.update { it.copy(intent = intent) }
+    }
+
+    fun updateAssetClass(assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass) {
+        _uiState.update { it.copy(assetClass = assetClass) }
+    }
+
+    fun updateDiscoveryMode(mode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode) {
+        val updated = _uiState.value.appSettings.copy(discoveryMode = mode)
+        updateAppSettings(updated)
     }
 
     fun updateKey(field: KeyField, value: String) {
@@ -79,7 +91,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val keys = _uiState.value.keys
             keyStore.saveKeys(keys.toApiKeys(), keys.llmKey)
-            Logger.event("keys_saved", mapOf("has_llm_key" to (keys.llmKey != null)))
+            Logger.event("keys_saved", mapOf("has_llm_key" to keys.llmKey.isNotBlank()))
             refreshKeys()
         }
     }
@@ -97,7 +109,7 @@ class AnalysisViewModel(
         val current = _uiState.value.customTickers
         if (current.any { it.symbol == upper }) return
         
-        val newList = current + TickerEntry(upper, true)
+        val newList = current + TickerEntry(upper)
         _uiState.update { it.copy(customTickers = newList) }
         saveCustomTickers(newList.map { it.symbol })
     }
@@ -137,6 +149,8 @@ class AnalysisViewModel(
                 val result = useCase.execute(
                     intent = state.intent,
                     risk = state.appSettings.riskTolerance,
+                    assetClass = state.assetClass,
+                    discoveryMode = state.appSettings.discoveryMode,
                     customTickers = customTickerList,
                     screenerThresholds = mapOf(
                         "conservative" to state.appSettings.screenerConservativeThreshold,
@@ -156,6 +170,17 @@ class AnalysisViewModel(
                 val symbols = result.setups.map { it.symbol }.distinct()
                 alertStore.saveSymbols(symbols)
                 _uiState.update { it.copy(alertSymbolCount = symbols.size) }
+
+                // Notify for high-confidence signals
+                result.setups.filter { it.confidence > 0.8 }.forEach { setup ->
+                    com.polaralias.signalsynthesis.util.NotificationHelper.showTradeSignal(
+                        context = application,
+                        symbol = setup.symbol,
+                        setupType = setup.setupType,
+                        confidence = setup.confidence,
+                        intent = setup.intent
+                    )
+                }
 
                 // Trigger Prefetching
                 val llmKey = _uiState.value.keys.llmKey
@@ -359,20 +384,7 @@ class AnalysisViewModel(
         _uiState.update { it.copy(isSuggestingScreener = true) }
         viewModelScope.launch(ioDispatcher) {
             try {
-                val systemPrompt = """
-                    You are a stock market expert. Based on the user's trading style, suggest price thresholds for Conservative, Moderate, and Aggressive stock screening.
-                    Conservative: Low volatility, steady stocks (usually lower price/market cap limits or higher quality).
-                    Moderate: Balanced risk.
-                    Aggressive: High risk/reward, potentially low-priced or high-volatility stocks.
-                    
-                    Return a JSON object:
-                    {
-                      "conservativeLimit": double,
-                      "moderateLimit": double,
-                      "aggressiveLimit": double,
-                      "rationale": "short explanation"
-                    }
-                """.trimIndent()
+                val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.SCREENER_SUGGESTION_SYSTEM.trimIndent()
 
                 val settings = _uiState.value.appSettings
                 val client = llmClientFactory.create(settings.llmModel)
@@ -402,7 +414,8 @@ class AnalysisViewModel(
             val updated = _uiState.value.appSettings.copy(
                 screenerConservativeThreshold = suggestion.conservativeLimit,
                 screenerModerateThreshold = suggestion.moderateLimit,
-                screenerAggressiveThreshold = suggestion.aggressiveLimit
+                screenerAggressiveThreshold = suggestion.aggressiveLimit,
+                screenerMinVolume = suggestion.minVolume
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiScreenerSuggestion = null) }
@@ -618,11 +631,11 @@ class AnalysisViewModel(
     private fun observeAppSettings() {
         viewModelScope.launch(ioDispatcher) {
             val settings = appSettingsStore.loadSettings()
-            val custom = (appSettingsStore as? AppSettingsStore)?.loadCustomTickers() ?: emptyList()
-            _uiState.update { 
-                it.copy(
+            val custom: List<String> = (appSettingsStore as? AppSettingsStore)?.loadCustomTickers() ?: emptyList()
+            _uiState.update { state ->
+                state.copy(
                     appSettings = settings,
-                    customTickers = custom.map { TickerEntry(it, true) }
+                    customTickers = custom.map { ticker -> TickerEntry(ticker) }
                 ) 
             }
         }
@@ -637,6 +650,16 @@ class AnalysisViewModel(
         viewModelScope.launch {
             com.polaralias.signalsynthesis.util.UsageTracker.monthlyProviderUsage.collect { usage ->
                 _uiState.update { it.copy(monthlyProviderUsage = usage) }
+            }
+        }
+    }
+
+    private fun observeProviderBlacklist() {
+        viewModelScope.launch {
+            com.polaralias.signalsynthesis.data.provider.ProviderStatusManager.blacklist.collect { blacklist ->
+                val now = System.currentTimeMillis()
+                val activeBlacklist = blacklist.filterValues { it > now }.keys.toList()
+                _uiState.update { it.copy(blacklistedProviders = activeBlacklist) }
             }
         }
     }
@@ -664,10 +687,10 @@ class AnalysisViewModel(
             val adapter = moshi.adapter(AiScreenerSuggestion::class.java)
             
             val validJson = json.replace(Regex("```json|```"), "").trim()
-            return adapter.fromJson(validJson) ?: AiScreenerSuggestion(5.0, 20.0, 100.0, "Could not parse suggestion.")
+            return adapter.fromJson(validJson) ?: AiScreenerSuggestion(5.0, 20.0, 100.0, 1000000L, "Could not parse suggestion.")
         } catch (e: Exception) {
             Logger.e("AnalysisViewModel", "Failed to parse AI screener suggestion", e)
-            return AiScreenerSuggestion(5.0, 20.0, 100.0, "Failed to parse AI suggestion.")
+            return AiScreenerSuggestion(5.0, 20.0, 100.0, 1000000L, "Failed to parse AI suggestion.")
         }
     }
 }
