@@ -48,6 +48,8 @@ class AnalysisViewModel(
     private val _uiState = MutableStateFlow(AnalysisUiState())
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
 
+    private var analysisJob: kotlinx.coroutines.Job? = null
+
     init {
         refreshKeys()
         refreshAlerts()
@@ -77,7 +79,7 @@ class AnalysisViewModel(
             val keys = when (field) {
                 KeyField.ALPACA_KEY -> state.keys.copy(alpacaKey = value)
                 KeyField.ALPACA_SECRET -> state.keys.copy(alpacaSecret = value)
-                KeyField.POLYGON -> state.keys.copy(polygonKey = value)
+                KeyField.MASSIVE -> state.keys.copy(massiveKey = value)
                 KeyField.FINNHUB -> state.keys.copy(finnhubKey = value)
                 KeyField.FMP -> state.keys.copy(fmpKey = value)
                 KeyField.TWELVE_DATA -> state.keys.copy(twelveDataKey = value)
@@ -133,9 +135,9 @@ class AnalysisViewModel(
             return
         }
 
-        _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap()) }
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap(), isPaused = false) }
         Logger.event("analysis_started", mapOf("intent" to _uiState.value.intent.name))
-        viewModelScope.launch(ioDispatcher) {
+        analysisJob = viewModelScope.launch(ioDispatcher) {
             try {
                 val useCase = buildUseCase(apiKeys)
                 val state = _uiState.value
@@ -163,7 +165,8 @@ class AnalysisViewModel(
                     it.copy(
                         isLoading = false,
                         result = result,
-                        lastRunAt = result.generatedAt
+                        lastRunAt = result.generatedAt,
+                        navigationEvent = NavigationEvent.Results
                     )
                 }
                 dbRepository.saveHistory(result)
@@ -206,6 +209,9 @@ class AnalysisViewModel(
                     }
                     _uiState.update { it.copy(isPrefetching = false) }
                 }
+            } catch (ex: kotlinx.coroutines.CancellationException) {
+                Logger.i("ViewModel", "Analysis cancelled")
+                _uiState.update { it.copy(isLoading = false) }
             } catch (ex: Exception) {
                 Logger.e("ViewModel", "Analysis failed", ex)
                 _uiState.update {
@@ -214,7 +220,24 @@ class AnalysisViewModel(
                         errorMessage = ex.message ?: "Analysis failed. Please try again."
                     )
                 }
+            } finally {
+                analysisJob = null
             }
+        }
+    }
+
+    fun cancelAnalysis() {
+        analysisJob?.cancel()
+        _uiState.update { it.copy(isLoading = false, isPaused = false) }
+        Logger.event("analysis_cancelled")
+    }
+
+    fun togglePause() {
+        val currentlyPaused = _uiState.value.isPaused
+        _uiState.update { it.copy(isPaused = !currentlyPaused) }
+        viewModelScope.launch(ioDispatcher) {
+            val settings = appSettingsStore.loadSettings()
+            appSettingsStore.saveSettings(settings.copy(isAnalysisPaused = !currentlyPaused))
         }
     }
 
@@ -232,7 +255,12 @@ class AnalysisViewModel(
         val state = _uiState.value
         val llmKey = state.keys.llmKey
         if (llmKey.isBlank() || !state.hasLlmKey) return
-        val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } ?: return
+        
+        // Find setup in current result or history
+        val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } 
+            ?: state.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }
+            ?: return
+            
         val existing = state.aiSummaries[symbol]
         if (existing?.status == AiSummaryStatus.LOADING || existing?.status == AiSummaryStatus.READY) return
 
@@ -289,7 +317,9 @@ class AnalysisViewModel(
 
     fun requestChartData(symbol: String) {
         val state = _uiState.value
-        val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } ?: return
+        val setup = state.result?.setups?.firstOrNull { it.symbol == symbol }
+            ?: state.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }
+            ?: return
         val existing = state.chartData[symbol]
         if (existing?.status == ChartStatus.LOADING || existing?.status == ChartStatus.READY) return
 
@@ -527,9 +557,19 @@ class AnalysisViewModel(
     private fun observeHistory() {
         viewModelScope.launch(ioDispatcher) {
             dbRepository.getHistory().collect { list ->
-                _uiState.update { it.copy(history = list) }
+                _uiState.update { state ->
+                    state.copy(
+                        history = list,
+                        // If no current result, load the most recent one from history
+                        result = state.result ?: list.firstOrNull()
+                    )
+                }
             }
         }
+    }
+    
+    fun clearNavigation() {
+        _uiState.update { it.copy(navigationEvent = null) }
     }
 
     private fun refreshKeys() {
@@ -635,7 +675,8 @@ class AnalysisViewModel(
             _uiState.update { state ->
                 state.copy(
                     appSettings = settings,
-                    customTickers = custom.map { ticker -> TickerEntry(ticker) }
+                    customTickers = custom.map { ticker -> TickerEntry(ticker) },
+                    isPaused = settings.isAnalysisPaused
                 ) 
             }
         }
@@ -698,7 +739,7 @@ class AnalysisViewModel(
 enum class KeyField {
     ALPACA_KEY,
     ALPACA_SECRET,
-    POLYGON,
+    MASSIVE,
     FINNHUB,
     FMP,
     TWELVE_DATA,

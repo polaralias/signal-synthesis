@@ -3,7 +3,7 @@ package com.polaralias.signalsynthesis.data.provider
 import com.polaralias.signalsynthesis.data.provider.alpaca.AlpacaMarketDataProvider
 import com.polaralias.signalsynthesis.data.provider.finnhub.FinnhubMarketDataProvider
 import com.polaralias.signalsynthesis.data.provider.fmp.FmpMarketDataProvider
-import com.polaralias.signalsynthesis.data.provider.polygon.PolygonMarketDataProvider
+import com.polaralias.signalsynthesis.data.provider.polygon.MassiveMarketDataProvider
 
 interface MarketDataProviderFactory {
     fun build(keys: ApiKeys): ProviderBundle
@@ -16,13 +16,13 @@ class ProviderFactory(
         val hasKeys = keys.hasAny()
         
         // Create providers based on available keys
-        // Priority: Alpaca > Polygon > Finnhub > FMP
+        // Priority: Alpaca > Massive > Finnhub > FMP
         val alpacaProvider = if (keys.hasAlpaca()) {
             AlpacaMarketDataProvider(keys.alpacaKey!!, keys.alpacaSecret!!)
         } else null
         
-        val polygonProvider = keys.polygon?.takeIf { it.isNotBlank() }?.let {
-            PolygonMarketDataProvider(it)
+        val massiveProvider = keys.massive?.takeIf { it.isNotBlank() }?.let {
+            MassiveMarketDataProvider(it)
         }
         
         val finnhubProvider = keys.finnhub?.takeIf { it.isNotBlank() }?.let {
@@ -37,25 +37,27 @@ class ProviderFactory(
             com.polaralias.signalsynthesis.data.provider.twelvedata.TwelveDataMarketDataProvider(it)
         }
         
-        val mockProvider = if (includeMock || !hasKeys) MockMarketDataProvider() else null
+        val mockProvider = if (!hasKeys) MockMarketDataProvider() else null
 
         // Build provider lists with fallback ordering
-        // For quotes and intraday: prefer Alpaca/Polygon (more real-time)
-        val quoteProviders = listOfNotNull(alpacaProvider, polygonProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
-        val intradayProviders = listOfNotNull(alpacaProvider, polygonProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
-        val dailyProviders = listOfNotNull(alpacaProvider, polygonProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
+        // For quotes and intraday: prefer Alpaca/Massive (more real-time)
+        val quoteProviders = listOfNotNull(alpacaProvider, massiveProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
+        val intradayProviders = listOfNotNull(alpacaProvider, massiveProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
+        val dailyProviders = listOfNotNull(alpacaProvider, massiveProvider, twelveDataProvider, finnhubProvider, fmpProvider, mockProvider)
         
-        // For profiles: prefer FMP/Finnhub/Polygon (better fundamental data)
-        val profileProviders = listOfNotNull(fmpProvider, finnhubProvider, polygonProvider, alpacaProvider, mockProvider)
+        // For profiles: prefer FMP/Finnhub/Massive (better fundamental data)
+        val profileProviders = listOfNotNull(fmpProvider, finnhubProvider, massiveProvider, twelveDataProvider, alpacaProvider, mockProvider)
         
         // For metrics: prefer FMP/Finnhub (only ones with PE, EPS)
-        val metricsProviders = listOfNotNull(fmpProvider, finnhubProvider, polygonProvider, mockProvider)
+        val metricsProviders = listOfNotNull(fmpProvider, finnhubProvider, massiveProvider, twelveDataProvider, mockProvider)
         
         // For sentiment: prefer FMP/Finnhub (only ones with sentiment)
         val sentimentProviders = listOfNotNull(fmpProvider, finnhubProvider, mockProvider)
 
-        // For screener: prefer FMP (native screener) > Polygon (tickers list) > Mock
-        val screenerProviders = listOfNotNull(fmpProvider, polygonProvider, mockProvider)
+        // For screener: prefer FMP (native screener) > Massive (tickers list) > Mock
+        val screenerProviders = listOfNotNull(fmpProvider, massiveProvider, mockProvider)
+
+        val searchProviders = listOfNotNull(fmpProvider, massiveProvider, finnhubProvider)
 
         return ProviderBundle(
             quoteProviders = quoteProviders,
@@ -64,7 +66,8 @@ class ProviderFactory(
             profileProviders = profileProviders,
             metricsProviders = metricsProviders,
             sentimentProviders = sentimentProviders,
-            screenerProviders = screenerProviders
+            screenerProviders = screenerProviders,
+            searchProviders = searchProviders
         )
     }
 }

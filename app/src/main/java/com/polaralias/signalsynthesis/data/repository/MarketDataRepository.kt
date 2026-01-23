@@ -12,6 +12,7 @@ import com.polaralias.signalsynthesis.data.provider.ProviderStatusManager
 import com.polaralias.signalsynthesis.data.provider.RetryHelper
 import com.polaralias.signalsynthesis.domain.provider.SearchResult
 import com.polaralias.signalsynthesis.util.Logger
+import kotlinx.coroutines.delay
 
 class MarketDataRepository(
     private val providers: ProviderBundle
@@ -26,7 +27,7 @@ class MarketDataRepository(
             isValid = { it.isNotEmpty() }
         ) ?: emptyList()
     }
-    private val quoteCache = TimedCache<String, Map<String, Quote>>(QUOTE_TTL_MILLIS)
+    private val quoteCache = TimedCache<String, Quote>(QUOTE_TTL_MILLIS)
     private val intradayCache = TimedCache<String, List<IntradayBar>>(INTRADAY_TTL_MILLIS)
     private val dailyCache = TimedCache<String, List<DailyBar>>(DAILY_TTL_MILLIS)
     private val profileCache = TimedCache<String, CompanyProfile>(PROFILE_TTL_MILLIS)
@@ -35,20 +36,62 @@ class MarketDataRepository(
 
     suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
-        val key = quoteKey(symbols)
-        quoteCache.get(key)?.let { 
-            Logger.d("Repository", "Cache hit for quotes: ${symbols.take(3)}...")
-            return it 
+        
+        val result = mutableMapOf<String, Quote>()
+        val missing = symbols.map { it.trim() }.toMutableList()
+        
+        // 1. Try Cache
+        val iterator = missing.iterator()
+        while (iterator.hasNext()) {
+            val symbol = iterator.next()
+            quoteCache.get(symbol)?.let {
+                result[symbol] = it
+                iterator.remove()
+            }
         }
-        val result = tryProviders(
-            dataType = "Quotes",
-            providers = providers.quoteProviders,
-            fetch = { it.getQuotes(symbols) },
-            isValid = { it.isNotEmpty() }
-        ) ?: emptyMap()
-        if (result.isNotEmpty()) {
-            quoteCache.put(key, result)
+        
+        if (missing.isEmpty()) {
+            Logger.d("Repository", "Full cache hit for quotes: ${symbols.take(3)}...")
+            return result
         }
+
+        Logger.d("Repository", "Fetching ${missing.size} missing quotes from providers...")
+        
+        // 2. Try Providers sequentially for missing symbols
+        val filteredProviders = providers.quoteProviders.filter { provider ->
+            val providerName = provider::class.simpleName ?: "Unknown"
+            !ProviderStatusManager.isBlacklisted(providerName)
+        }
+
+        for (provider in filteredProviders) {
+            if (missing.isEmpty()) break
+            
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200) // Rate limit prevention
+                val fetched = RetryHelper.withRetry(providerName) {
+                    provider.getQuotes(missing)
+                }
+                
+                if (fetched.isNotEmpty()) {
+                    fetched.forEach { (symbol, quote) ->
+                        quoteCache.put(symbol, quote)
+                        result[symbol] = quote
+                        missing.remove(symbol)
+                    }
+                    Logger.d("Repository", "Fetched ${fetched.size} quotes from $providerName. ${missing.size} still missing.")
+                    com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Quotes(${fetched.size})", "Success", true, 0)
+                }
+            } catch (e: Exception) {
+                val errorMessage = e.message ?: "Unknown error"
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Quotes", errorMessage, false, 0)
+                
+                if (errorMessage.contains("403") || (e is retrofit2.HttpException && e.code() == 403)) {
+                    ProviderStatusManager.blacklistProvider(providerName, ENFORCED_COOLDOWN_MS)
+                }
+            }
+        }
+        
         return result
     }
 
@@ -96,16 +139,44 @@ class MarketDataRepository(
             Logger.d("Repository", "Cache hit for profile: $symbol")
             return it 
         }
-        val result = tryProviders(
-            dataType = "Profile($symbol)",
-            providers = providers.profileProviders,
-            fetch = { it.getProfile(symbol) },
-            isValid = { it != null }
-        )
-        if (result != null) {
-            profileCache.put(symbol, result)
+
+        var aggregatedProfile: CompanyProfile? = null
+        val filteredProviders = providers.profileProviders.filter { provider ->
+            !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
-        return result
+
+        for (provider in filteredProviders) {
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200)
+                val result = RetryHelper.withRetry(providerName) {
+                    provider.getProfile(symbol)
+                }
+                if (result != null) {
+                    if (aggregatedProfile == null) {
+                        aggregatedProfile = result
+                    } else {
+                        aggregatedProfile = aggregatedProfile.copy(
+                            name = if (aggregatedProfile.name == symbol || aggregatedProfile.name.isBlank()) result.name else aggregatedProfile.name,
+                            sector = aggregatedProfile.sector ?: result.sector,
+                            industry = aggregatedProfile.industry ?: result.industry,
+                            description = aggregatedProfile.description ?: result.description
+                        )
+                    }
+
+                    if (aggregatedProfile.sector != null && aggregatedProfile.description != null) {
+                        break
+                    }
+                }
+            } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Profile", e.message ?: "Error", false, 0)
+            }
+        }
+
+        if (aggregatedProfile != null) {
+            profileCache.put(symbol, aggregatedProfile)
+        }
+        return aggregatedProfile
     }
 
     suspend fun getMetrics(symbol: String): FinancialMetrics? {
@@ -114,16 +185,50 @@ class MarketDataRepository(
             Logger.d("Repository", "Cache hit for metrics: $symbol")
             return it 
         }
-        val result = tryProviders(
-            dataType = "Metrics($symbol)",
-            providers = providers.metricsProviders,
-            fetch = { it.getMetrics(symbol) },
-            isValid = { it != null }
-        )
-        if (result != null) {
-            metricsCache.put(symbol, result)
+
+        var aggregatedMetrics: FinancialMetrics? = null
+        val filteredProviders = providers.metricsProviders.filter { provider ->
+            !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
-        return result
+
+        for (provider in filteredProviders) {
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200)
+                val result = RetryHelper.withRetry(providerName) {
+                    provider.getMetrics(symbol)
+                }
+                if (result != null) {
+                    if (aggregatedMetrics == null) {
+                        aggregatedMetrics = result
+                    } else {
+                        // Fill in missing fields
+                        aggregatedMetrics = aggregatedMetrics.copy(
+                            marketCap = aggregatedMetrics.marketCap ?: result.marketCap,
+                            peRatio = aggregatedMetrics.peRatio ?: result.peRatio,
+                            eps = aggregatedMetrics.eps ?: result.eps,
+                            earningsDate = aggregatedMetrics.earningsDate ?: result.earningsDate,
+                            dividendYield = aggregatedMetrics.dividendYield ?: result.dividendYield,
+                            pbRatio = aggregatedMetrics.pbRatio ?: result.pbRatio,
+                            debtToEquity = aggregatedMetrics.debtToEquity ?: result.debtToEquity
+                        )
+                    }
+                    
+                    // If we have the most critical fields, we can stop early
+                    if (aggregatedMetrics.marketCap != null && aggregatedMetrics.peRatio != null && aggregatedMetrics.eps != null) {
+                        Logger.d("Repository", "Collected all critical metrics for $symbol from $providerName (and potentially others).")
+                        break
+                    }
+                }
+            } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Metrics", e.message ?: "Error", false, 0)
+            }
+        }
+
+        if (aggregatedMetrics != null) {
+            metricsCache.put(symbol, aggregatedMetrics)
+        }
+        return aggregatedMetrics
     }
 
     suspend fun getSentiment(symbol: String): SentimentData? {
@@ -151,40 +256,104 @@ class MarketDataRepository(
         sector: String?,
         limit: Int
     ): List<String> {
-        val result = tryProviders(
-            dataType = "Screener",
-            providers = providers.screenerProviders,
-            fetch = { it.screenStocks(minPrice, maxPrice, minVolume, sector, limit) },
-            isValid = { it.isNotEmpty() }
-        )
-        return result ?: emptyList()
+        val allResults = mutableSetOf<String>()
+        val filteredProviders = providers.screenerProviders.filter { provider ->
+            !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
+        }
+
+        for (provider in filteredProviders) {
+            if (allResults.size >= limit) break
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200)
+                val results = RetryHelper.withRetry(providerName) {
+                    provider.screenStocks(minPrice, maxPrice, minVolume, sector, limit - allResults.size)
+                }
+                if (results.isNotEmpty()) {
+                    allResults.addAll(results)
+                    Logger.d("Repository", "Added ${results.size} from $providerName to screener results.")
+                    com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Screener", "Success", true, 0)
+                }
+            } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Screener", e.message ?: "Error", false, 0)
+            }
+        }
+        return allResults.toList()
     }
 
     suspend fun getTopGainers(limit: Int = 10): List<String> {
-        return tryProviders(
-            dataType = "Gainers",
-            providers = providers.screenerProviders,
-            fetch = { it.getTopGainers(limit) },
-            isValid = { it.isNotEmpty() }
-        ) ?: emptyList()
+        val allResults = mutableSetOf<String>()
+        val filteredProviders = providers.screenerProviders.filter { provider ->
+            !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
+        }
+
+        for (provider in filteredProviders) {
+            if (allResults.size >= limit) break
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200)
+                val results = RetryHelper.withRetry(providerName) {
+                    provider.getTopGainers(limit - allResults.size)
+                }
+                if (results.isNotEmpty()) {
+                    allResults.addAll(results)
+                    com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Gainers", "Success", true, 0)
+                }
+            } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Gainers", e.message ?: "Error", false, 0)
+            }
+        }
+        return allResults.toList()
     }
 
     suspend fun getTopLosers(limit: Int = 10): List<String> {
-        return tryProviders(
-            dataType = "Losers",
-            providers = providers.screenerProviders,
-            fetch = { it.getTopLosers(limit) },
-            isValid = { it.isNotEmpty() }
-        ) ?: emptyList()
+        val allResults = mutableSetOf<String>()
+        val filteredProviders = providers.screenerProviders.filter { provider ->
+            !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
+        }
+
+        for (provider in filteredProviders) {
+            if (allResults.size >= limit) break
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200)
+                val results = RetryHelper.withRetry(providerName) {
+                    provider.getTopLosers(limit - allResults.size)
+                }
+                if (results.isNotEmpty()) {
+                    allResults.addAll(results)
+                    com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Losers", "Success", true, 0)
+                }
+            } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Losers", e.message ?: "Error", false, 0)
+            }
+        }
+        return allResults.toList()
     }
 
     suspend fun getMostActive(limit: Int = 10): List<String> {
-        return tryProviders(
-            dataType = "Actives",
-            providers = providers.screenerProviders,
-            fetch = { it.getMostActive(limit) },
-            isValid = { it.isNotEmpty() }
-        ) ?: emptyList()
+        val allResults = mutableSetOf<String>()
+        val filteredProviders = providers.screenerProviders.filter { provider ->
+            !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
+        }
+
+        for (provider in filteredProviders) {
+            if (allResults.size >= limit) break
+            val providerName = provider::class.simpleName ?: "Unknown"
+            try {
+                delay(200)
+                val results = RetryHelper.withRetry(providerName) {
+                    provider.getMostActive(limit - allResults.size)
+                }
+                if (results.isNotEmpty()) {
+                    allResults.addAll(results)
+                    com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Actives", "Success", true, 0)
+                }
+            } catch (e: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Actives", e.message ?: "Error", false, 0)
+            }
+        }
+        return allResults.toList()
     }
 
     private suspend fun <P : Any, T> tryProviders(
@@ -206,6 +375,9 @@ class MarketDataRepository(
         for (provider in filteredProviders) {
             val providerName = provider::class.simpleName ?: "Unknown"
             try {
+                // Add a small delay between provider calls/network requests to avoid rate limits
+                delay(200)
+                
                 val result = RetryHelper.withRetry(providerName) {
                     fetch(provider)
                 }
@@ -233,17 +405,15 @@ class MarketDataRepository(
         return null
     }
 
-    private fun quoteKey(symbols: List<String>): String {
-        return "quotes:" + symbols.map { it.trim() }.sorted().joinToString(",")
-    }
+
 
     companion object {
-        private const val QUOTE_TTL_MILLIS = 5_000L
-        private const val INTRADAY_TTL_MILLIS = 2 * 60_000L
+        private const val QUOTE_TTL_MILLIS = 60_000L // 1 minute
+        private const val INTRADAY_TTL_MILLIS = 10 * 60_000L // 10 minutes
         private const val DAILY_TTL_MILLIS = 24 * 60 * 60_000L
         private const val PROFILE_TTL_MILLIS = 24 * 60 * 60_000L
         private const val METRICS_TTL_MILLIS = 24 * 60 * 60_000L
-        private const val SENTIMENT_TTL_MILLIS = 15 * 60_000L
+        private const val SENTIMENT_TTL_MILLIS = 30 * 60_000L // 30 minutes
         private const val ENFORCED_COOLDOWN_MS = 10 * 60 * 1000L // 10 minutes
     }
 }

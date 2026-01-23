@@ -31,7 +31,7 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
         ApiKeys(
             alpacaKey = preferences.getString(KEY_ALPACA, null),
             alpacaSecret = preferences.getString(KEY_ALPACA_SECRET, null),
-            polygon = preferences.getString(KEY_POLYGON, null),
+            massive = preferences.getString(KEY_POLYGON, null),
             finnhub = preferences.getString(KEY_FINNHUB, null),
             financialModelingPrep = preferences.getString(KEY_FMP, null),
             twelveData = preferences.getString(KEY_TWELVE_DATA, null)
@@ -47,7 +47,7 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
             preferences.edit().apply {
                 putOrRemove(KEY_ALPACA, apiKeys.alpacaKey)
                 putOrRemove(KEY_ALPACA_SECRET, apiKeys.alpacaSecret)
-                putOrRemove(KEY_POLYGON, apiKeys.polygon)
+                putOrRemove(KEY_POLYGON, apiKeys.massive)
                 putOrRemove(KEY_FINNHUB, apiKeys.finnhub)
                 putOrRemove(KEY_FMP, apiKeys.financialModelingPrep)
                 putOrRemove(KEY_TWELVE_DATA, apiKeys.twelveData)

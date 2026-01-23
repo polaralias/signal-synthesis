@@ -32,6 +32,7 @@ class EnrichContextUseCase(
         val results = mutableMapOf<String, SymbolContext>()
         
         for (symbol in symbols) {
+            kotlinx.coroutines.yield()
             try {
                 val profile = try {
                     repository.getProfile(symbol)

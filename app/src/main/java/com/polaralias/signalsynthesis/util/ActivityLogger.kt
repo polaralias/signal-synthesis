@@ -28,7 +28,7 @@ object ActivityLogger {
 
     fun logApi(tag: String, input: String, output: String, isSuccess: Boolean, durationMs: Long) {
         addEntry(ActivityEntry(type = ActivityType.API_REQUEST, tag = tag, input = input, output = output, isSuccess = isSuccess, durationMs = durationMs))
-        if (isSuccess) {
+        if (isSuccess && tag != "MockMarketDataProvider" && tag != "MockProvider") {
             UsageTracker.incrementApiCount(tag)
         }
     }

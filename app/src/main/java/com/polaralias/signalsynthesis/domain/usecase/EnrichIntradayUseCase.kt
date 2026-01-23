@@ -25,6 +25,7 @@ class EnrichIntradayUseCase(
         val results = mutableMapOf<String, IntradayStats>()
         
         for (symbol in symbols) {
+            kotlinx.coroutines.yield()
             try {
                 val bars = repository.getIntraday(symbol, days)
                 if (bars.isEmpty()) continue

@@ -29,8 +29,11 @@ class MarketAlertWorker(
 
     override suspend fun doWork(): Result {
         val alertStore = AlertSettingsStore(applicationContext)
+        val appSettingsStore = com.polaralias.signalsynthesis.data.storage.AppSettingsStore(applicationContext)
         val settings = alertStore.loadSettings()
-        if (!settings.enabled) return Result.success()
+        val appSettings = appSettingsStore.loadSettings()
+        
+        if (!settings.enabled || appSettings.isAnalysisPaused) return Result.success()
 
         val symbols = alertStore.loadSymbols()
         if (symbols.isEmpty()) return Result.success()
@@ -44,6 +47,9 @@ class MarketAlertWorker(
 
         val alerts = mutableListOf<AlertEvent>()
         for (symbol in symbols) {
+            kotlinx.coroutines.yield()
+            if (isStopped) break
+            
             val quote = quotes[symbol] ?: continue
             val bars = repository.getIntraday(symbol, 1)
             val vwap = VwapIndicator.calculate(bars)

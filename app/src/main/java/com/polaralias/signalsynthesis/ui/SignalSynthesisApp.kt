@@ -59,7 +59,10 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onOpenSettings = { navController.navigate(Screen.Settings.route) },
                 onOpenWatchlist = { navController.navigate(Screen.Watchlist.route) },
                 onOpenHistory = { navController.navigate(Screen.History.route) },
-                onDismissError = viewModel::clearError
+                onDismissError = viewModel::clearError,
+                onClearNavigation = viewModel::clearNavigation,
+                onCancelAnalysis = viewModel::cancelAnalysis,
+                onTogglePause = viewModel::togglePause
             )
         }
         composable(Screen.Watchlist.route) {

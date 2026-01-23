@@ -24,6 +24,18 @@ interface TwelveDataService {
         @Query("apikey") apiKey: String
     ): TwelveDataTimeSeries
 
+    @GET("profile")
+    suspend fun getProfile(
+        @Query("symbol") symbol: String,
+        @Query("apikey") apiKey: String
+    ): TwelveDataProfile
+
+    @GET("statistics")
+    suspend fun getStatistics(
+        @Query("symbol") symbol: String,
+        @Query("apikey") apiKey: String
+    ): TwelveDataStatistics
+
     companion object {
         private const val BASE_URL = "https://api.twelvedata.com/"
 
@@ -62,4 +74,27 @@ data class TwelveDataBar(
     val low: Double? = null,
     val close: Double? = null,
     val volume: Long? = null
+)
+
+data class TwelveDataProfile(
+    val name: String? = null,
+    val exchange: String? = null,
+    val sector: String? = null,
+    val industry: String? = null,
+    val description: String? = null
+)
+
+data class TwelveDataStatistics(
+    val valuations_metrics: TwelveDataValuations? = null,
+    val dividends_and_splits: TwelveDataDividends? = null
+)
+
+data class TwelveDataValuations(
+    @Json(name = "market_capitalization") val marketCap: Long? = null,
+    @Json(name = "pe_ratio") val peRatio: Double? = null,
+    @Json(name = "price_to_book") val pbRatio: Double? = null
+)
+
+data class TwelveDataDividends(
+    @Json(name = "dividend_yield") val dividendYield: Double? = null
 )

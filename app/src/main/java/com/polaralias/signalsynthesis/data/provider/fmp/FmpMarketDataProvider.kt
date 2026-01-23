@@ -77,10 +77,13 @@ class FmpMarketDataProvider(
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
-        return symbols.mapNotNull { symbol ->
-            val quotes = service.getQuote(symbol, apiKey)
-            quotes.firstOrNull()?.toQuote()
-        }.associateBy { it.symbol }
+        val symbolsCsv = symbols.joinToString(",")
+        return try {
+            val quotes = service.getQuote(symbolsCsv, apiKey)
+            quotes.mapNotNull { it.toQuote() }.associateBy { it.symbol }
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     override suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {

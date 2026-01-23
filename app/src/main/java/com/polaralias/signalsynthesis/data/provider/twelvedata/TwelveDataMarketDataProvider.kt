@@ -1,10 +1,14 @@
 package com.polaralias.signalsynthesis.data.provider.twelvedata
 
+import com.polaralias.signalsynthesis.domain.model.CompanyProfile
 import com.polaralias.signalsynthesis.domain.model.DailyBar
+import com.polaralias.signalsynthesis.domain.model.FinancialMetrics
 import com.polaralias.signalsynthesis.domain.model.IntradayBar
 import com.polaralias.signalsynthesis.domain.model.Quote
 import com.polaralias.signalsynthesis.domain.provider.DailyProvider
 import com.polaralias.signalsynthesis.domain.provider.IntradayProvider
+import com.polaralias.signalsynthesis.domain.provider.MetricsProvider
+import com.polaralias.signalsynthesis.domain.provider.ProfileProvider
 import com.polaralias.signalsynthesis.domain.provider.QuoteProvider
 import java.time.Clock
 import java.time.Instant
@@ -18,7 +22,40 @@ class TwelveDataMarketDataProvider(
     private val apiKey: String,
     private val service: TwelveDataService = TwelveDataService.create(),
     private val clock: Clock = Clock.systemUTC()
-) : QuoteProvider, IntradayProvider, DailyProvider {
+) : QuoteProvider, IntradayProvider, DailyProvider, ProfileProvider, MetricsProvider {
+
+    override suspend fun getProfile(symbol: String): CompanyProfile? {
+        if (symbol.isBlank()) return null
+        return try {
+            val response = service.getProfile(symbol, apiKey)
+            CompanyProfile(
+                name = response.name ?: symbol,
+                sector = response.sector,
+                industry = response.industry,
+                description = response.description
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun getMetrics(symbol: String): FinancialMetrics? {
+        if (symbol.isBlank()) return null
+        return try {
+            val response = service.getStatistics(symbol, apiKey)
+            val valuations = response.valuations_metrics
+            val dividends = response.dividends_and_splits
+            FinancialMetrics(
+                marketCap = valuations?.marketCap,
+                peRatio = valuations?.peRatio,
+                eps = null,
+                pbRatio = valuations?.pbRatio,
+                dividendYield = dividends?.dividendYield
+            )
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()

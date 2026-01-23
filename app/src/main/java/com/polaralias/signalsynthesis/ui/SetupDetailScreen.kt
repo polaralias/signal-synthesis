@@ -42,6 +42,8 @@ fun SetupDetailScreen(
     onToggleWatchlist: (String) -> Unit
 ) {
     val setup = uiState.result?.setups?.firstOrNull { it.symbol == symbol }
+        ?: uiState.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }
+    
     var showRawData by remember { mutableStateOf(false) }
     val aiSummary = uiState.aiSummaries[symbol]
 

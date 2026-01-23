@@ -10,7 +10,7 @@ import java.time.Instant
 data class ApiKeyUiState(
     val alpacaKey: String = "",
     val alpacaSecret: String = "",
-    val polygonKey: String = "",
+    val massiveKey: String = "",
     val finnhubKey: String = "",
     val fmpKey: String = "",
     val twelveDataKey: String = "",
@@ -19,7 +19,7 @@ data class ApiKeyUiState(
     fun toApiKeys(): ApiKeys = ApiKeys(
         alpacaKey = alpacaKey.ifBlank { null },
         alpacaSecret = alpacaSecret.ifBlank { null },
-        polygon = polygonKey.ifBlank { null },
+        massive = massiveKey.ifBlank { null },
         finnhub = finnhubKey.ifBlank { null },
         financialModelingPrep = fmpKey.ifBlank { null },
         twelveData = twelveDataKey.ifBlank { null }
@@ -29,7 +29,7 @@ data class ApiKeyUiState(
         fun from(apiKeys: ApiKeys, llmKey: String?): ApiKeyUiState = ApiKeyUiState(
             alpacaKey = apiKeys.alpacaKey.orEmpty(),
             alpacaSecret = apiKeys.alpacaSecret.orEmpty(),
-            polygonKey = apiKeys.polygon.orEmpty(),
+            massiveKey = apiKeys.massive.orEmpty(),
             finnhubKey = apiKeys.finnhub.orEmpty(),
             fmpKey = apiKeys.financialModelingPrep.orEmpty(),
             twelveDataKey = apiKeys.twelveData.orEmpty(),
@@ -73,8 +73,14 @@ data class AnalysisUiState(
     val monthlyApiUsage: Int = 0,
     val monthlyProviderUsage: Map<String, Int> = emptyMap(),
     val blacklistedProviders: List<String> = emptyList(),
-    val assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS
+    val assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
+    val navigationEvent: NavigationEvent? = null,
+    val isPaused: Boolean = false
 )
+
+sealed class NavigationEvent {
+    object Results : NavigationEvent()
+}
 
 data class AiScreenerSuggestion(
     val conservativeLimit: Double,

@@ -9,12 +9,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
@@ -74,19 +74,18 @@ fun ApiKeysScreen(
                 isBlacklisted = uiState.blacklistedProviders.contains("AlpacaMarketDataProvider")
             )
             
-            OutlinedTextField(
+            ApiKeyField(
                 value = uiState.keys.alpacaSecret,
                 onValueChange = { onFieldChanged(KeyField.ALPACA_SECRET, it) },
-                label = { Text("Alpaca Secret") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                label = "Alpaca Secret",
+                isBlacklisted = false
             )
 
             ApiKeyField(
-                value = uiState.keys.polygonKey,
-                onValueChange = { onFieldChanged(KeyField.POLYGON, it) },
-                label = "Polygon API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("PolygonMarketDataProvider")
+                value = uiState.keys.massiveKey,
+                onValueChange = { onFieldChanged(KeyField.MASSIVE, it) },
+                label = "Massive API Key",
+                isBlacklisted = uiState.blacklistedProviders.contains("MassiveMarketDataProvider")
             )
 
             ApiKeyField(
@@ -115,12 +114,11 @@ fun ApiKeysScreen(
                 LlmProvider.OPENAI -> "OpenAI API Key"
                 LlmProvider.GEMINI -> "Gemini API Key"
             }
-            OutlinedTextField(
+            ApiKeyField(
                 value = uiState.keys.llmKey,
                 onValueChange = { onFieldChanged(KeyField.LLM, it) },
-                label = { Text(llmLabel) },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                label = llmLabel,
+                isBlacklisted = false
             )
             Spacer(modifier = Modifier.height(8.dp))
             Row {
@@ -145,6 +143,7 @@ private fun ApiKeyField(
             onValueChange = onValueChange,
             label = { Text(label) },
             isError = isBlacklisted,
+            visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = if (isBlacklisted) {
                 { Text("🚫", modifier = Modifier.padding(end = 8.dp)) }

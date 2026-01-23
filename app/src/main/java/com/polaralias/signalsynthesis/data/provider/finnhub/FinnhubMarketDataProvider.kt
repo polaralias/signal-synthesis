@@ -26,7 +26,20 @@ class FinnhubMarketDataProvider(
     DailyProvider,
     ProfileProvider,
     MetricsProvider,
-    SentimentProvider {
+    SentimentProvider,
+    com.polaralias.signalsynthesis.domain.provider.SearchProvider {
+
+    override suspend fun searchSymbols(query: String, limit: Int): List<com.polaralias.signalsynthesis.domain.provider.SearchResult> {
+        if (query.isBlank()) return emptyList()
+        val response = service.searchTickers(query, apiKey)
+        return response.result?.take(limit)?.map {
+            com.polaralias.signalsynthesis.domain.provider.SearchResult(
+                symbol = it.symbol ?: it.displaySymbol ?: "",
+                name = it.description ?: "",
+                exchange = null
+            )
+        } ?: emptyList()
+    }
 
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()

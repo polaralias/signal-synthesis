@@ -44,6 +44,12 @@ interface FinnhubService {
         @Query("token") token: String
     ): FinnhubSentimentResponse
 
+    @GET("search")
+    suspend fun searchTickers(
+        @Query("q") query: String,
+        @Query("token") token: String
+    ): FinnhubSearchResponse
+
     companion object {
         private const val BASE_URL = "https://finnhub.io/api/v1/"
 
@@ -104,4 +110,16 @@ data class FinnhubSentimentResponse(
 data class FinnhubSentimentBreakdown(
     val bullishPercent: Double? = null,
     val bearishPercent: Double? = null
+)
+
+data class FinnhubSearchResponse(
+    val count: Int? = null,
+    val result: List<FinnhubSearchResult>? = null
+)
+
+data class FinnhubSearchResult(
+    val description: String? = null,
+    val displaySymbol: String? = null,
+    val symbol: String? = null,
+    val type: String? = null
 )

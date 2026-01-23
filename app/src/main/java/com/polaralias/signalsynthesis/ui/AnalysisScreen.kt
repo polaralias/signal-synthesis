@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.IconButton
@@ -17,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.width
 import androidx.compose.ui.unit.dp
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 
@@ -36,13 +39,27 @@ fun AnalysisScreen(
     onOpenSettings: () -> Unit,
     onOpenWatchlist: () -> Unit,
     onOpenHistory: () -> Unit,
-    onDismissError: () -> Unit
+    onDismissError: () -> Unit,
+    onClearNavigation: () -> Unit,
+    onCancelAnalysis: () -> Unit,
+    onTogglePause: () -> Unit
 ) {
+    androidx.compose.runtime.LaunchedEffect(uiState.navigationEvent) {
+        if (uiState.navigationEvent is NavigationEvent.Results) {
+            onOpenResults()
+            onClearNavigation()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Signal Synthesis") },
                 actions = {
+                    val pauseLabel = if (uiState.isPaused) "▶️ Resume" else "⏸️ Pause"
+                    TextButton(onClick = onTogglePause) {
+                        Text(pauseLabel)
+                    }
                     IconButton(onClick = onOpenWatchlist) {
                         Text("⭐")
                     }
@@ -62,6 +79,29 @@ fun AnalysisScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            if (uiState.isPaused) {
+                androidx.compose.material3.Surface(
+                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        Text("⏸️", style = MaterialTheme.typography.titleMedium)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Analysis Paused", style = MaterialTheme.typography.titleSmall)
+                            Text("Background alerts and scheduled tasks are suspended.", style = MaterialTheme.typography.bodySmall)
+                        }
+                        TextButton(onClick = onTogglePause) {
+                            Text("Resume")
+                        }
+                    }
+                }
+            }
+
             SectionHeader("Asset Class")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AssetChip(
@@ -191,12 +231,25 @@ fun AnalysisScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
             }
-            Button(
-                onClick = onRunAnalysis,
-                enabled = !uiState.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(if (uiState.isLoading) "Running..." else "Run Analysis")
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = onRunAnalysis,
+                    enabled = !uiState.isLoading && !uiState.isPaused,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (uiState.isLoading) "Running..." else "Run Analysis")
+                }
+                
+                if (uiState.isLoading) {
+                    OutlinedButton(
+                        onClick = onCancelAnalysis,
+                        modifier = Modifier.weight(0.4f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("Stop")
+                    }
+                }
             }
 
             SectionHeader("Summary")

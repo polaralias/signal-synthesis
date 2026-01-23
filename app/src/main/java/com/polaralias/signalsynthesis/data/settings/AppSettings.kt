@@ -24,7 +24,8 @@ data class AppSettings(
     val screenerAggressiveThreshold: Double = 100.0,
     val screenerMinVolume: Long = 1_000_000L,
     val preferredAssetClass: AssetClass = AssetClass.STOCKS,
-    val discoveryMode: DiscoveryMode = DiscoveryMode.CURATED
+    val discoveryMode: DiscoveryMode = DiscoveryMode.CURATED,
+    val isAnalysisPaused: Boolean = false
 )
 
 enum class RiskTolerance { CONSERVATIVE, MODERATE, AGGRESSIVE }

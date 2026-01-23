@@ -23,6 +23,7 @@ class EnrichEodUseCase(
         val results = mutableMapOf<String, EodStats>()
         
         for (symbol in symbols) {
+            kotlinx.coroutines.yield()
             try {
                 val bars = repository.getDaily(symbol, days)
                 if (bars.isEmpty()) continue
