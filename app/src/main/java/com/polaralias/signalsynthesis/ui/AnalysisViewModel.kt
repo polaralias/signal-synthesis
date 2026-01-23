@@ -135,7 +135,7 @@ class AnalysisViewModel(
             return
         }
 
-        _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap(), isPaused = false) }
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap(), isPaused = false, removedAlerts = emptySet()) }
         Logger.event("analysis_started", mapOf("intent" to _uiState.value.intent.name))
         analysisJob = viewModelScope.launch(ioDispatcher) {
             try {
@@ -154,6 +154,7 @@ class AnalysisViewModel(
                     assetClass = state.assetClass,
                     discoveryMode = state.appSettings.discoveryMode,
                     customTickers = customTickerList,
+                    blocklist = state.blocklist,
                     screenerThresholds = mapOf(
                         "conservative" to state.appSettings.screenerConservativeThreshold,
                         "moderate" to state.appSettings.screenerModerateThreshold,
@@ -170,9 +171,10 @@ class AnalysisViewModel(
                     )
                 }
                 dbRepository.saveHistory(result)
-                val symbols = result.setups.map { it.symbol }.distinct()
+                val resultsWithoutRemoved = result.setups.filter { !state.removedAlerts.contains(it.symbol) }
+                val symbols = resultsWithoutRemoved.map { it.symbol }.distinct().filter { !state.blocklist.contains(it) }
                 alertStore.saveSymbols(symbols)
-                _uiState.update { it.copy(alertSymbolCount = symbols.size) }
+                _uiState.update { it.copy(alertSymbolCount = symbols.size, alertSymbols = symbols) }
 
                 // Notify for high-confidence signals
                 result.setups.filter { it.confidence > 0.8 }.forEach { setup ->
@@ -529,6 +531,54 @@ class AnalysisViewModel(
         }
     }
 
+    fun addToBlocklist(symbol: String) {
+        val upper = symbol.trim().uppercase()
+        if (upper.isBlank()) return
+        val current = _uiState.value.blocklist
+        if (current.contains(upper)) return
+
+        val newList = current + upper
+        _uiState.update { it.copy(blocklist = newList) }
+        saveBlocklist(newList)
+        
+        // Also remove from current alerts if present
+        if (_uiState.value.alertSymbols.contains(upper)) {
+            val newAlerts = _uiState.value.alertSymbols.filter { it != upper }
+            _uiState.update { it.copy(alertSymbols = newAlerts, alertSymbolCount = newAlerts.size) }
+            viewModelScope.launch(ioDispatcher) {
+                alertStore.saveSymbols(newAlerts)
+            }
+        }
+    }
+
+    fun removeFromBlocklist(symbol: String) {
+        val newList = _uiState.value.blocklist.filter { it != symbol }
+        _uiState.update { it.copy(blocklist = newList) }
+        saveBlocklist(newList)
+    }
+
+    private fun saveBlocklist(blocklist: List<String>) {
+        viewModelScope.launch(ioDispatcher) {
+            (appSettingsStore as? AppSettingsStore)?.saveBlocklist(blocklist)
+        }
+    }
+
+    fun removeAlert(symbol: String) {
+        val currentRemoved = _uiState.value.removedAlerts
+        val newRemoved = currentRemoved + symbol
+        _uiState.update { state -> 
+            val newAlerts = state.alertSymbols.filter { it != symbol }
+            state.copy(
+                removedAlerts = newRemoved,
+                alertSymbols = newAlerts,
+                alertSymbolCount = newAlerts.size
+            )
+        }
+        viewModelScope.launch(ioDispatcher) {
+            alertStore.saveSymbols(_uiState.value.alertSymbols)
+        }
+    }
+
     fun toggleWatchlist(symbol: String) {
         viewModelScope.launch(ioDispatcher) {
             val current = _uiState.value.watchlist
@@ -593,7 +643,8 @@ class AnalysisViewModel(
             _uiState.update {
                 it.copy(
                     alertsEnabled = settings.enabled,
-                    alertSymbolCount = symbols.size
+                    alertSymbolCount = symbols.size,
+                    alertSymbols = symbols
                 )
             }
             workScheduler.scheduleAlerts(settings.enabled)
@@ -672,10 +723,12 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val settings = appSettingsStore.loadSettings()
             val custom: List<String> = (appSettingsStore as? AppSettingsStore)?.loadCustomTickers() ?: emptyList()
+            val blocklist = (appSettingsStore as? AppSettingsStore)?.loadBlocklist() ?: emptyList()
             _uiState.update { state ->
                 state.copy(
                     appSettings = settings,
                     customTickers = custom.map { ticker -> TickerEntry(ticker) },
+                    blocklist = blocklist,
                     isPaused = settings.isAnalysisPaused
                 ) 
             }

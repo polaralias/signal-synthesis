@@ -54,6 +54,9 @@ data class AnalysisUiState(
     val hasLlmKey: Boolean = false,
     val alertsEnabled: Boolean = false,
     val alertSymbolCount: Int = 0,
+    val alertSymbols: List<String> = emptyList(),
+    val blocklist: List<String> = emptyList(),
+    val removedAlerts: Set<String> = emptySet(),
     val watchlist: List<String> = emptyList(),
     val history: List<AnalysisResult> = emptyList(),
     val appSettings: AppSettings = AppSettings(),
@@ -80,6 +83,7 @@ data class AnalysisUiState(
 
 sealed class NavigationEvent {
     object Results : NavigationEvent()
+    object Alerts : NavigationEvent()
 }
 
 data class AiScreenerSuggestion(

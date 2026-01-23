@@ -12,17 +12,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
 
@@ -32,8 +29,12 @@ fun ResultsScreen(
     uiState: AnalysisUiState,
     onBack: () -> Unit,
     onOpenDetail: (String) -> Unit,
-    onToggleWatchlist: (String) -> Unit
+    onToggleWatchlist: (String) -> Unit,
+    onRemoveTicker: (String) -> Unit,
+    onBlockTicker: (String) -> Unit
 ) {
+    var symbolToBlock by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -46,8 +47,8 @@ fun ResultsScreen(
             )
         }
     ) { paddingValues ->
-        val result = uiState.result
-        if (result == null) {
+        val fullResult = uiState.result
+        if (fullResult == null) {
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
@@ -58,6 +59,8 @@ fun ResultsScreen(
             return@Scaffold
         }
 
+        val filteredSetups = fullResult.setups.filter { !uiState.removedAlerts.contains(it.symbol) }
+
         Column(modifier = Modifier.padding(paddingValues)) {
             if (uiState.isPrefetching) {
                 LinearProgressIndicator(
@@ -66,7 +69,7 @@ fun ResultsScreen(
                     trackColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 Text(
-                    text = "Generating AI insights... (${uiState.prefetchCount}/3)",
+                    text = "Generating AI insights... (${uiState.prefetchCount}/${filteredSetups.size.coerceAtMost(3)})",
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                 )
@@ -76,19 +79,32 @@ fun ResultsScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(result.setups) { setup ->
-                SetupCard(
-                    setup = setup,
-                    hasLlmKey = uiState.hasLlmKey,
-                    aiSummary = uiState.aiSummaries[setup.symbol],
-                    isInWatchlist = uiState.watchlist.contains(setup.symbol),
-                    onToggleWatchlist = { onToggleWatchlist(setup.symbol) },
-                    onOpen = { onOpenDetail(setup.symbol) }
-                )
+                items(filteredSetups) { setup ->
+                    SetupCard(
+                        setup = setup,
+                        hasLlmKey = uiState.hasLlmKey,
+                        aiSummary = uiState.aiSummaries[setup.symbol],
+                        isInWatchlist = uiState.watchlist.contains(setup.symbol),
+                        onToggleWatchlist = { onToggleWatchlist(setup.symbol) },
+                        onOpen = { onOpenDetail(setup.symbol) },
+                        onRemove = { onRemoveTicker(setup.symbol) },
+                        onBlock = { symbolToBlock = setup.symbol }
+                    )
+                }
             }
         }
+
+        if (symbolToBlock != null) {
+            ConfirmBlocklistDialog(
+                symbol = symbolToBlock!!,
+                onConfirm = {
+                    onBlockTicker(symbolToBlock!!)
+                    symbolToBlock = null
+                },
+                onDismiss = { symbolToBlock = null }
+            )
+        }
     }
-}
 }
 
 @Composable
@@ -98,12 +114,13 @@ private fun SetupCard(
     aiSummary: AiSummaryState?,
     isInWatchlist: Boolean,
     onToggleWatchlist: () -> Unit,
-    onOpen: () -> Unit
+    onOpen: () -> Unit,
+    onRemove: () -> Unit,
+    onBlock: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onOpen)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -111,17 +128,28 @@ private fun SetupCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(setup.symbol, style = MaterialTheme.typography.titleLarge)
-                Spacer(modifier = Modifier.width(8.dp))
-                SourceBadge(setup.source)
-                Spacer(modifier = Modifier.width(8.dp))
-                IntentBadge(setup.intent)
-            }
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = onOpen),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(setup.symbol, style = MaterialTheme.typography.titleLarge)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    SourceBadge(setup.source)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IntentBadge(setup.intent)
+                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(formatPercent(setup.confidence))
+                    Text(formatPercent(setup.confidence), fontWeight = FontWeight.Bold)
                     IconButton(onClick = onToggleWatchlist) {
                         Text(if (isInWatchlist) "⭐" else "☆")
+                    }
+                    IconButton(onClick = onRemove) {
+                        Icon(Icons.Default.Close, contentDescription = "Remove")
+                    }
+                    IconButton(onClick = onBlock) {
+                        Icon(Icons.Default.Block, contentDescription = "Block", tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }

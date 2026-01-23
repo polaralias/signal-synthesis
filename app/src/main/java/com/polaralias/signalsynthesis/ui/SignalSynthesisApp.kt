@@ -28,6 +28,20 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
         }
     }
 
+    LaunchedEffect(uiState.navigationEvent) {
+        when (uiState.navigationEvent) {
+            NavigationEvent.Results -> {
+                navController.navigate(Screen.Results.route)
+                viewModel.clearNavigation()
+            }
+            NavigationEvent.Alerts -> {
+                navController.navigate(Screen.Alerts.route)
+                viewModel.clearNavigation()
+            }
+            null -> {}
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = Screen.Dashboard.route
@@ -44,7 +58,10 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onOpenResults = { navController.navigate(Screen.Results.route) },
                 onOpenDetail = { symbol ->
                     navController.navigate(Screen.detailRoute(symbol))
-                }
+                },
+                onOpenAlertsList = { navController.navigate(Screen.Alerts.route) },
+                onRemoveTicker = viewModel::removeAlert,
+                onBlockTicker = viewModel::addToBlocklist
             )
         }
         composable(Screen.Analysis.route) {
@@ -72,7 +89,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onOpenSymbol = { symbol ->
                     navController.navigate(Screen.detailRoute(symbol))
                 },
-                onRemove = viewModel::toggleWatchlist
+                onRemove = viewModel::toggleWatchlist,
+                onBlock = viewModel::addToBlocklist
             )
         }
         composable(Screen.History.route) {
@@ -101,7 +119,20 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onOpenDetail = { symbol ->
                     navController.navigate(Screen.detailRoute(symbol))
                 },
-                onToggleWatchlist = viewModel::toggleWatchlist
+                onToggleWatchlist = viewModel::toggleWatchlist,
+                onRemoveTicker = viewModel::removeAlert,
+                onBlockTicker = viewModel::addToBlocklist
+            )
+        }
+        composable(Screen.Alerts.route) {
+            MarketAlertsScreen(
+                uiState = uiState,
+                onBack = { navController.popBackStack() },
+                onOpenDetail = { symbol ->
+                    navController.navigate(Screen.detailRoute(symbol))
+                },
+                onRemoveAlert = viewModel::removeAlert,
+                onAddToBlocklist = viewModel::addToBlocklist
             )
         }
         composable(
@@ -136,7 +167,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onClearTickerSearch = viewModel::clearTickerSearch,
                 onSuggestScreenerAi = viewModel::suggestScreenerWithAi,
                 onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
-                onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion
+                onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion,
+                onRemoveFromBlocklist = viewModel::removeFromBlocklist
             )
         }
         composable(Screen.Logs.route) {
@@ -151,6 +183,7 @@ sealed class Screen(val route: String) {
     object Analysis : Screen("analysis")
     object Keys : Screen("keys")
     object Results : Screen("results")
+    object Alerts : Screen("alerts")
     object Settings : Screen("settings")
     object Watchlist : Screen("watchlist")
     object History : Screen("history")

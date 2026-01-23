@@ -9,14 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,8 +23,11 @@ fun WatchlistScreen(
     uiState: AnalysisUiState,
     onBack: () -> Unit,
     onOpenSymbol: (String) -> Unit,
-    onRemove: (String) -> Unit
+    onRemove: (String) -> Unit,
+    onBlock: (String) -> Unit
 ) {
+    var symbolToBlock by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -64,10 +63,22 @@ fun WatchlistScreen(
                         intent = setup?.intent,
                         source = setup?.source ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED,
                         onClick = { onOpenSymbol(symbol) },
-                        onRemove = { onRemove(symbol) }
+                        onRemove = { onRemove(symbol) },
+                        onBlock = { symbolToBlock = symbol }
                     )
                 }
             }
+        }
+
+        if (symbolToBlock != null) {
+            ConfirmBlocklistDialog(
+                symbol = symbolToBlock!!,
+                onConfirm = {
+                    onBlock(symbolToBlock!!)
+                    symbolToBlock = null
+                },
+                onDismiss = { symbolToBlock = null }
+            )
         }
     }
 }
@@ -78,19 +89,23 @@ private fun WatchlistItem(
     intent: com.polaralias.signalsynthesis.domain.model.TradingIntent?,
     source: com.polaralias.signalsynthesis.domain.model.TickerSource,
     onClick: () -> Unit,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onBlock: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(onClick = onClick),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(symbol, style = MaterialTheme.typography.titleMedium)
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
                 SourceBadge(source)
@@ -101,6 +116,13 @@ private fun WatchlistItem(
             }
             IconButton(onClick = onRemove) {
                 Text("Remove")
+            }
+            IconButton(onClick = onBlock) {
+                Icon(
+                    imageVector = Icons.Default.Block,
+                    contentDescription = "Block",
+                    tint = MaterialTheme.colorScheme.error
+                )
             }
         }
     }

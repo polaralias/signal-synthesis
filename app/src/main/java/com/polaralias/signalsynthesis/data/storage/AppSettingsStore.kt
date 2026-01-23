@@ -54,6 +54,16 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         }
     }
 
+    suspend fun loadBlocklist(): List<String> = withContext(Dispatchers.IO) {
+        prefs.getString(KEY_BLOCKLIST, "")?.split(",")?.filter { it.isNotBlank() } ?: emptyList()
+    }
+
+    suspend fun saveBlocklist(tickers: List<String>) = withContext(Dispatchers.IO) {
+        prefs.edit {
+            putString(KEY_BLOCKLIST, tickers.joinToString(","))
+        }
+    }
+
     companion object {
         private const val PREFS_NAME = "app_settings"
         private const val KEY_QUOTE_REFRESH = "quote_refresh_interval"
@@ -67,5 +77,6 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_SCREEN_AGGR = "screen_aggr"
         private const val KEY_SCREEN_VOL = "screen_vol"
         private const val KEY_CUSTOM_TICKERS = "custom_tickers_list"
+        private const val KEY_BLOCKLIST = "blocklist_tickers"
     }
 }

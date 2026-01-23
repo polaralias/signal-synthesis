@@ -9,13 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -65,7 +62,8 @@ fun SettingsScreen(
     onClearTickerSearch: () -> Unit,
     onSuggestScreenerAi: (String) -> Unit,
     onApplyScreenerAi: () -> Unit,
-    onDismissScreenerAi: () -> Unit
+    onDismissScreenerAi: () -> Unit,
+    onRemoveFromBlocklist: (String) -> Unit
 ) {
     var showThresholdAiDialog by remember { mutableStateOf(false) }
     var showScreenerAiDialog by remember { mutableStateOf(false) }
@@ -622,6 +620,30 @@ fun SettingsScreen(
                         },
                         overlineContent = { SourceBadge(ticker.source) }
                     )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            SectionHeader("Blocklist")
+            Text(
+                text = "Tickers on this list are permanently excluded from analysis and alerts.",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            if (uiState.blocklist.isEmpty()) {
+                Text("No tickers blocklisted.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
+            } else {
+                Column {
+                    for (symbol in uiState.blocklist) {
+                        ListItem(
+                            headlineContent = { Text(symbol) },
+                            trailingContent = {
+                                TextButton(onClick = { onRemoveFromBlocklist(symbol) }) {
+                                    Text("Reintroduce")
+                                }
+                            }
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))

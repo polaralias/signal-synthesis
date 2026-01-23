@@ -39,10 +39,14 @@ class RunAnalysisUseCase(
         assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
         discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
         customTickers: List<String> = emptyList(),
+        blocklist: List<String> = emptyList(),
         screenerThresholds: Map<String, Double> = emptyMap()
     ): AnalysisResult {
         // Step 1: Discover candidates
-        val candidateMap = discoverCandidates.execute(intent, risk, assetClass, discoveryMode, customTickers, screenerThresholds)
+        val rawCandidateMap = discoverCandidates.execute(intent, risk, assetClass, discoveryMode, customTickers, screenerThresholds)
+        
+        // Filter out blocklisted tickers
+        val candidateMap = rawCandidateMap.filter { (symbol, _) -> !blocklist.contains(symbol) }
         val symbols = candidateMap.keys.toList()
         
         if (symbols.isEmpty()) {

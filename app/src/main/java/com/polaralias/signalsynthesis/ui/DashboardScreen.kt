@@ -7,10 +7,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,8 +29,13 @@ fun DashboardScreen(
     onRefreshMarket: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenResults: () -> Unit,
-    onOpenDetail: (String) -> Unit
+    onOpenDetail: (String) -> Unit,
+    onOpenAlertsList: () -> Unit,
+    onRemoveTicker: (String) -> Unit,
+    onBlockTicker: (String) -> Unit
 ) {
+    var symbolToBlock by remember { mutableStateOf<String?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -92,7 +99,9 @@ fun DashboardScreen(
                 RecentResultsSection(
                     uiState = uiState,
                     onOpenResults = onOpenResults,
-                    onOpenDetail = onOpenDetail
+                    onOpenDetail = onOpenDetail,
+                    onRemoveTicker = onRemoveTicker,
+                    onBlockTicker = { symbolToBlock = it }
                 )
             }
 
@@ -100,7 +109,18 @@ fun DashboardScreen(
             AlertStatusCard(
                 enabled = uiState.alertsEnabled,
                 count = uiState.alertSymbolCount,
-                onOpenSettings = onOpenSettings
+                onOpenAlertsList = onOpenAlertsList
+            )
+        }
+
+        if (symbolToBlock != null) {
+            ConfirmBlocklistDialog(
+                symbol = symbolToBlock!!,
+                onConfirm = {
+                    onBlockTicker(symbolToBlock!!)
+                    symbolToBlock = null
+                },
+                onDismiss = { symbolToBlock = null }
             )
         }
     }
@@ -197,9 +217,11 @@ private fun AnalysisButton(label: String, modifier: Modifier = Modifier, onClick
 private fun RecentResultsSection(
     uiState: AnalysisUiState,
     onOpenResults: () -> Unit,
-    onOpenDetail: (String) -> Unit
+    onOpenDetail: (String) -> Unit,
+    onRemoveTicker: (String) -> Unit,
+    onBlockTicker: (String) -> Unit
 ) {
-    val setups = uiState.result?.setups?.take(3) ?: emptyList()
+    val setups = uiState.result?.setups?.filter { !uiState.removedAlerts.contains(it.symbol) }?.take(3) ?: emptyList()
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -218,12 +240,14 @@ private fun RecentResultsSection(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .clickable { onOpenDetail(setup.symbol) },
+                        .padding(vertical = 4.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Row(
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpenDetail(setup.symbol) }
+                            .padding(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
@@ -236,7 +260,17 @@ private fun RecentResultsSection(
                             }
                             Text(setup.setupType, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
+                        
                         Text(formatPercent(setup.confidence), fontWeight = FontWeight.Bold)
+                        
+                        Spacer(modifier = Modifier.width(8.dp))
+                        
+                        IconButton(modifier = Modifier.size(24.dp), onClick = { onRemoveTicker(setup.symbol) }) {
+                            Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(16.dp))
+                        }
+                        IconButton(modifier = Modifier.size(24.dp), onClick = { onBlockTicker(setup.symbol) }) {
+                            Icon(Icons.Default.Block, contentDescription = "Block", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                        }
                     }
                 }
             }
@@ -245,11 +279,11 @@ private fun RecentResultsSection(
 }
 
 @Composable
-private fun AlertStatusCard(enabled: Boolean, count: Int, onOpenSettings: () -> Unit) {
+private fun AlertStatusCard(enabled: Boolean, count: Int, onOpenAlertsList: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onOpenSettings() },
+            .clickable { onOpenAlertsList() },
         colors = CardDefaults.cardColors(
             containerColor = if (enabled) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceVariant
         )
