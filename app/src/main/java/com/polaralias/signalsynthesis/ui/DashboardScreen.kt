@@ -55,10 +55,18 @@ fun DashboardScreen(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
+            MockModeBanner(
+                isVisible = !uiState.hasAnyApiKeys,
+                onClick = onOpenSettings
+            )
+
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
             // Market Overview Section
             MarketSection(
                 indexQuotes = uiState.marketOverview?.indices ?: emptyList(),
@@ -112,6 +120,7 @@ fun DashboardScreen(
                 onOpenAlertsList = onOpenAlertsList
             )
         }
+    }
 
         if (symbolToBlock != null) {
             ConfirmBlocklistDialog(

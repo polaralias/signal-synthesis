@@ -2,6 +2,7 @@ package com.polaralias.signalsynthesis.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -63,7 +64,8 @@ fun SettingsScreen(
     onSuggestScreenerAi: (String) -> Unit,
     onApplyScreenerAi: () -> Unit,
     onDismissScreenerAi: () -> Unit,
-    onRemoveFromBlocklist: (String) -> Unit
+    onRemoveFromBlocklist: (String) -> Unit,
+    onArchiveUsage: () -> Unit = {}
 ) {
     var showThresholdAiDialog by remember { mutableStateOf(false) }
     var showScreenerAiDialog by remember { mutableStateOf(false) }
@@ -125,25 +127,114 @@ fun SettingsScreen(
             Text("LLM key: $llmStatus")
             
             Spacer(modifier = Modifier.height(8.dp))
-            SectionHeader("Usage Status")
-            Text("Total Monthly API Requests: ${uiState.monthlyApiUsage}", fontWeight = FontWeight.Bold)
-            if (uiState.monthlyProviderUsage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                uiState.monthlyProviderUsage.forEach { (provider, count) ->
-                    Text("$provider: $count", style = MaterialTheme.typography.bodySmall)
+            SectionHeader("API Usage (Today)")
+            Text("Total API Requests Today: ${uiState.dailyApiUsage}", fontWeight = FontWeight.Bold)
+            
+            if (uiState.dailyProviderUsage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                uiState.dailyProviderUsage.forEach { (provider, categories) ->
+                    val totalForProvider = categories.values.sum()
+                    androidx.compose.material3.Card(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        colors = androidx.compose.material3.CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "$provider: $totalForProvider calls",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            categories.forEach { (category, count) ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(start = 8.dp, top = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = formatCategoryName(category),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = "$count",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            Text("Usage is monitored per provider to help you stay within individual limits.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            
+            Text(
+                "Usage is tracked daily per provider and operation type to help you understand API consumption patterns.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+            
+            if (uiState.archivedUsage.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                var showArchive by remember { mutableStateOf(false) }
+                
+                TextButton(onClick = { showArchive = !showArchive }) {
+                    Text(if (showArchive) "Hide Previous Days" else "View Previous Days (${uiState.archivedUsage.size})")
+                }
+                
+                if (showArchive) {
+                    uiState.archivedUsage.take(7).forEach { archive ->
+                        androidx.compose.material3.Card(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            colors = androidx.compose.material3.CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = "${archive.date}: ${archive.totalCalls} calls",
+                                    style = MaterialTheme.typography.titleSmall
+                                )
+                                archive.providerBreakdown.forEach { (provider, categories) ->
+                                    val total = categories.values.sum()
+                                    Text(
+                                        text = "  $provider: $total",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(12.dp))
-            Row {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onEditKeys) {
                     Text("Edit Keys")
                 }
-                Spacer(modifier = Modifier.padding(8.dp))
                 OutlinedButton(onClick = onClearKeys) {
                     Text("Clear Keys")
                 }
+            }
+            
+            if (uiState.dailyApiUsage > 0) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedButton(
+                    onClick = onArchiveUsage,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Archive Today & Reset Counter")
+                }
+                Text(
+                    "Archives today's usage to history and resets the counter. Use this to track usage across multiple analysis sessions.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
 
             SectionHeader("AI Model")
@@ -796,5 +887,16 @@ private fun formatModelName(model: LlmModel): String {
         LlmModel.GEMINI_2_5_PRO -> "Gemini 2.5 Pro"
         LlmModel.GEMINI_3_FLASH -> "Gemini 3 Flash"
         LlmModel.GEMINI_3_PRO -> "Gemini 3 Pro"
+    }
+}
+
+private fun formatCategoryName(category: com.polaralias.signalsynthesis.util.ApiUsageCategory): String {
+    return when (category) {
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.DISCOVERY -> "Finding Tickers"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.ANALYSIS -> "Reviewing Trends"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.FUNDAMENTALS -> "Company Data"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.ALERTS -> "Alert Checks"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.SEARCH -> "Ticker Search"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.OTHER -> "Other"
     }
 }

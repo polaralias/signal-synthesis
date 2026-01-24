@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.domain.usecase.DiscoverCandidatesUseCaseTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:29" hostname="LAPTOP" time="0.027">
-  <properties/>
-  <testcase name="returnsCandidatesForDayTrading" classname="com.polaralias.signalsynthesis.domain.usecase.DiscoverCandidatesUseCaseTest" time="0.014"/>
-  <testcase name="returnsCandidatesForLongTerm" classname="com.polaralias.signalsynthesis.domain.usecase.DiscoverCandidatesUseCaseTest" time="0.005"/>
-  <testcase name="returnsCandidatesForSwingTrading" classname="com.polaralias.signalsynthesis.domain.usecase.DiscoverCandidatesUseCaseTest" time="0.008"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

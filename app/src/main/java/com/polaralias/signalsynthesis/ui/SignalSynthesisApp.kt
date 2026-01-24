@@ -168,7 +168,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                 onSuggestScreenerAi = viewModel::suggestScreenerWithAi,
                 onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
                 onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion,
-                onRemoveFromBlocklist = viewModel::removeFromBlocklist
+                onRemoveFromBlocklist = viewModel::removeFromBlocklist,
+                onArchiveUsage = viewModel::archiveUsage
             )
         }
         composable(Screen.Logs.route) {

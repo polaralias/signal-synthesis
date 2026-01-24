@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.polaralias.signalsynthesis.domain.usecase.RankSetupsUseCaseTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-01-20T00:25:29" hostname="LAPTOP" time="0.044">
-  <properties/>
-  <testcase name="executeRanksByConfidenceAndSetsFields" classname="com.polaralias.signalsynthesis.domain.usecase.RankSetupsUseCaseTest" time="0.044"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

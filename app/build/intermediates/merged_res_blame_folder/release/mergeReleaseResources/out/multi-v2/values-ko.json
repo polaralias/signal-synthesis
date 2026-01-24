@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.polaralias.signalsynthesis.app-mergeReleaseResources-67:/values-ko/values-ko.xml",
+            "outputFile": "com.polaralias.signalsynthesis.app-mergeReleaseResources-68:/values-ko/values-ko.xml",
             "map": [
                 {
                     "source": "C:\\Users\\james.DESKTOP-Q8VOBFS\\.gradle\\caches\\transforms-4\\7681f93c1e3044001310bbe900eb6d81\\transformed\\core-1.13.1\\res\\values-ko\\values-ko.xml",

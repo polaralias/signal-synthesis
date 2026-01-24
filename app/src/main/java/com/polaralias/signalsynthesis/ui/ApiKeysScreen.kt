@@ -147,7 +147,12 @@ private fun ApiKeyField(
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = if (isBlacklisted) {
                 { Text("🚫", modifier = Modifier.padding(end = 8.dp)) }
-            } else null
+            } else null,
+            singleLine = true,
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                autoCorrect = false
+            )
         )
         if (isBlacklisted) {
             Text(

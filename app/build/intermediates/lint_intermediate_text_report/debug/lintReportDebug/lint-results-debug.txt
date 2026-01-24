@@ -1,0 +1,287 @@
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\DashboardScreen.kt:190: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                text = "${if (index.changePercent >= 0) "+" else ""}${String.format("%.2f", index.changePercent)}%",
+                                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\data\alerts\MarketAlertWorker.kt:131: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+private fun formatPrice(value: Double): String = "$" + String.format("%.2f", value)
+                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\RankSetupsUseCase.kt:94: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            reasons.add("Price above VWAP (${String.format("%.2f", vwap)})")
+                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\RankSetupsUseCase.kt:103: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    reasons.add("RSI oversold (${String.format("%.1f", rsi)})")
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\RankSetupsUseCase.kt:107: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    reasons.add("RSI overbought (${String.format("%.1f", rsi)})")
+                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\RankSetupsUseCase.kt:110: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    reasons.add("RSI neutral (${String.format("%.1f", rsi)})")
+                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\RankSetupsUseCase.kt:119: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            reasons.add("Price above SMA-200 (${String.format("%.2f", sma200)})")
+                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\RankSetupsUseCase.kt:130: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            reasons.add("Positive sentiment ($label, ${String.format("%.2f", sentimentScore)})")
+                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SettingsScreen.kt:518: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                format = { String.format("%.1f%%", it) },
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SettingsScreen.kt:550: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    suggestionText = "VWAP Dip: ${String.format("%.1f%%", uiState.aiThresholdSuggestion.vwapDipPercent)}\nRSI Oversold: ${uiState.aiThresholdSuggestion.rsiOversold.roundToInt()}\nRSI Overbought: ${uiState.aiThresholdSuggestion.rsiOverbought.roundToInt()}",
+                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SettingsScreen.kt:606: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    if (vol >= 1_000_000) String.format("%.1fM", vol / 1_000_000.0)
+                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SettingsScreen.kt:607: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                    else String.format("%dK", vol / 1_000)
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SettingsScreen.kt:618: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                                     "Min Vol: ${String.format("%.1fM", uiState.aiScreenerSuggestion.minVolume / 1_000_000.0)}",
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SetupDetailScreen.kt:200: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            value = String.format("%.2f", rsi),
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SetupDetailScreen.kt:252: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            value = String.format("%.2f", pe),
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SetupDetailScreen.kt:260: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            value = String.format("%.2f", pb),
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SetupDetailScreen.kt:268: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            value = String.format("%.2f", de),
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SetupDetailScreen.kt:276: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            value = String.format("%.2f%%", yield * 100),
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\SetupDetailScreen.kt:299: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+                            value = String.format("%.2f", score),
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\SynthesizeSetupUseCase.kt:70: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            it.rsi14?.let { rsi -> technicalLines.add("RSI (14): ${String.format("%.2f", rsi)}") }
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\SynthesizeSetupUseCase.kt:71: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            it.vwap?.let { vwap -> technicalLines.add("VWAP: ${String.format("%.2f", vwap)}") }
+                                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\SynthesizeSetupUseCase.kt:72: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            it.atr14?.let { atr -> technicalLines.add("ATR (14): ${String.format("%.2f", atr)}") }
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\SynthesizeSetupUseCase.kt:75: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            it.sma50?.let { sma -> technicalLines.add("SMA (50): ${String.format("%.2f", sma)}") }
+                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\domain\usecase\SynthesizeSetupUseCase.kt:76: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+            it.sma200?.let { sma -> technicalLines.add("SMA (200): ${String.format("%.2f", sma)}") }
+                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\UiComponents.kt:19: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        "$" + String.format("%.5f", value)
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\UiComponents.kt:21: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        "$" + String.format("%.4f", value)
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\UiComponents.kt:23: Warning: Implicitly using the default locale is a common source of bugs: Use String.format(Locale, ...) instead [DefaultLocale]
+        "$" + String.format("%.2f", value)
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "DefaultLocale":
+   Calling String#toLowerCase() or #toUpperCase() without specifying an
+   explicit locale is a common source of bugs. The reason for that is that
+   those methods will use the current locale on the user's device, and even
+   though the code appears to work correctly when you are developing the app,
+   it will fail in some locales. For example, in the Turkish locale, the
+   uppercase replacement for i is not I.
+
+   If you want the methods to just perform ASCII replacement, for example to
+   convert an enum name, call String#toUpperCase(Locale.ROOT) instead. If you
+   really want to use the current locale, call
+   String#toUpperCase(Locale.getDefault()) instead.
+
+   https://developer.android.com/reference/java/util/Locale.html#default_locale
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:14: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]
+        targetSdk = 34
+        ~~~~~~~~~~~~~~
+
+   Explanation for issues of type "OldTargetApi":
+   When your application runs on a version of Android that is more recent than
+   your targetSdkVersion specifies that it has been tested with, various
+   compatibility modes kick in. This ensures that your application continues
+   to work, but it may look out of place. For example, if the targetSdkVersion
+   is less than 14, your app may get an option button in the UI.
+
+   To fix this issue, set the targetSdkVersion to the highest available value.
+   Then test your app to make sure everything works correctly. You may want to
+   consult the compatibility notes to see what changes apply to each version
+   you are adding support for:
+   https://developer.android.com/reference/android/os/Build.VERSION_CODES.html
+   as well as follow this guide:
+   https://developer.android.com/distribute/best-practices/develop/target-sdk.
+   html
+
+   https://developer.android.com/distribute/best-practices/develop/target-sdk.html
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:57: Warning: A newer version of androidx.compose:compose-bom than 2024.06.00 is available: 2026.01.00 [GradleDependency]
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:58: Warning: A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.17.0 [GradleDependency]
+    implementation("androidx.core:core-ktx:1.13.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:59: Warning: A newer version of androidx.activity:activity-compose than 1.9.0 is available: 1.12.2 [GradleDependency]
+    implementation("androidx.activity:activity-compose:1.9.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:64: Warning: A newer version of androidx.lifecycle:lifecycle-runtime-compose than 2.8.1 is available: 2.10.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:65: Warning: A newer version of androidx.lifecycle:lifecycle-viewmodel-compose than 2.8.1 is available: 2.10.0 [GradleDependency]
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:66: Warning: A newer version of androidx.navigation:navigation-compose than 2.7.7 is available: 2.9.6 [GradleDependency]
+    implementation("androidx.navigation:navigation-compose:2.7.7")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:67: Warning: A newer version of androidx.security:security-crypto than 1.1.0-alpha06 is available: 1.1.0 [GradleDependency]
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:68: Warning: A newer version of androidx.work:work-runtime-ktx than 2.9.0 is available: 2.11.0 [GradleDependency]
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:69: Warning: A newer version of com.google.android.material:material than 1.12.0 is available: 1.13.0 [GradleDependency]
+    implementation("com.google.android.material:material:1.12.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:75: Warning: A newer version of com.android.tools:desugar_jdk_libs than 2.1.2 is available: 2.1.5 [GradleDependency]
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.2")
+                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:77: Warning: A newer version of androidx.room:room-runtime than 2.6.1 is available: 2.8.4 [GradleDependency]
+    implementation("androidx.room:room-runtime:$roomVersion")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:78: Warning: A newer version of androidx.room:room-ktx than 2.6.1 is available: 2.8.4 [GradleDependency]
+    implementation("androidx.room:room-ktx:$roomVersion")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:79: Warning: A newer version of androidx.room:room-compiler than 2.6.1 is available: 2.8.4 [GradleDependency]
+    ksp("androidx.room:room-compiler:$roomVersion")
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:83: Warning: A newer version of androidx.room:room-testing than 2.6.1 is available: 2.8.4 [GradleDependency]
+    testImplementation("androidx.room:room-testing:$roomVersion")
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\build.gradle.kts:85: Warning: A newer version of androidx.test:core than 1.5.0 is available: 1.7.0 [GradleDependency]
+    testImplementation("androidx.test:core:1.5.0")
+                        ~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\ui\ChartView.kt:28: Warning: Modifier parameter should be the first optional parameter [ModifierParameter from androidx.compose.ui]
+    modifier: Modifier = Modifier
+    ~~~~~~~~
+
+   Explanation for issues of type "ModifierParameter":
+   The first (or only) Modifier parameter in a Composable function should
+   follow the following rules:
+   - Be named modifier
+   - Have a type of Modifier
+   - Either have no default value, or have a default value of Modifier
+   - If optional, be the first optional parameter in the parameter list
+
+   Vendor: Jetpack Compose
+   Identifier: androidx.compose.ui
+   Feedback: https://issuetracker.google.com/issues/new?component=612128
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\util\NotificationHelper.kt:96: Warning: Unnecessary; SDK_INT is always >= 24 [ObsoleteSdkInt]
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\util\ActivityLogger.kt:97: Warning: Do not place Android context classes in static fields (static reference to UsageTracker which has field context pointing to Context); this is a memory leak [StaticFieldLeak]
+object UsageTracker {
+^
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\java\com\polaralias\signalsynthesis\util\ActivityLogger.kt:106: Warning: Do not place Android context classes in static fields; this is a memory leak [StaticFieldLeak]
+    private var context: Context? = null
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "StaticFieldLeak":
+   A static field will leak contexts.
+
+   Non-static inner classes have an implicit reference to their outer class.
+   If that outer class is for example a Fragment or Activity, then this
+   reference means that the long-running handler/loader/task will hold a
+   reference to the activity which prevents it from getting garbage
+   collected.
+
+   Similarly, direct field references to activities and fragments from these
+   longer running instances can cause leaks.
+
+   ViewModel classes should never point to Views or non-application Contexts.
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\values\strings.xml:4: Warning: The resource R.string.alert_channel_name appears to be unused [UnusedResources]
+    <string name="alert_channel_name">Market Alerts</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\values\strings.xml:5: Warning: The resource R.string.alert_channel_description appears to be unused [UnusedResources]
+    <string name="alert_channel_description">Notifications for triggered signal conditions.</string>
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UnusedResources":
+   Unused resources make applications larger and slow down builds.
+
+
+   The unused resource check can ignore tests. If you want to include
+   resources that are only referenced from tests, consider packaging them in a
+   test source set instead.
+
+   You can include test sources in the unused resource check by setting the
+   system property lint.unused-resources.include-tests =true, and to exclude
+   them (usually for performance reasons), use
+   lint.unused-resources.exclude-tests =true.
+   ,
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-anydpi-v26\ic_launcher.xml:2: Warning: The application adaptive icon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+^
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-anydpi-v26\ic_launcher_round.xml:2: Warning: The application adaptive roundIcon is missing a monochrome tag [MonochromeLauncherIcon]
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+^
+
+   Explanation for issues of type "MonochromeLauncherIcon":
+   If android:roundIcon and android:icon are both in your manifest, you must
+   either remove the reference to android:roundIcon if it is not needed; or,
+   supply the monochrome icon in the drawable defined by the android:roundIcon
+   and android:icon attribute.
+
+   For example, if android:roundIcon and android:icon are both in the
+   manifest, a launcher might choose to use android:roundIcon over
+   android:icon to display the adaptive app icon. Therefore, your themed
+   application iconwill not show if your monochrome attribute is not also
+   specified in android:roundIcon.
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\drawable\ic_launcher_foreground.png: Warning: Found bitmap drawable res/drawable/ic_launcher_foreground.png in densityless folder [IconLocation]
+
+   Explanation for issues of type "IconLocation":
+   The res/drawable folder is intended for density-independent graphics such
+   as shapes defined in XML. For bitmaps, move it to drawable-mdpi and
+   consider providing higher and lower resolution versions in drawable-ldpi,
+   drawable-hdpi and drawable-xhdpi. If the icon really is density independent
+   (for example a solid color) you can place it in drawable-nodpi.
+
+   https://developer.android.com/guide/practices/screens_support.html
+
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-hdpi\ic_launcher_round.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png [IconDuplicates]
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-mdpi\ic_launcher_round.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png [IconDuplicates]
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-xhdpi\ic_launcher_round.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png [IconDuplicates]
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-xxhdpi\ic_launcher_round.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png [IconDuplicates]
+C:\Users\james.DESKTOP-Q8VOBFS\Documents\Development\signal-synthesis\app\src\main\res\mipmap-xxxhdpi\ic_launcher_round.png: Warning: The following unrelated icon files have identical contents: ic_launcher.png, ic_launcher_round.png [IconDuplicates]
+
+   Explanation for issues of type "IconDuplicates":
+   If an icon is repeated under different names, you can consolidate and just
+   use one of the icons and delete the others to make your application
+   smaller. However, duplicated icons usually are not intentional and can
+   sometimes point to icons that were accidentally overwritten or accidentally
+   not updated.
+
+0 errors, 57 warnings

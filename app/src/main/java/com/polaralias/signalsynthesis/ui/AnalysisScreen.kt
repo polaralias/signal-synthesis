@@ -76,10 +76,15 @@ fun AnalysisScreen(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            if (uiState.isPaused) {
+            MockModeBanner(
+                isVisible = !uiState.hasAnyApiKeys,
+                onClick = onOpenKeys
+            )
+
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (uiState.isPaused) {
                 androidx.compose.material3.Surface(
                     color = MaterialTheme.colorScheme.tertiaryContainer,
                     shape = MaterialTheme.shapes.medium,
@@ -189,27 +194,6 @@ fun AnalysisScreen(
             }
 
             SectionHeader("Keys")
-            if (!uiState.hasAnyApiKeys) {
-                androidx.compose.material3.Card(
-                    colors = androidx.compose.material3.CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "MOCK MODE ACTIVE",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                        Text(
-                            text = "No API keys configured. Using simulated data for demonstration.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                    }
-                }
-            }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = onOpenKeys) {
                     Text(if (uiState.hasAnyApiKeys) "Configure Keys" else "Add Keys")
@@ -265,6 +249,7 @@ fun AnalysisScreen(
                 Button(onClick = onOpenResults) {
                     Text("View Results")
                 }
+            }
             }
         }
     }

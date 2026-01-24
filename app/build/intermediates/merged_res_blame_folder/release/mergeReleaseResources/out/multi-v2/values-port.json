@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.polaralias.signalsynthesis.app-mergeReleaseResources-67:/values-port/values-port.xml",
+            "outputFile": "com.polaralias.signalsynthesis.app-mergeReleaseResources-68:/values-port/values-port.xml",
             "map": [
                 {
                     "source": "C:\\Users\\james.DESKTOP-Q8VOBFS\\.gradle\\caches\\transforms-4\\60a4ca374d76ab620d05addfd54e3fb7\\transformed\\appcompat-1.6.1\\res\\values-port\\values-port.xml",

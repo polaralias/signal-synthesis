@@ -113,3 +113,30 @@ fun formatTickerSource(source: com.polaralias.signalsynthesis.domain.model.Ticke
     com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> "📉 Loser"
     com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> "🔥 Active"
 }
+
+@Composable
+fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
+    if (!isVisible) return
+    
+    androidx.compose.material3.Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.errorContainer,
+        modifier = androidx.compose.ui.Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = androidx.compose.ui.Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Text(
+                    text = "⚠️ MOCK MODE ACTIVE",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Text(
+                text = "Synthesis is running in mock mode only. Real market data providers are currently disabled because no API keys have been configured.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
+    }
+}

@@ -62,6 +62,10 @@ fun ResultsScreen(
         val filteredSetups = fullResult.setups.filter { !uiState.removedAlerts.contains(it.symbol) }
 
         Column(modifier = Modifier.padding(paddingValues)) {
+            MockModeBanner(
+                isVisible = !uiState.hasAnyApiKeys
+            )
+
             if (uiState.isPrefetching) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),

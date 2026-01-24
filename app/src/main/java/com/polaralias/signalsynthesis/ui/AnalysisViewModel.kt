@@ -57,7 +57,7 @@ class AnalysisViewModel(
         observeHistory()
         observeAppSettings()
         refreshMarketOverview()
-        observeMonthlyUsage()
+        observeDailyUsage()
         observeProviderBlacklist()
     }
 
@@ -735,17 +735,26 @@ class AnalysisViewModel(
         }
     }
 
-    private fun observeMonthlyUsage() {
+    private fun observeDailyUsage() {
         viewModelScope.launch {
-            com.polaralias.signalsynthesis.util.UsageTracker.monthlyApiCount.collect { count ->
-                _uiState.update { it.copy(monthlyApiUsage = count) }
+            com.polaralias.signalsynthesis.util.UsageTracker.dailyApiCount.collect { count ->
+                _uiState.update { it.copy(dailyApiUsage = count) }
             }
         }
         viewModelScope.launch {
-            com.polaralias.signalsynthesis.util.UsageTracker.monthlyProviderUsage.collect { usage ->
-                _uiState.update { it.copy(monthlyProviderUsage = usage) }
+            com.polaralias.signalsynthesis.util.UsageTracker.dailyProviderUsage.collect { usage ->
+                _uiState.update { it.copy(dailyProviderUsage = usage) }
             }
         }
+        viewModelScope.launch {
+            com.polaralias.signalsynthesis.util.UsageTracker.archivedUsage.collect { archived ->
+                _uiState.update { it.copy(archivedUsage = archived) }
+            }
+        }
+    }
+
+    fun archiveUsage() {
+        com.polaralias.signalsynthesis.util.UsageTracker.manualArchive()
     }
 
     private fun observeProviderBlacklist() {
