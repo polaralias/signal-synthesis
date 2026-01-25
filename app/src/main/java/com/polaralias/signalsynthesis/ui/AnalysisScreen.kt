@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +44,7 @@ fun AnalysisScreen(
         }
     }
 
-    AmbientBackground {
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -55,15 +56,17 @@ fun AnalysisScreen(
                     },
                     actions = {
                         val pauseLabel = if (uiState.isPaused) "RESUME" else "PAUSE"
-                        val pauseIcon = if (uiState.isPaused) "▶️" else "⏸️"
+                        val pauseIcon = if (uiState.isPaused) Icons.Filled.PlayArrow else Icons.Filled.Pause
                         TextButton(onClick = onTogglePause) {
-                            Text("$pauseIcon $pauseLabel", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                            Icon(pauseIcon, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(pauseLabel, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                         }
                         IconButton(onClick = onOpenWatchlist) {
-                            Text("⭐", style = MaterialTheme.typography.titleMedium)
+                            Icon(Icons.Filled.Star, contentDescription = "Watchlist", tint = MaterialTheme.colorScheme.onSurface)
                         }
                         IconButton(onClick = onOpenHistory) {
-                            Text("🕒", style = MaterialTheme.typography.titleMedium)
+                            Icon(Icons.Filled.History, contentDescription = "History", tint = MaterialTheme.colorScheme.onSurface)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -96,7 +99,7 @@ fun AnalysisScreen(
                                 modifier = Modifier.padding(16.dp),
                                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                             ) {
-                                Text("⏸️", style = MaterialTheme.typography.titleLarge)
+                                Icon(Icons.Filled.Pause, contentDescription = null, tint = com.polaralias.signalsynthesis.ui.theme.NeonPurple, modifier = Modifier.size(24.dp))
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text("SYSTEM PAUSED", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, color = com.polaralias.signalsynthesis.ui.theme.NeonPurple)
@@ -114,6 +117,7 @@ fun AnalysisScreen(
                 item {
                     AssetChip(
                         label = "STOCKS",
+                        icon = Icons.Filled.CandlestickChart,
                         selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
                         onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS) }
                     )
@@ -121,6 +125,7 @@ fun AnalysisScreen(
                 item {
                     AssetChip(
                         label = "FOREX",
+                        icon = Icons.Filled.CurrencyExchange,
                         selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX,
                         onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX) }
                     )
@@ -128,6 +133,7 @@ fun AnalysisScreen(
                 item {
                     AssetChip(
                         label = "METALS",
+                        icon = Icons.Filled.Diamond,
                         selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.METALS,
                         onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.METALS) }
                     )
@@ -135,6 +141,7 @@ fun AnalysisScreen(
                 item {
                     AssetChip(
                         label = "ALL",
+                        icon = Icons.Filled.Public,
                         selected = uiState.assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL,
                         onClick = { onAssetClassSelected(com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) }
                     )
@@ -147,11 +154,13 @@ fun AnalysisScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AssetChip(
                     label = "CURATED",
+                    icon = Icons.Filled.Recommend,
                     selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
                     onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED) }
                 )
                 AssetChip(
                     label = "LIVE SCANNER",
+                    icon = Icons.Filled.Radar,
                     selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER,
                     onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER) }
                 )
@@ -163,16 +172,19 @@ fun AnalysisScreen(
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 IntentChip(
                     label = "DAY TRADE",
+                    icon = Icons.Filled.Timer,
                     selected = uiState.intent == TradingIntent.DAY_TRADE,
                     onClick = { onIntentSelected(TradingIntent.DAY_TRADE) }
                 )
                 IntentChip(
                     label = "SWING",
+                    icon = Icons.Filled.ShowChart,
                     selected = uiState.intent == TradingIntent.SWING,
                     onClick = { onIntentSelected(TradingIntent.SWING) }
                 )
                 IntentChip(
                     label = "LONG TERM",
+                    icon = Icons.Filled.CalendarToday,
                     selected = uiState.intent == TradingIntent.LONG_TERM,
                     onClick = { onIntentSelected(TradingIntent.LONG_TERM) }
                 )
@@ -187,7 +199,7 @@ fun AnalysisScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                            Text("🚫")
+                            Icon(Icons.Filled.Block, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 "Providers Paused",
@@ -383,7 +395,7 @@ private fun TelemetryItem(label: String, value: String, color: Color) {
 }
 
 @Composable
-private fun IntentChip(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun IntentChip(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
     val color = if (selected) com.polaralias.signalsynthesis.ui.theme.NeonBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
@@ -393,17 +405,21 @@ private fun IntentChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (selected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = if (selected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (selected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            )
+        }
     }
 }
 
 @Composable
-private fun AssetChip(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun AssetChip(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
     val color = if (selected) com.polaralias.signalsynthesis.ui.theme.NeonPurple else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
@@ -413,11 +429,15 @@ private fun AssetChip(label: String, selected: Boolean, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = if (selected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = if (selected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = if (selected) color else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+            )
+        }
     }
 }

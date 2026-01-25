@@ -72,7 +72,11 @@ fun SetupDetailScreen(
                     },
                     actions = {
                         IconButton(onClick = { onToggleWatchlist(symbol) }) {
-                            Text(if (uiState.watchlist.contains(symbol)) "⭐" else "☆", fontSize = 20.sp)
+                            Icon(
+                                imageVector = if (uiState.watchlist.contains(symbol)) Icons.Filled.Star else Icons.Default.StarBorder,
+                                contentDescription = "Watchlist",
+                                tint = RainbowBlue
+                            )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -171,12 +175,15 @@ fun SetupDetailScreen(
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
                     ) {
-                        Text(
-                            text = "⚠️ Earnings Alert: Expected in $daysUntil days",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(12.dp)
-                        )
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.onErrorContainer)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Earnings Alert: Expected in $daysUntil days",
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
                     }
                 }
             }
@@ -387,7 +394,7 @@ fun SetupDetailScreen(
                         } else {
                             setup.reasons.forEach { reason ->
                                 Row(modifier = Modifier.padding(vertical = 6.dp)) {
-                                    Text("⚡", fontSize = 12.sp)
+                                    Icon(Icons.Filled.Bolt, contentDescription = null, modifier = Modifier.size(16.dp), tint = RainbowBlue)
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(reason, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
                                 }
