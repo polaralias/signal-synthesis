@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun AppContent(viewModel: AnalysisViewModel, initialSymbol: String?) {
-    MaterialTheme {
+    com.polaralias.signalsynthesis.ui.theme.SignalSynthesisTheme {
         Surface(color = MaterialTheme.colorScheme.background) {
             SignalSynthesisApp(viewModel, initialSymbol)
         }

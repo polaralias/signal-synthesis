@@ -1,19 +1,22 @@
 package com.polaralias.signalsynthesis.ui
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.polaralias.signalsynthesis.domain.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,26 +29,50 @@ fun MarketAlertsScreen(
 ) {
     var symbolToBlock by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Market Alerts") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("Back")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
+    AmbientBackground {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { 
+                        RainbowMcpText(
+                            text = "MARKET ALERTS", 
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                letterSpacing = 3.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        ) 
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
         if (uiState.alertSymbols.isEmpty()) {
             Box(
                 modifier = Modifier
                     .padding(paddingValues)
-                    .fillMaxSize(),
+                    .fillMaxSize()
+                    .padding(32.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No active alerts. New signals will appear here.", color = MaterialTheme.colorScheme.outline)
+                Text(
+                    "NO ACTIVE SIGNALS", 
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    letterSpacing = 2.sp
+                )
             }
         } else {
             LazyColumn(
@@ -78,6 +105,7 @@ fun MarketAlertsScreen(
         }
     }
 }
+}
 
 @Composable
 private fun AlertItem(
@@ -86,7 +114,7 @@ private fun AlertItem(
     onRemove: () -> Unit,
     onBlock: () -> Unit
 ) {
-    Card(
+    com.polaralias.signalsynthesis.ui.components.GlassCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
@@ -96,8 +124,20 @@ private fun AlertItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(symbol, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text("Currently monitoring for signals", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    symbol, 
+                    style = MaterialTheme.typography.titleLarge, 
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    "ACTIVE TELEMETRY MONITORING", 
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 8.sp,
+                    letterSpacing = 1.sp
+                )
             }
             
             IconButton(onClick = onOpen) {
@@ -109,7 +149,7 @@ private fun AlertItem(
             }
             
             IconButton(onClick = onBlock) {
-                Icon(Icons.Default.Block, contentDescription = "Add to Blocklist", tint = MaterialTheme.colorScheme.error)
+                Icon(Icons.Default.Block, contentDescription = "Add to Blocklist", tint = com.polaralias.signalsynthesis.ui.theme.NeonRed.copy(alpha = 0.7f))
             }
         }
     }

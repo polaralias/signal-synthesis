@@ -1,23 +1,25 @@
 package com.polaralias.signalsynthesis.ui
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.foundation.clickable
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,18 +29,36 @@ fun ApiKeysScreen(
     onFieldChanged: (KeyField, String) -> Unit,
     onSave: () -> Unit
 ) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("API Keys") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("Back")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
+    AmbientBackground {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { 
+                        RainbowMcpText(
+                            text = "NODE AUTHENTICATION", 
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                letterSpacing = 3.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        ) 
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
@@ -47,31 +67,45 @@ fun ApiKeysScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (uiState.blacklistedProviders.isNotEmpty()) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                com.polaralias.signalsynthesis.ui.components.GlassCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("⚠️", style = MaterialTheme.typography.titleMedium)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                "AUTH PROTOCOL FAILURE",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = com.polaralias.signalsynthesis.ui.theme.NeonRed,
+                                letterSpacing = 1.sp
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "⚠️ Provider Blocked",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                        Text(
-                            "One or more providers returned a 403 Forbidden error and are temporarily paused (10min). Please check your API keys.",
-                            style = MaterialTheme.typography.bodySmall
+                            "One or more market nodes are temporarily suspended due to invalid credentials. Session will reset in 10 minutes.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     }
                 }
             }
 
-            Text("Provide your data provider keys. Keys are stored locally.")
+            Text(
+                "ESTABLISH SECURE LINK TO MARKET DECODERS:",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
             
             ApiKeyField(
                 value = uiState.keys.alpacaKey,
                 onValueChange = { onFieldChanged(KeyField.ALPACA_KEY, it) },
                 label = "Alpaca API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("AlpacaMarketDataProvider")
+                isBlacklisted = uiState.blacklistedProviders.contains("Alpaca")
             )
             
             ApiKeyField(
@@ -85,34 +119,34 @@ fun ApiKeysScreen(
                 value = uiState.keys.massiveKey,
                 onValueChange = { onFieldChanged(KeyField.MASSIVE, it) },
                 label = "Massive API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("MassiveMarketDataProvider")
+                isBlacklisted = uiState.blacklistedProviders.contains("Massive")
             )
 
             ApiKeyField(
                 value = uiState.keys.finnhubKey,
                 onValueChange = { onFieldChanged(KeyField.FINNHUB, it) },
                 label = "Finnhub API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("FinnhubMarketDataProvider")
+                isBlacklisted = uiState.blacklistedProviders.contains("Finnhub")
             )
 
             ApiKeyField(
                 value = uiState.keys.fmpKey,
                 onValueChange = { onFieldChanged(KeyField.FMP, it) },
                 label = "FMP API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("FmpMarketDataProvider")
+                isBlacklisted = uiState.blacklistedProviders.contains("Fmp")
             )
 
             ApiKeyField(
                 value = uiState.keys.twelveDataKey,
                 onValueChange = { onFieldChanged(KeyField.TWELVE_DATA, it) },
                 label = "Twelve Data API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("TwelveDataMarketDataProvider")
+                isBlacklisted = uiState.blacklistedProviders.contains("TwelveData")
             )
 
-            SectionHeader("AI Key")
+            SectionHeader("AI COGNITIVE HUB")
             val llmLabel = when (uiState.appSettings.llmProvider) {
-                LlmProvider.OPENAI -> "OpenAI API Key"
-                LlmProvider.GEMINI -> "Gemini API Key"
+                LlmProvider.OPENAI -> "OpenAI Signature"
+                LlmProvider.GEMINI -> "Gemini Signature"
             }
             ApiKeyField(
                 value = uiState.keys.llmKey,
@@ -120,14 +154,32 @@ fun ApiKeysScreen(
                 label = llmLabel,
                 isBlacklisted = false
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row {
-                Button(onClick = onSave) {
-                    Text("Save Keys")
-                }
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                    .background(com.polaralias.signalsynthesis.ui.theme.NeonGreen.copy(alpha = 0.2f))
+                    .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonGreen.copy(alpha = 0.5f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                    .clickable { onSave() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "COMMIT CONFIGURATION",
+                    color = com.polaralias.signalsynthesis.ui.theme.NeonGreen,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp
+                )
             }
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
+}
 }
 
 @Composable

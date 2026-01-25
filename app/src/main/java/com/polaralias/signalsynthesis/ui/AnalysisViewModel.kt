@@ -21,6 +21,7 @@ import com.polaralias.signalsynthesis.util.Logger
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.IndexQuote
 import com.polaralias.signalsynthesis.domain.model.MarketOverview
+import com.polaralias.signalsynthesis.domain.model.MarketSection
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +140,7 @@ class AnalysisViewModel(
         Logger.event("analysis_started", mapOf("intent" to _uiState.value.intent.name))
         analysisJob = viewModelScope.launch(ioDispatcher) {
             try {
+                _uiState.update { it.copy(progressMessage = "Discovering candidates...") }
                 val useCase = buildUseCase(apiKeys)
                 val state = _uiState.value
                 val customTickerList = state.customTickers.map { it.symbol }
@@ -148,6 +150,7 @@ class AnalysisViewModel(
                     "provider_screener_enabled" to (state.hasAnyApiKeys)
                 ))
 
+                _uiState.update { it.copy(progressMessage = "Filtering tradeable symbols...") }
                 val result = useCase.execute(
                     intent = state.intent,
                     risk = state.appSettings.riskTolerance,
@@ -161,6 +164,7 @@ class AnalysisViewModel(
                         "aggressive" to state.appSettings.screenerAggressiveThreshold
                     )
                 )
+                _uiState.update { it.copy(isLoading = false, progressMessage = null) }
                 Logger.event("analysis_completed", mapOf("setups" to result.setups.size))
                 _uiState.update {
                     it.copy(
@@ -190,7 +194,7 @@ class AnalysisViewModel(
                 // Trigger Prefetching
                 val llmKey = _uiState.value.keys.llmKey
                 if (llmKey.isNotBlank() && result.setups.isNotEmpty()) {
-                    _uiState.update { it.copy(isPrefetching = true, prefetchCount = 0) }
+                    _uiState.update { it.copy(isPrefetching = true, prefetchCount = 0, progressMessage = "Prefetching AI insights...") }
                     
                     val prefetchFlow = PrefetchAiSummariesUseCase(
                         buildSynthesisUseCase(apiKeys),
@@ -209,7 +213,7 @@ class AnalysisViewModel(
                         )
                         _uiState.update { it.copy(prefetchCount = it.prefetchCount + 1) }
                     }
-                    _uiState.update { it.copy(isPrefetching = false) }
+                    _uiState.update { it.copy(isPrefetching = false, progressMessage = null) }
                 }
             } catch (ex: kotlinx.coroutines.CancellationException) {
                 Logger.i("ViewModel", "Analysis cancelled")
@@ -219,6 +223,7 @@ class AnalysisViewModel(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
+                        progressMessage = null,
                         errorMessage = ex.message ?: "Analysis failed. Please try again."
                     )
                 }
@@ -230,7 +235,7 @@ class AnalysisViewModel(
 
     fun cancelAnalysis() {
         analysisJob?.cancel()
-        _uiState.update { it.copy(isLoading = false, isPaused = false) }
+        _uiState.update { it.copy(isLoading = false, isPaused = false, progressMessage = null) }
         Logger.event("analysis_cancelled")
     }
 
@@ -284,13 +289,17 @@ class AnalysisViewModel(
                     return@launch
                 }
 
+                _uiState.update { it.copy(progressMessage = "Synthesizing Setup...") }
                 val useCase = buildSynthesisUseCase(state.keys.toApiKeys())
                 val synthesis = useCase.execute(
                     setup = setup,
                     llmKey = llmKey,
                     reasoningDepth = state.appSettings.reasoningDepth,
                     outputLength = state.appSettings.outputLength,
-                    verbosity = state.appSettings.verbosity
+                    verbosity = state.appSettings.verbosity,
+                    onProgress = { msg ->
+                        _uiState.update { it.copy(progressMessage = "AI Synthesis: $msg") }
+                    }
                 )
                 
                 // Save to cache
@@ -305,7 +314,9 @@ class AnalysisViewModel(
                         verdict = synthesis.verdict
                     )
                 )
+                _uiState.update { it.copy(progressMessage = null) }
             } catch (ex: Exception) {
+                _uiState.update { it.copy(progressMessage = null) }
                 updateAiSummary(
                     symbol,
                     AiSummaryState(
@@ -384,10 +395,9 @@ class AnalysisViewModel(
             try {
                 val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.THRESHOLD_SUGGESTION_SYSTEM.trimIndent()
 
-                val currentModel = _uiState.value.appSettings.llmModel
-                val client = llmClientFactory.create(currentModel)
-                
                 val settings = _uiState.value.appSettings
+                val client = llmClientFactory.create(getSuggestionModel())
+                
                 val startTime = System.currentTimeMillis()
                 val response = client.generate(
                     prompt = "User context: $prompt",
@@ -419,7 +429,7 @@ class AnalysisViewModel(
                 val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.SCREENER_SUGGESTION_SYSTEM.trimIndent()
 
                 val settings = _uiState.value.appSettings
-                val client = llmClientFactory.create(settings.llmModel)
+                val client = llmClientFactory.create(getSuggestionModel())
                 val startTime = System.currentTimeMillis()
                 val response = client.generate(
                     prompt = "User context: $prompt",
@@ -668,24 +678,83 @@ class AnalysisViewModel(
                 val bundle = providerFactory.build(apiKeys)
                 val repository = MarketDataRepository(bundle)
                 
-                val symbols = listOf("SPY", "QQQ", "DIA")
-                val quotes = repository.getQuotes(symbols)
+                // 1. Fetch main indices
+                val indexSymbols = listOf("SPY", "QQQ", "DIA", "IWM", "VIX")
+                val indexQuotes = repository.getQuotes(indexSymbols)
                 
-                val indices = symbols.mapNotNull { symbol ->
-                    val quote = quotes[symbol] ?: return@mapNotNull null
-                    val names = mapOf("SPY" to "S&P 500", "QQQ" to "Nasdaq 100", "DIA" to "Dow 30")
+                val indexItems = indexSymbols.mapNotNull { symbol ->
+                    val quote = indexQuotes[symbol] ?: return@mapNotNull null
+                    val names = mapOf(
+                        "SPY" to "S&P 500",
+                        "QQQ" to "Nasdaq 100",
+                        "DIA" to "Dow 30",
+                        "IWM" to "Russell 2000",
+                        "VIX" to "Volatility"
+                    )
                     IndexQuote(
                         symbol = symbol,
                         name = names[symbol] ?: symbol,
                         price = quote.price,
-                        changePercent = quote.changePercent ?: 0.0
+                        changePercent = quote.changePercent ?: 0.0,
+                        volume = quote.volume
                     )
                 }
 
-                if (indices.isNotEmpty()) {
+                val sections = mutableListOf<MarketSection>()
+                if (indexItems.isNotEmpty()) {
+                    sections.add(MarketSection("Indices", indexItems))
+                }
+
+                // 2. Fetch Gainers
+                try {
+                    val gainerSymbols = repository.getTopGainers(5)
+                    if (gainerSymbols.isNotEmpty()) {
+                        val gainerQuotes = repository.getQuotes(gainerSymbols)
+                        val gainerItems = gainerSymbols.mapNotNull { symbol ->
+                            val quote = gainerQuotes[symbol] ?: return@mapNotNull null
+                            IndexQuote(
+                                symbol = symbol,
+                                name = symbol,
+                                price = quote.price,
+                                changePercent = quote.changePercent ?: 0.0,
+                                volume = quote.volume
+                            )
+                        }
+                        if (gainerItems.isNotEmpty()) {
+                            sections.add(MarketSection("Top Gainers", gainerItems))
+                        }
+                    }
+                } catch (e: Exception) {
+                    Logger.e("ViewModel", "Failed to fetch gainers", e)
+                }
+
+                // 3. Fetch Losers
+                try {
+                    val loserSymbols = repository.getTopLosers(5)
+                    if (loserSymbols.isNotEmpty()) {
+                        val loserQuotes = repository.getQuotes(loserSymbols)
+                        val loserItems = loserSymbols.mapNotNull { symbol ->
+                            val quote = loserQuotes[symbol] ?: return@mapNotNull null
+                            IndexQuote(
+                                symbol = symbol,
+                                name = symbol,
+                                price = quote.price,
+                                changePercent = quote.changePercent ?: 0.0,
+                                volume = quote.volume
+                            )
+                        }
+                        if (loserItems.isNotEmpty()) {
+                            sections.add(MarketSection("Top Losers", loserItems))
+                        }
+                    }
+                } catch (e: Exception) {
+                    Logger.e("ViewModel", "Failed to fetch losers", e)
+                }
+
+                if (sections.isNotEmpty()) {
                     _uiState.update { 
                         it.copy(
-                            marketOverview = MarketOverview(indices, clock.instant()),
+                            marketOverview = MarketOverview(sections, clock.instant()),
                             isLoadingMarket = false
                         )
                     }
@@ -693,6 +762,7 @@ class AnalysisViewModel(
                     _uiState.update { it.copy(isLoadingMarket = false) }
                 }
             } catch (e: Exception) {
+                Logger.e("ViewModel", "Market overview refresh failed", e)
                 _uiState.update { it.copy(isLoadingMarket = false) }
             }
         }
@@ -701,10 +771,21 @@ class AnalysisViewModel(
     private fun buildSynthesisUseCase(
         apiKeys: com.polaralias.signalsynthesis.data.provider.ApiKeys
     ): SynthesizeSetupUseCase {
+        val settings = _uiState.value.appSettings
         val bundle = providerFactory.build(apiKeys)
         val repository = MarketDataRepository(bundle)
-        val client = llmClientFactory.create(_uiState.value.appSettings.llmModel)
-        return SynthesizeSetupUseCase(repository, client)
+        
+        val analysisModel = if (settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.DEEP || 
+                                settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.EXTRA) {
+            settings.reasoningModel
+        } else {
+            settings.analysisModel
+        }
+        
+        val analysisClient = llmClientFactory.create(analysisModel)
+        val verdictClient = llmClientFactory.create(settings.verdictModel)
+        
+        return SynthesizeSetupUseCase(repository, analysisClient, verdictClient)
     }
 
     private fun updateAiSummary(symbol: String, summary: AiSummaryState) {
@@ -761,7 +842,9 @@ class AnalysisViewModel(
         viewModelScope.launch {
             com.polaralias.signalsynthesis.data.provider.ProviderStatusManager.blacklist.collect { blacklist ->
                 val now = System.currentTimeMillis()
-                val activeBlacklist = blacklist.filterValues { it > now }.keys.toList()
+                val activeBlacklist = blacklist.filterValues { it > now }.keys
+                    .map { simplifyProviderName(it) }
+                    .toList()
                 _uiState.update { it.copy(blacklistedProviders = activeBlacklist) }
             }
         }
@@ -795,6 +878,19 @@ class AnalysisViewModel(
             Logger.e("AnalysisViewModel", "Failed to parse AI screener suggestion", e)
             return AiScreenerSuggestion(5.0, 20.0, 100.0, 1000000L, "Failed to parse AI suggestion.")
         }
+    }
+
+    private fun getSuggestionModel(): com.polaralias.signalsynthesis.domain.ai.LlmModel {
+        val provider = _uiState.value.appSettings.llmProvider
+        return if (provider == com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI) {
+            com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_MINI
+        } else {
+            com.polaralias.signalsynthesis.domain.ai.LlmModel.GEMINI_3_FLASH
+        }
+    }
+
+    private fun simplifyProviderName(name: String): String {
+        return name.replace("MarketDataProvider", "").replace("DataProvider", "")
     }
 }
 

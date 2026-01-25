@@ -23,10 +23,11 @@ object NotificationHelper {
     fun showBlacklistNotification(context: Context, providerName: String) {
         ensureChannels(context)
         
+        val simpleName = providerName.replace("MarketDataProvider", "").replace("DataProvider", "")
         val notification = NotificationCompat.Builder(context, SYSTEM_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("Provider Blocked")
-            .setContentText("$providerName has been temporarily paused due to authentication errors.")
+            .setContentText("$simpleName has been temporarily paused due to authentication errors.")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(buildPendingIntent(context, null))

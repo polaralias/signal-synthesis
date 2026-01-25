@@ -1,0 +1,49 @@
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin
+> Task :app:compileDebugKotlin
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:46:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:165:22 Unresolved reference: clickable
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/HistoryScreen.kt:45:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:48:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:48:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:52:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt:44:57 Unresolved reference: CheckCircle
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt:46:57 Unresolved reference: Block
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt:125:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt:820:81 Unresolved reference: Add
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt:858:81 Unresolved reference: Close
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:69:99 Unresolved reference: ArrowBack
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/WatchlistScreen.kt:48:99 Unresolved reference: ArrowBack
+
+> Task :app:compileDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 45s
+16 actionable tasks: 3 executed, 13 up-to-date

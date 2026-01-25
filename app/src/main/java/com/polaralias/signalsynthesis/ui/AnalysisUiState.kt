@@ -46,6 +46,7 @@ data class TickerEntry(
 data class AnalysisUiState(
     val intent: TradingIntent = TradingIntent.DAY_TRADE,
     val isLoading: Boolean = false,
+    val progressMessage: String? = null,
     val errorMessage: String? = null,
     val result: AnalysisResult? = null,
     val lastRunAt: Instant? = null,

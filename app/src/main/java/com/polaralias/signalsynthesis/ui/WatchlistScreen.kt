@@ -1,21 +1,22 @@
 package com.polaralias.signalsynthesis.ui
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.polaralias.signalsynthesis.domain.model.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,48 +29,81 @@ fun WatchlistScreen(
 ) {
     var symbolToBlock by remember { mutableStateOf<String?>(null) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Watchlist") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("Back")
-                    }
-                }
-            )
-        }
-    ) { paddingValues ->
-        if (uiState.watchlist.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .padding(paddingValues)
-                    .padding(16.dp)
-            ) {
-                Text("Your watchlist is empty.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(uiState.watchlist) { symbol ->
-                    val setup = uiState.result?.setups?.find { it.symbol == symbol }
-                        ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }
-                    
-                    WatchlistItem(
-                        symbol = symbol,
-                        intent = setup?.intent,
-                        source = setup?.source ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED,
-                        onClick = { onOpenSymbol(symbol) },
-                        onRemove = { onRemove(symbol) },
-                        onBlock = { symbolToBlock = symbol }
+    AmbientBackground {
+        Scaffold(
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = { 
+                        RainbowMcpText(
+                            text = "WATCHLIST", 
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                letterSpacing = 4.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        ) 
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = MaterialTheme.colorScheme.primary
+                    )
+                )
+            },
+            containerColor = Color.Transparent
+        ) { paddingValues ->
+            if (uiState.watchlist.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .padding(paddingValues)
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "NO TRACKED NODES", 
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        letterSpacing = 2.sp
+                    )
+                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Add symbols from results to monitor them here.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
                     )
                 }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.padding(paddingValues),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(uiState.watchlist) { symbol ->
+                        val setup = uiState.result?.setups?.find { it.symbol == symbol }
+                            ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }
+                        
+                        WatchlistItem(
+                            symbol = symbol,
+                            intent = setup?.intent,
+                            source = setup?.source ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED,
+                            onClick = { onOpenSymbol(symbol) },
+                            onRemove = { onRemove(symbol) },
+                            onBlock = { symbolToBlock = symbol }
+                        )
+                    }
+                }
             }
         }
-
         if (symbolToBlock != null) {
             ConfirmBlocklistDialog(
                 symbol = symbolToBlock!!,
@@ -92,9 +126,8 @@ private fun WatchlistItem(
     onRemove: () -> Unit,
     onBlock: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
+    com.polaralias.signalsynthesis.ui.components.GlassCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -106,22 +139,35 @@ private fun WatchlistItem(
                     .clickable(onClick = onClick),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(symbol, style = MaterialTheme.typography.titleMedium)
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    symbol, 
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
                 SourceBadge(source)
                 intent?.let {
                     androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
                     IntentBadge(it)
                 }
             }
-            IconButton(onClick = onRemove) {
-                Text("Remove")
+            
+            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Remove",
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                )
             }
-            IconButton(onClick = onBlock) {
+            
+            IconButton(onClick = onBlock, modifier = Modifier.size(32.dp)) {
                 Icon(
                     imageVector = Icons.Default.Block,
                     contentDescription = "Block",
-                    tint = MaterialTheme.colorScheme.error
+                    modifier = Modifier.size(18.dp),
+                    tint = com.polaralias.signalsynthesis.ui.theme.NeonRed.copy(alpha = 0.7f)
                 )
             }
         }

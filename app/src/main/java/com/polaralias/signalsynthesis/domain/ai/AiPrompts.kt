@@ -3,36 +3,41 @@ package com.polaralias.signalsynthesis.domain.ai
 object AiPrompts {
     const val SYSTEM_ANALYST = "You are a senior trading analyst. Respond with JSON only."
 
-    const val SETUP_SYNTHESIS_TEMPLATE = """
-        Act as an elite quantitative trading analyst. Review the provided market data and synthesize it into a high-conviction trade thesis.
+    const val STEP_1_DATA_ANALYSIS = """
+        Analyze the following market data for {symbol}. 
+        Provide a deep evaluation of:
+        1. Technical Strength/Weakness (RS, VWAP, Trends).
+        2. Fundamental Context (Valuation, Sector, Catalysts).
+        3. Sentiment Profile.
         
-        Mandatory Guidelines:
-        1. Explicitly reference technical indicators (RSI, VWAP, ATR, SMA) and their current values.
-        2. Evaluate the risk-to-reward ratio based on the trigger, stop-loss, and target prices.
-        3. Consider the trading 'Intent' ({intent}) and ensure your analysis matches the horizon.
-        4. In the 'summary', provide a professional narrative explaining *why* this setup is unique or standard.
-        5. In 'risks', list specific environmental or technical factors that could invalidate the thesis.
+        Output a detailed internal analysis document. Focus purely on data interpretation.
         
-        Output schema (JSON ONLY):
-        {
-          "summary": "Professional narrative synthesis of technicals, fundamentals, and sentiment.",
-          "risks": ["Specific invalidation point 1", "Specific invalidation point 2"],
-          "verdict": "Clear, decisive recommendation (e.g., 'Strong Buy on Dip', 'Avoid - Low Confluence')"
-        }
-
         Ticker: {symbol}
-        Setup: {setupType}
-        Trigger: {triggerPrice}
-        Stop: {stopLoss}
-        Target: {targetPrice}
-        Confidence: {confidence}
-        Reasons: {reasons}
-        
         Technical Indicators:
         {technicalIndicators}
         
         Context & Fundamentals:
         {context}
+        
+        Algorithmic Reasons: {reasons}
+    """
+
+    const val STEP_2_TRADING_VERDICT = """
+        Act as the Chief Investment Officer. Based on the following Data Analysis, provide a final trading verdict for {symbol}.
+        
+        Intent: {intent}
+        Setup Type: {setupType}
+        Levels: Trigger {triggerPrice}, Stop {stopLoss}, Target {targetPrice}.
+        
+        Data Analysis Report:
+        {analysisReport}
+        
+        Output schema (JSON ONLY):
+        {
+          "summary": "High-conviction synthesis of why this trade works or fails.",
+          "risks": ["Primary risk factor", "Secondary risk factor"],
+          "verdict": "Final Decisive action (e.g. 'Strong Buy', 'Watchlist Only', 'Reject')"
+        }
     """
 
     const val THRESHOLD_SUGGESTION_SYSTEM = """

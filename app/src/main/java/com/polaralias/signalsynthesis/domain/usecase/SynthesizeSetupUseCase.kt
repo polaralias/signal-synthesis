@@ -3,9 +3,6 @@ package com.polaralias.signalsynthesis.domain.usecase
 import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.model.AiSynthesis
-import com.polaralias.signalsynthesis.domain.model.CompanyProfile
-import com.polaralias.signalsynthesis.domain.model.FinancialMetrics
-import com.polaralias.signalsynthesis.domain.model.SentimentData
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
 import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONArray
@@ -13,37 +10,67 @@ import org.json.JSONObject
 
 class SynthesizeSetupUseCase(
     private val repository: MarketDataRepository,
-    private val llmClient: LlmClient
+    private val analysisClient: LlmClient,
+    private val verdictClient: LlmClient
 ) {
     suspend fun execute(
         setup: TradeSetup,
         llmKey: String,
         reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth = com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.BALANCED,
         outputLength: com.polaralias.signalsynthesis.domain.ai.OutputLength = com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD,
-        verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM
+        verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM,
+        onProgress: ((String) -> Unit)? = null
     ): AiSynthesis {
-        val prompt = buildPrompt(setup)
-        Logger.i("LLM", "Sending synthesis request for ${setup.symbol}")
-        Logger.d("LLM", "Prompt: $prompt")
+        // Step 1: Data Analysis
+        onProgress?.invoke("Data Interpretation...")
+        val analysisPrompt = buildAnalysisPrompt(setup)
+        Logger.i("LLM", "Step 1: Data Analysis for ${setup.symbol}")
         
-        try {
-            val rawResponse = llmClient.generate(
-                prompt = prompt,
+        val startTime1 = System.currentTimeMillis()
+        val analysisReport = try {
+            val res = analysisClient.generate(
+                prompt = analysisPrompt,
                 apiKey = llmKey,
                 reasoningDepth = reasoningDepth,
                 outputLength = outputLength,
                 verbosity = verbosity
             )
-            Logger.i("LLM", "Received synthesis response for ${setup.symbol}")
-            Logger.d("LLM", "Response: $rawResponse")
-            return parseResponse(rawResponse)
+            val duration = System.currentTimeMillis() - startTime1
+            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("DataAnalysis", analysisPrompt, res, true, duration)
+            res
         } catch (e: Exception) {
-            Logger.e("LLM", "Failed to generate synthesis for ${setup.symbol}", e)
+            val duration = System.currentTimeMillis() - startTime1
+            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("DataAnalysis", analysisPrompt, e.message ?: "Failed", false, duration)
             throw e
         }
+
+        // Step 2: Trading Verdict
+        val verdictPrompt = buildVerdictPrompt(setup, analysisReport)
+        Logger.i("LLM", "Step 2: Trading Verdict for ${setup.symbol}")
+        onProgress?.invoke("Formulating Verdict...")
+        
+        val startTime2 = System.currentTimeMillis()
+        val rawVerdictResponse = try {
+            val res = verdictClient.generate(
+                prompt = verdictPrompt,
+                apiKey = llmKey,
+                reasoningDepth = reasoningDepth,
+                outputLength = outputLength,
+                verbosity = verbosity
+            )
+            val duration = System.currentTimeMillis() - startTime2
+            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("TradingVerdict", verdictPrompt, res, true, duration)
+            res
+        } catch (e: Exception) {
+            val duration = System.currentTimeMillis() - startTime2
+            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("TradingVerdict", verdictPrompt, e.message ?: "Failed", false, duration)
+            throw e
+        }
+
+        return parseResponse(rawVerdictResponse)
     }
 
-    private fun buildPrompt(setup: TradeSetup): String {
+    private fun buildAnalysisPrompt(setup: TradeSetup): String {
         val contextLines = mutableListOf<String>()
         setup.profile?.let {
             contextLines.add("Company: ${it.name}")
@@ -78,30 +105,28 @@ class SynthesizeSetupUseCase(
 
         val reasons = if (setup.reasons.isEmpty()) "None" else setup.reasons.joinToString("; ")
 
-        return com.polaralias.signalsynthesis.domain.ai.AiPrompts.SETUP_SYNTHESIS_TEMPLATE
+        return com.polaralias.signalsynthesis.domain.ai.AiPrompts.STEP_1_DATA_ANALYSIS
             .replace("{symbol}", setup.symbol)
-            .replace("{setupType}", setup.setupType)
+            .replace("{technicalIndicators}", technicalLines.joinToString("\n"))
+            .replace("{context}", contextLines.joinToString("\n"))
+            .replace("{reasons}", reasons)
+            .trimIndent()
+    }
+
+    private fun buildVerdictPrompt(setup: TradeSetup, analysisReport: String): String {
+        return com.polaralias.signalsynthesis.domain.ai.AiPrompts.STEP_2_TRADING_VERDICT
+            .replace("{symbol}", setup.symbol)
             .replace("{intent}", setup.intent.name)
+            .replace("{setupType}", setup.setupType)
             .replace("{triggerPrice}", setup.triggerPrice.toString())
             .replace("{stopLoss}", setup.stopLoss.toString())
             .replace("{targetPrice}", setup.targetPrice.toString())
-            .replace("{confidence}", setup.confidence.toString())
-            .replace("{reasons}", reasons)
-            .replace("{technicalIndicators}", technicalLines.joinToString("\n"))
-            .replace("{context}", contextLines.joinToString("\n"))
+            .replace("{analysisReport}", analysisReport)
             .trimIndent()
     }
 
     private fun parseResponse(raw: String): AiSynthesis {
         val trimmed = raw.trim()
-        if (trimmed.isEmpty()) {
-            return AiSynthesis(
-                summary = "No AI response received.",
-                risks = emptyList(),
-                verdict = "Unavailable"
-            )
-        }
-
         val json = extractJson(trimmed)
         if (json != null) {
             try {
@@ -114,16 +139,10 @@ class SynthesizeSetupUseCase(
                     risks = risks,
                     verdict = verdict.ifBlank { "Unavailable" }
                 )
-            } catch (_: Exception) {
-                // Fallback to plain text below.
-            }
+            } catch (_: Exception) { }
         }
 
-        return AiSynthesis(
-            summary = trimmed,
-            risks = emptyList(),
-            verdict = "Unavailable"
-        )
+        return AiSynthesis(summary = trimmed, risks = emptyList(), verdict = "Unavailable")
     }
 
     private fun extractJson(text: String): String? {
@@ -140,13 +159,5 @@ class SynthesizeSetupUseCase(
             items.add(optString(index))
         }
         return items.filter { it.isNotBlank() }
-    }
-
-    private suspend fun <T> safeFetch(block: suspend () -> T?): T? {
-        return try {
-            block()
-        } catch (_: Exception) {
-            null
-        }
     }
 }

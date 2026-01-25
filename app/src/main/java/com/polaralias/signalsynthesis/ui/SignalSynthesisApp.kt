@@ -13,6 +13,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = null) {
@@ -42,139 +45,151 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = Screen.Dashboard.route
-    ) {
-        composable(Screen.Dashboard.route) {
-            DashboardScreen(
-                uiState = uiState,
-                onIntentSelected = { intent ->
-                    viewModel.updateIntent(intent)
-                    navController.navigate(Screen.Analysis.route)
-                },
-                onRefreshMarket = viewModel::refreshMarketOverview,
-                onOpenSettings = { navController.navigate(Screen.Settings.route) },
-                onOpenResults = { navController.navigate(Screen.Results.route) },
-                onOpenDetail = { symbol ->
-                    navController.navigate(Screen.detailRoute(symbol))
-                },
-                onOpenAlertsList = { navController.navigate(Screen.Alerts.route) },
-                onRemoveTicker = viewModel::removeAlert,
-                onBlockTicker = viewModel::addToBlocklist
-            )
+    androidx.compose.foundation.layout.Box(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Dashboard.route
+        ) {
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(
+                    uiState = uiState,
+                    onIntentSelected = { intent ->
+                        viewModel.updateIntent(intent)
+                        navController.navigate(Screen.Analysis.route)
+                    },
+                    onRefreshMarket = viewModel::refreshMarketOverview,
+                    onOpenSettings = { navController.navigate(Screen.Settings.route) },
+                    onOpenResults = { navController.navigate(Screen.Results.route) },
+                    onOpenDetail = { symbol ->
+                        navController.navigate(Screen.detailRoute(symbol))
+                    },
+                    onOpenAlertsList = { navController.navigate(Screen.Alerts.route) },
+                    onRemoveTicker = viewModel::removeAlert,
+                    onBlockTicker = viewModel::addToBlocklist
+                )
+            }
+            composable(Screen.Analysis.route) {
+                AnalysisScreen(
+                    uiState = uiState,
+                    onIntentSelected = viewModel::updateIntent,
+                    onAssetClassSelected = viewModel::updateAssetClass,
+                    onDiscoveryModeSelected = viewModel::updateDiscoveryMode,
+                    onRunAnalysis = viewModel::runAnalysis,
+                    onOpenKeys = { navController.navigate(Screen.Keys.route) },
+                    onOpenResults = { navController.navigate(Screen.Results.route) },
+                    onOpenSettings = { navController.navigate(Screen.Settings.route) },
+                    onOpenWatchlist = { navController.navigate(Screen.Watchlist.route) },
+                    onOpenHistory = { navController.navigate(Screen.History.route) },
+                    onDismissError = viewModel::clearError,
+                    onClearNavigation = viewModel::clearNavigation,
+                    onCancelAnalysis = viewModel::cancelAnalysis,
+                    onTogglePause = viewModel::togglePause
+                )
+            }
+            composable(Screen.Watchlist.route) {
+                WatchlistScreen(
+                    uiState = uiState,
+                    onBack = { navController.popBackStack() },
+                    onOpenSymbol = { symbol ->
+                        navController.navigate(Screen.detailRoute(symbol))
+                    },
+                    onRemove = viewModel::toggleWatchlist,
+                    onBlock = viewModel::addToBlocklist
+                )
+            }
+            composable(Screen.History.route) {
+                HistoryScreen(
+                    uiState = uiState,
+                    onBack = { navController.popBackStack() },
+                    onClearHistory = viewModel::clearHistory,
+                    onViewResult = { result ->
+                        viewModel.showHistoricalResult(result)
+                        navController.navigate(Screen.Results.route)
+                    }
+                )
+            }
+            composable(Screen.Keys.route) {
+                ApiKeysScreen(
+                    uiState = uiState,
+                    onBack = { navController.popBackStack() },
+                    onFieldChanged = viewModel::updateKey,
+                    onSave = viewModel::saveKeys
+                )
+            }
+            composable(Screen.Results.route) {
+                ResultsScreen(
+                    uiState = uiState,
+                    onBack = { navController.popBackStack() },
+                    onOpenDetail = { symbol ->
+                        navController.navigate(Screen.detailRoute(symbol))
+                    },
+                    onToggleWatchlist = viewModel::toggleWatchlist,
+                    onRemoveTicker = viewModel::removeAlert,
+                    onBlockTicker = viewModel::addToBlocklist
+                )
+            }
+            composable(Screen.Alerts.route) {
+                MarketAlertsScreen(
+                    uiState = uiState,
+                    onBack = { navController.popBackStack() },
+                    onOpenDetail = { symbol ->
+                        navController.navigate(Screen.detailRoute(symbol))
+                    },
+                    onRemoveAlert = viewModel::removeAlert,
+                    onAddToBlocklist = viewModel::addToBlocklist
+                )
+            }
+            composable(
+                route = Screen.Detail.route,
+                arguments = listOf(navArgument(Screen.Detail.ARG_SYMBOL) { type = NavType.StringType })
+            ) { entry ->
+                val symbol = entry.arguments?.getString(Screen.Detail.ARG_SYMBOL).orEmpty()
+                SetupDetailScreen(
+                    uiState = uiState,
+                    symbol = Uri.decode(symbol),
+                    onBack = { navController.popBackStack() },
+                    onRequestSummary = viewModel::requestAiSummary,
+                    onRequestChartData = viewModel::requestChartData,
+                    onToggleWatchlist = viewModel::toggleWatchlist
+                )
+            }
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    uiState = uiState,
+                    onBack = { navController.popBackStack() },
+                    onEditKeys = { navController.navigate(Screen.Keys.route) },
+                    onClearKeys = viewModel::clearKeys,
+                    onToggleAlerts = viewModel::updateAlertsEnabled,
+                    onUpdateSettings = viewModel::updateAppSettings,
+                    onSuggestAi = viewModel::suggestThresholdsWithAi,
+                    onApplyAi = viewModel::applyAiThresholdSuggestion,
+                    onDismissAi = viewModel::dismissAiSuggestion,
+                    onOpenLogs = { navController.navigate(Screen.Logs.route) },
+                    onAddCustomTicker = viewModel::addCustomTicker,
+                    onRemoveCustomTicker = viewModel::removeCustomTicker,
+                    onSearchTickers = viewModel::searchTickers,
+                    onClearTickerSearch = viewModel::clearTickerSearch,
+                    onSuggestScreenerAi = viewModel::suggestScreenerWithAi,
+                    onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
+                    onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion,
+                    onRemoveFromBlocklist = viewModel::removeFromBlocklist,
+                    onArchiveUsage = viewModel::archiveUsage
+                )
+            }
+            composable(Screen.Logs.route) {
+                LogViewerScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
-        composable(Screen.Analysis.route) {
-            AnalysisScreen(
-                uiState = uiState,
-                onIntentSelected = viewModel::updateIntent,
-                onAssetClassSelected = viewModel::updateAssetClass,
-                onDiscoveryModeSelected = viewModel::updateDiscoveryMode,
-                onRunAnalysis = viewModel::runAnalysis,
-                onOpenKeys = { navController.navigate(Screen.Keys.route) },
-                onOpenResults = { navController.navigate(Screen.Results.route) },
-                onOpenSettings = { navController.navigate(Screen.Settings.route) },
-                onOpenWatchlist = { navController.navigate(Screen.Watchlist.route) },
-                onOpenHistory = { navController.navigate(Screen.History.route) },
-                onDismissError = viewModel::clearError,
-                onClearNavigation = viewModel::clearNavigation,
-                onCancelAnalysis = viewModel::cancelAnalysis,
-                onTogglePause = viewModel::togglePause
-            )
-        }
-        composable(Screen.Watchlist.route) {
-            WatchlistScreen(
-                uiState = uiState,
-                onBack = { navController.popBackStack() },
-                onOpenSymbol = { symbol ->
-                    navController.navigate(Screen.detailRoute(symbol))
-                },
-                onRemove = viewModel::toggleWatchlist,
-                onBlock = viewModel::addToBlocklist
-            )
-        }
-        composable(Screen.History.route) {
-            HistoryScreen(
-                uiState = uiState,
-                onBack = { navController.popBackStack() },
-                onClearHistory = viewModel::clearHistory,
-                onViewResult = { result ->
-                    viewModel.showHistoricalResult(result)
-                    navController.navigate(Screen.Results.route)
-                }
-            )
-        }
-        composable(Screen.Keys.route) {
-            ApiKeysScreen(
-                uiState = uiState,
-                onBack = { navController.popBackStack() },
-                onFieldChanged = viewModel::updateKey,
-                onSave = viewModel::saveKeys
-            )
-        }
-        composable(Screen.Results.route) {
-            ResultsScreen(
-                uiState = uiState,
-                onBack = { navController.popBackStack() },
-                onOpenDetail = { symbol ->
-                    navController.navigate(Screen.detailRoute(symbol))
-                },
-                onToggleWatchlist = viewModel::toggleWatchlist,
-                onRemoveTicker = viewModel::removeAlert,
-                onBlockTicker = viewModel::addToBlocklist
-            )
-        }
-        composable(Screen.Alerts.route) {
-            MarketAlertsScreen(
-                uiState = uiState,
-                onBack = { navController.popBackStack() },
-                onOpenDetail = { symbol ->
-                    navController.navigate(Screen.detailRoute(symbol))
-                },
-                onRemoveAlert = viewModel::removeAlert,
-                onAddToBlocklist = viewModel::addToBlocklist
-            )
-        }
-        composable(
-            route = Screen.Detail.route,
-            arguments = listOf(navArgument(Screen.Detail.ARG_SYMBOL) { type = NavType.StringType })
-        ) { entry ->
-            val symbol = entry.arguments?.getString(Screen.Detail.ARG_SYMBOL).orEmpty()
-            SetupDetailScreen(
-                uiState = uiState,
-                symbol = Uri.decode(symbol),
-                onBack = { navController.popBackStack() },
-                onRequestSummary = viewModel::requestAiSummary,
-                onRequestChartData = viewModel::requestChartData,
-                onToggleWatchlist = viewModel::toggleWatchlist
-            )
-        }
-        composable(Screen.Settings.route) {
-            SettingsScreen(
-                uiState = uiState,
-                onBack = { navController.popBackStack() },
-                onEditKeys = { navController.navigate(Screen.Keys.route) },
-                onClearKeys = viewModel::clearKeys,
-                onToggleAlerts = viewModel::updateAlertsEnabled,
-                onUpdateSettings = viewModel::updateAppSettings,
-                onSuggestAi = viewModel::suggestThresholdsWithAi,
-                onApplyAi = viewModel::applyAiThresholdSuggestion,
-                onDismissAi = viewModel::dismissAiSuggestion,
-                onOpenLogs = { navController.navigate(Screen.Logs.route) },
-                onAddCustomTicker = viewModel::addCustomTicker,
-                onRemoveCustomTicker = viewModel::removeCustomTicker,
-                onSearchTickers = viewModel::searchTickers,
-                onClearTickerSearch = viewModel::clearTickerSearch,
-                onSuggestScreenerAi = viewModel::suggestScreenerWithAi,
-                onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
-                onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion,
-                onRemoveFromBlocklist = viewModel::removeFromBlocklist,
-                onArchiveUsage = viewModel::archiveUsage
-            )
-        }
-        composable(Screen.Logs.route) {
-            LogViewerScreen(
-                onBack = { navController.popBackStack() }
+
+        if (uiState.isLoading) {
+            androidx.compose.material3.LinearProgressIndicator(
+                modifier = androidx.compose.ui.Modifier
+                    .fillMaxWidth()
+                    .align(androidx.compose.ui.Alignment.TopCenter),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primaryContainer
             )
         }
     }
