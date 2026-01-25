@@ -54,7 +54,7 @@ fun SectionHeader(title: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp, bottom = 12.dp)
+            .padding(top = 12.dp, bottom = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -195,6 +195,7 @@ fun RainbowMcpText(
 @Composable
 fun AppHeader(
     title: String,
+    suffix: String? = null,
     subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
@@ -213,13 +214,15 @@ fun AppHeader(
                     color = MaterialTheme.colorScheme.onBackground
                 )
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            RainbowMcpText(
-                text = "SYNTHESIS",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = 32.sp
+            if (suffix != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                RainbowMcpText(
+                    text = suffix,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 32.sp
+                    )
                 )
-            )
+            }
         }
         if (subtitle != null) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -364,7 +367,7 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "SYSTEM OFFLINE / MOCK MODE",
+                    text = "DEMO MODE ACTIVE",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Black,
                     color = RainbowRed,
@@ -373,13 +376,13 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Synthesis is running in simulation mode. Real-time market protocols are disabled until valid API credentials are provided.",
+                text = "Running in demo mode. Real-time data is disabled until API keys are configured.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "TAP TO CONFIGURE AUTHENTICATION KEYS",
+                text = "TAP TO CONFIGURE API KEYS",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.Black,
                 color = RainbowRed,

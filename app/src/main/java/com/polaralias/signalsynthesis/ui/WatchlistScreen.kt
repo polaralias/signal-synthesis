@@ -61,10 +61,7 @@ fun WatchlistScreen(
             containerColor = Color.Transparent
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                AppHeader(
-                    title = "TRACKED",
-                    subtitle = "Real-time spectrum surveillance nodes"
-                )
+
 
                 if (uiState.watchlist.isEmpty()) {
                     Box(
@@ -83,7 +80,7 @@ fun WatchlistScreen(
                             )
                             Spacer(modifier = Modifier.height(32.dp))
                             Text(
-                                "NO TRACKED NODES", 
+                                "WATCHLIST EMPTY", 
                                 style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                                 fontWeight = FontWeight.Black,
@@ -91,7 +88,7 @@ fun WatchlistScreen(
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                "Initialize synthesis protocols to identify targets for surveillance.",
+                                "Run analysis to identify targets for monitoring.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                                 textAlign = TextAlign.Center,

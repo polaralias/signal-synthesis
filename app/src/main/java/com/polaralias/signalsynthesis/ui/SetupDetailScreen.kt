@@ -95,16 +95,13 @@ fun SetupDetailScreen(
             ) {
                 if (setup == null) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("NODE NOT FOUND", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontWeight = FontWeight.Black)
+                        Text("ASSET NOT FOUND", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontWeight = FontWeight.Black)
                     }
                     return@Scaffold
                 }
 
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    AppHeader(
-                        title = "SYNTHESIS",
-                        subtitle = "Neural interpretation & technical report"
-                    )
+
 
                     SectionHeader("AI INTERPRETATION")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -112,7 +109,7 @@ fun SetupDetailScreen(
                             when {
                                 !uiState.hasLlmKey -> {
                                     Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                                        Text("Neural core offline. Activate LLM in settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), textAlign = TextAlign.Center)
+                                        Text("AI service offline. Activate LLM in settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), textAlign = TextAlign.Center)
                                     }
                                 }
                                 aiSummary?.status == AiSummaryStatus.LOADING -> {
@@ -129,7 +126,7 @@ fun SetupDetailScreen(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.Error, contentDescription = null, tint = ErrorRed, modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(12.dp))
-                                        Text(aiSummary.errorMessage ?: "NODE FAILURE", color = ErrorRed, fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelSmall)
+                                        Text(aiSummary.errorMessage ?: "ANALYSIS FAILED", color = ErrorRed, fontWeight = FontWeight.Black, style = MaterialTheme.typography.labelSmall)
                                     }
                                 }
                                 aiSummary?.status == AiSummaryStatus.READY -> {
@@ -173,7 +170,7 @@ fun SetupDetailScreen(
                                 }
                                 else -> {
                                     Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                                        Text("Initializing neural link...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                        Text("Initializing AI service...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                                     }
                                 }
                             }
@@ -399,7 +396,7 @@ fun SetupDetailScreen(
                         com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(24.dp)) {
                                 if (setup.reasons.isEmpty()) {
-                                    Text("NO LOGICAL NODES DETECTED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                    Text("NO KEY FACTORS DETECTED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                                 } else {
                                     setup.reasons.forEach { reason ->
                                         Row(modifier = Modifier.padding(vertical = 8.dp)) {

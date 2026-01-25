@@ -63,7 +63,7 @@ fun AnalysisScreen(
                         }
                         
                         RainbowMcpText(
-                            text = "PROTOCOL",
+                            text = "ANALYSIS",
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
                         )
 
@@ -82,10 +82,7 @@ fun AnalysisScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AppHeader(
-                    title = "ENGINE",
-                    subtitle = "Initialize neural market synthesis"
-                )
+
 
                 MockModeBanner(
                     isVisible = !uiState.hasAnyApiKeys,
@@ -296,7 +293,7 @@ fun AnalysisScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    SectionHeader("NODE TELEMETRY")
+                    SectionHeader("ANALYSIS STATISTICS")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         if (uiState.result == null) {
                             Box(

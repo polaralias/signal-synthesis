@@ -16,7 +16,7 @@ data class AppSettings(
     val llmProvider: LlmProvider = LlmProvider.OPENAI,
     val analysisModel: LlmModel = LlmModel.GPT_5_1,
     val verdictModel: LlmModel = LlmModel.GPT_5_1,
-    val reasoningModel: LlmModel = LlmModel.GPT_5_O_REASONING,
+    val reasoningModel: LlmModel = LlmModel.GPT_5_2,
     val reasoningDepth: ReasoningDepth = ReasoningDepth.BALANCED,
     val outputLength: OutputLength = OutputLength.STANDARD,
     val verbosity: Verbosity = Verbosity.MEDIUM,
@@ -27,8 +27,11 @@ data class AppSettings(
     val screenerMinVolume: Long = 1_000_000L,
     val preferredAssetClass: AssetClass = AssetClass.STOCKS,
     val discoveryMode: DiscoveryMode = DiscoveryMode.CURATED,
-    val isAnalysisPaused: Boolean = false
+    val isAnalysisPaused: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM
 )
+
+enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class RiskTolerance { CONSERVATIVE, MODERATE, AGGRESSIVE }
 

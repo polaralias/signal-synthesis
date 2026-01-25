@@ -13,7 +13,7 @@ enum class LlmModel(val provider: LlmProvider, val modelId: String) {
     GPT_5_NANO(LlmProvider.OPENAI, "gpt-5-nano"),
     GPT_5_2_PRO(LlmProvider.OPENAI, "gpt-5.2-pro"),
     GPT_4_O_MINI(LlmProvider.OPENAI, "gpt-4o-mini"),
-    GPT_5_O_REASONING(LlmProvider.OPENAI, "o1-preview"),
+
 
     // Gemini Models (as per Phase 3 Spec)
     GEMINI_2_5_FLASH(LlmProvider.GEMINI, "gemini-2.5-flash"),

@@ -104,10 +104,7 @@ fun ResultsScreen(
             val filteredSetups = fullResult.setups.filter { !uiState.removedAlerts.contains(it.symbol) }
 
             Column(modifier = Modifier.padding(paddingValues)) {
-                AppHeader(
-                    title = "RECON",
-                    subtitle = "Synthesized higher-order opportunities"
-                )
+
 
                 if (uiState.isPrefetching) {
                     com.polaralias.signalsynthesis.ui.components.GlassBox(
@@ -120,7 +117,7 @@ fun ResultsScreen(
                                 CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.5.dp, color = BrandPrimary)
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
-                                    "NEURAL SYNTHESIS IN PROGRESS", 
+                                    "ANALYSIS IN PROGRESS", 
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     color = BrandPrimary,
                                     fontWeight = FontWeight.Black,
@@ -230,7 +227,7 @@ private fun SetupCard(
                             fontWeight = FontWeight.Black,
                             color = if (setup.confidence > 0.7) SuccessGreen else BrandPrimary
                         )
-                        Text("RELIABILITY", style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp), fontWeight = FontWeight.Black)
+                        Text("CONFIDENCE", style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp), fontWeight = FontWeight.Black)
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     IconButton(onClick = onToggleWatchlist, modifier = Modifier.size(36.dp)) {
@@ -264,10 +261,10 @@ private fun SetupCard(
                     .padding(16.dp)
             ) {
                 val summary = when {
-                    !hasLlmKey -> "Connect LLM node for neural synthesis"
+                    !hasLlmKey -> "Connect LLM for detailed analysis"
                     aiSummary?.status == AiSummaryStatus.READY -> aiSummary.summary.orEmpty()
-                    aiSummary?.status == AiSummaryStatus.LOADING -> "Neural synthesis in progress..."
-                    aiSummary?.status == AiSummaryStatus.ERROR -> "Neural node offline"
+                    aiSummary?.status == AiSummaryStatus.LOADING -> "Generating analysis..."
+                    aiSummary?.status == AiSummaryStatus.ERROR -> "Analysis service unavailable"
                     else -> "Detailed analysis pending"
                 }
                 Row(verticalAlignment = Alignment.Top) {
@@ -310,7 +307,7 @@ private fun SetupCard(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)),
                     contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
-                    Text("FULL SPECTRUM", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
+                    Text("VIEW DETAILS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
         }

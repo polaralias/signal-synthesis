@@ -64,10 +64,7 @@ fun HistoryScreen(
             containerColor = Color.Transparent
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                AppHeader(
-                    title = "TELEMETRY",
-                    subtitle = "Historical synthesis reports"
-                )
+
 
                 if (uiState.history.isEmpty()) {
                     Box(

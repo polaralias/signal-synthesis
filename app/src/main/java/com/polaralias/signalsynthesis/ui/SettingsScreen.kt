@@ -140,21 +140,54 @@ fun SettingsScreen(
                     .padding(paddingValues)
                     .verticalScroll(androidx.compose.foundation.rememberScrollState())
             ) {
-                AppHeader(
-                    title = "SYSTEM",
-                    subtitle = "Manage neural cores and protocols"
-                )
+
 
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    SectionHeader("NODE AUTHENTICATION")
+                    SectionHeader("APPEARANCE")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Text("INTERFACE THEME", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            var themeExpanded by remember { mutableStateOf(false) }
+                            ExposedDropdownMenuBox(
+                                expanded = themeExpanded,
+                                onExpandedChange = { themeExpanded = !themeExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = uiState.appSettings.themeMode.name.lowercase().replaceFirstChar { it.uppercase() },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = themeExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = themeExpanded,
+                                    onDismissRequest = { themeExpanded = false }
+                                ) {
+                                    for (mode in com.polaralias.signalsynthesis.data.settings.ThemeMode.values()) {
+                                        DropdownMenuItem(
+                                            text = { Text(mode.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                                            onClick = {
+                                                onUpdateSettings(uiState.appSettings.copy(themeMode = mode))
+                                                themeExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    SectionHeader("API AUTHENTICATION")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
                             val providerStatus = if (uiState.hasAnyApiKeys) "ACTIVE" else "DATA LINK OFFLINE"
-                            val llmStatus = if (uiState.hasLlmKey) "ACTIVE" else "NEURAL CORE OFFLINE"
+                            val llmStatus = if (uiState.hasLlmKey) "ACTIVE" else "AI SERVICE OFFLINE"
                             
                             AuthStatusItem("MARKET DATA PROTOCOL", providerStatus, uiState.hasAnyApiKeys)
                             Spacer(modifier = Modifier.height(20.dp))
-                            AuthStatusItem("AI SYNTHESIS PROTOCOL", llmStatus, uiState.hasLlmKey)
+                            AuthStatusItem("AI ANALYSIS SERVICE", llmStatus, uiState.hasLlmKey)
                             
                             Spacer(modifier = Modifier.height(24.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -245,7 +278,7 @@ fun SettingsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
-                    SectionHeader("NEURAL CORE")
+                    SectionHeader("AI CONFIGURATION")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
                             var providerExpanded by remember { mutableStateOf(false) }
@@ -277,7 +310,7 @@ fun SettingsScreen(
                                 ) {
                                     for (provider in LlmProvider.values()) {
                                         DropdownMenuItem(
-                                            text = { Text(if(provider == LlmProvider.OPENAI) "OPENAI" else "GOOGLE GEMINI") },
+                                            text = { Text(if(provider == LlmProvider.OPENAI) "OpenAI" else "Google Gemini") },
                                             onClick = {
                                                 val defaultModel = LlmModel.values().first { it.provider == provider }
                                                 onUpdateSettings(uiState.appSettings.copy(
@@ -295,7 +328,7 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            Text("ANALYSIS CORE (DATA INTERPRETATION)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Text("ANALYSIS MODEL (DATA INTERPRETATION)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             ExposedDropdownMenuBox(
                                 expanded = analysisModelExpanded,
@@ -328,7 +361,7 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            Text("VERDICT CORE (FINAL THESIS)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Text("VERDICT MODEL (FINAL THESIS)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             ExposedDropdownMenuBox(
                                 expanded = verdictModelExpanded,
@@ -361,7 +394,7 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(20.dp))
 
-                            Text("REASONING CORE (DEEP SEARCH)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Text("REASONING MODEL (DEEP SEARCH)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             ExposedDropdownMenuBox(
                                 expanded = reasoningModelExpanded,
@@ -564,7 +597,7 @@ fun SettingsScreen(
                                 letterSpacing = 1.sp
                             )
                             Text(
-                                text = if (uiState.alertsEnabled) "SCANNING ${uiState.alertSymbolCount} NODES" else "PROTOCOLS SUSPENDED",
+                                text = if (uiState.alertsEnabled) "SCANNING ${uiState.alertSymbolCount} ASSETS" else "MONITORING SUSPENDED",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = if (uiState.alertsEnabled) BrandPrimary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                 fontWeight = FontWeight.Bold,
@@ -784,7 +817,7 @@ fun SettingsScreen(
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-            SectionHeader("CUSTOM TICKER NODES")
+            SectionHeader("CUSTOM TICKERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     OutlinedTextField(

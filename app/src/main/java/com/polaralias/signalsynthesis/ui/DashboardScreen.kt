@@ -55,7 +55,7 @@ fun DashboardScreen(
                         }
                         
                         RainbowMcpText(
-                            text = "SYNTHESIS",
+                            text = "SIGNAL SYNTHESIS",
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Black)
                         )
 
@@ -74,25 +74,21 @@ fun DashboardScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                AppHeader(
-                    title = "NEURAL",
-                    subtitle = "Autonomous market intelligence protocol"
-                )
-
-                MockModeBanner(
-                    isVisible = !uiState.hasAnyApiKeys,
-                    onClick = onOpenSettings
-                )
-
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
+                    MockModeBanner(
+                        isVisible = !uiState.hasAnyApiKeys,
+                        onClick = onOpenSettings
+                    )
+
                     // Market Pulse Section
                     uiState.marketOverview?.let { overview ->
                         MarketSection(
                             overview = overview,
-                            isLoading = uiState.isLoadingMarket
+                            isLoading = uiState.isLoadingMarket,
+                            onOpenDetail = onOpenDetail
                         )
                     }
 
@@ -146,7 +142,7 @@ private fun WatchlistPreview(onOpenWatchlist: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
-            SectionHeader(title = "CORE ASSETS")
+            SectionHeader(title = "WATCHLIST")
             TextButton(onClick = onOpenWatchlist) {
                 Text("MANAGE", style = MaterialTheme.typography.labelSmall, color = BrandPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
             }
@@ -162,8 +158,8 @@ private fun WatchlistPreview(onOpenWatchlist: () -> Unit) {
                 Icon(Icons.Default.ViewQuilt, contentDescription = null, tint = BrandSecondary)
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("NODE SURVEILLANCE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                    Text("Access sector performance nodes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                    Text("SECTOR MONITORING", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                    Text("View sector performance metrics", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
@@ -175,17 +171,16 @@ private fun WatchlistPreview(onOpenWatchlist: () -> Unit) {
 @Composable
 private fun MarketSection(
     overview: MarketOverview,
-    isLoading: Boolean
+    isLoading: Boolean,
+    onOpenDetail: (String) -> Unit
 ) {
-    var selectedIndex by remember { mutableStateOf<IndexQuote?>(null) }
-
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
-            SectionHeader(title = "MARKET PULSE")
+            SectionHeader(title = "MARKET DATA")
             if (isLoading) {
                 Box(modifier = Modifier.padding(bottom = 12.dp)) {
                     CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = BrandPrimary)
@@ -217,60 +212,15 @@ private fun MarketSection(
                     contentPadding = PaddingValues(bottom = 12.dp)
                 ) {
                     items(section.items) { index ->
-                        IndexCard(index, onClick = { selectedIndex = index })
+                        IndexCard(index, onClick = { onOpenDetail(index.symbol) })
                     }
                 }
             }
         }
     }
-
-    if (selectedIndex != null) {
-        MarketDetailDialog(
-            index = selectedIndex!!,
-            onDismiss = { selectedIndex = null }
-        )
-    }
 }
 
-@Composable
-private fun MarketDetailDialog(index: IndexQuote, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { 
-            Column {
-                RainbowMcpText(text = index.symbol, style = MaterialTheme.typography.headlineSmall)
-                Text(index.name.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                DetailRow("CURRENT PRICE", formatPrice(index.price))
-                DetailRow("NODE VOLATILITY", "${if (index.changePercent >= 0) "+" else ""}${String.format("%.2f", index.changePercent)}%")
-                index.volume?.let { DetailRow("TOTAL LIQUIDITY", formatLargeNumber(it)) }
-                index.high?.let { DetailRow("SESSION HIGH", formatPrice(it)) }
-                index.low?.let { DetailRow("SESSION LOW", formatPrice(it)) }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { 
-                Text("DISMISS", fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp) 
-            }
-        },
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(24.dp)
-    )
-}
 
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Black)
-    }
-}
 
 @Composable
 private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
@@ -325,7 +275,7 @@ private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
 @Composable
 private fun QuickAnalysisSection(onIntentSelected: (TradingIntent) -> Unit) {
     Column {
-        SectionHeader(title = "SYNTHESIS PROTOCOLS")
+        SectionHeader(title = "TRADING STRATEGIES")
         Spacer(modifier = Modifier.height(12.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -385,7 +335,7 @@ private fun RecentResultsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
-            SectionHeader(title = "RECENT SYNERGY")
+            SectionHeader(title = "RECENT SIGNALS")
             TextButton(onClick = onOpenResults) {
                 Text("HISTORICAL", style = MaterialTheme.typography.labelSmall, color = BrandPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
             }
@@ -394,7 +344,7 @@ private fun RecentResultsSection(
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Box(modifier = Modifier.fillMaxWidth().height(80.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        "NO ACTIVE PROTOCOLS RECORDED", 
+                        "NO ACTIVE SIGNALS FOUND", 
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                         fontWeight = FontWeight.Black,
@@ -494,14 +444,14 @@ private fun AlertStatusCard(enabled: Boolean, count: Int, onOpenAlertsList: () -
             Spacer(modifier = Modifier.width(20.dp))
             Column {
                 Text(
-                    text = if (enabled) "SURVEILLANCE ACTIVE" else "ANTENNAS OFFLINE",
+                    text = if (enabled) "MONITORING ACTIVE" else "MONITORING PAUSED",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Black,
                     color = color,
                     letterSpacing = 1.sp
                 )
                 Text(
-                    text = if (enabled) "Monitoring $count premium assets" else "Tap to resume spectral scanning",
+                    text = if (enabled) "Monitoring $count assets" else "Tap to resume scanning",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )

@@ -14,6 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.work.WorkManager
 import androidx.room.Room
 import com.polaralias.signalsynthesis.data.db.AppDatabase
@@ -29,6 +31,7 @@ import com.polaralias.signalsynthesis.ui.AnalysisViewModel
 import com.polaralias.signalsynthesis.ui.SignalSynthesisApp
 
 import com.polaralias.signalsynthesis.util.CrashReporter
+import com.polaralias.signalsynthesis.data.settings.ThemeMode
 
 class MainActivity : ComponentActivity() {
     private val db by lazy {
@@ -71,7 +74,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun AppContent(viewModel: AnalysisViewModel, initialSymbol: String?) {
-    com.polaralias.signalsynthesis.ui.theme.SignalSynthesisTheme {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val useDarkTheme = when (uiState.appSettings.themeMode) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }
+
+    com.polaralias.signalsynthesis.ui.theme.SignalSynthesisTheme(darkTheme = useDarkTheme) {
         Surface(color = MaterialTheme.colorScheme.background) {
             SignalSynthesisApp(viewModel, initialSymbol)
         }

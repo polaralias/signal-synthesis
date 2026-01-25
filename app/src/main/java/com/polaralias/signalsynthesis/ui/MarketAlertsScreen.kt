@@ -61,10 +61,7 @@ fun MarketAlertsScreen(
             containerColor = Color.Transparent
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                AppHeader(
-                    title = "ALERTS",
-                    subtitle = "Active neural monitoring nodes"
-                )
+
 
                 if (uiState.alertSymbols.isEmpty()) {
                     Box(
@@ -161,7 +158,7 @@ private fun AlertItem(
             }
             
             IconButton(onClick = onBlock) {
-                Icon(Icons.Default.Block, contentDescription = "Blacklist Node", tint = ErrorRed.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+                Icon(Icons.Default.Block, contentDescription = "Block Asset", tint = ErrorRed.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
             }
         }
     }
@@ -177,7 +174,7 @@ fun ConfirmBlocklistDialog(
         onDismissRequest = onDismiss,
         title = { 
             Text(
-                "BLACKLIST NODE: $symbol", 
+                "BLOCK ASSET: $symbol", 
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
@@ -185,13 +182,13 @@ fun ConfirmBlocklistDialog(
         },
         text = { 
             Text(
-                "Exclude $symbol from all future protocols and autonomous monitoring? This action is recorded in the blocklist.",
+                "Exclude $symbol from all future analysis and monitoring? This action is recorded in the blocklist.",
                 style = MaterialTheme.typography.bodyMedium
             ) 
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("BLACKLIST", color = ErrorRed, fontWeight = FontWeight.Black)
+                Text("BLOCK", color = ErrorRed, fontWeight = FontWeight.Black)
             }
         },
         dismissButton = {

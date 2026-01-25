@@ -62,10 +62,7 @@ fun LogViewerScreen(
             containerColor = Color.Transparent
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-                AppHeader(
-                    title = "TRAFFIC",
-                    subtitle = "Real-time protocol feedback"
-                )
+
 
                 if (activities.isEmpty()) {
                     Box(
@@ -128,7 +125,7 @@ private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntr
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (entry.type == com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST) "DATA" else "NEURAL",
+                        text = if (entry.type == com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST) "DATA" else "AI",
                         style = MaterialTheme.typography.labelSmall,
                         color = accentColor,
                         fontWeight = FontWeight.Black,

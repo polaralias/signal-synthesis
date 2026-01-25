@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import androidx.compose.material.icons.Icons
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.foundation.clickable
@@ -31,8 +32,12 @@ fun ApiKeysScreen(
     onFieldChanged: (KeyField, String) -> Unit,
     onSave: () -> Unit
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     AmbientBackground {
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 Box(
                     modifier = Modifier
@@ -68,10 +73,7 @@ fun ApiKeysScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
-                AppHeader(
-                    title = "NODES",
-                    subtitle = "Establish secure market links"
-                )
+
 
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp),
@@ -131,21 +133,21 @@ fun ApiKeysScreen(
                     ApiKeyField(
                         value = uiState.keys.massiveKey,
                         onValueChange = { onFieldChanged(KeyField.MASSIVE, it) },
-                        label = "Massive Node Access",
+                        label = "Massive Access",
                         isBlacklisted = uiState.blacklistedProviders.contains("Massive")
                     )
 
                     ApiKeyField(
                         value = uiState.keys.finnhubKey,
                         onValueChange = { onFieldChanged(KeyField.FINNHUB, it) },
-                        label = "Finnhub Node Access",
+                        label = "Finnhub Access",
                         isBlacklisted = uiState.blacklistedProviders.contains("Finnhub")
                     )
 
                     ApiKeyField(
                         value = uiState.keys.fmpKey,
                         onValueChange = { onFieldChanged(KeyField.FMP, it) },
-                        label = "FMP Node Access",
+                        label = "FMP Access",
                         isBlacklisted = uiState.blacklistedProviders.contains("Fmp")
                     )
 
@@ -158,7 +160,7 @@ fun ApiKeysScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        "NEURAL CORE PARAMETERS",
+                        "AI SERVICE CONFIGURATION",
                         style = MaterialTheme.typography.labelSmall,
                         color = BrandSecondary,
                         fontWeight = FontWeight.Black,
@@ -183,7 +185,15 @@ fun ApiKeysScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(64.dp)
-                            .clickable { onSave() }
+                            .clickable { 
+                                onSave()
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Security protocols updated. Encrypted storage synchronized.",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            }
                     ) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
@@ -243,7 +253,7 @@ private fun ApiKeyField(
         )
         if (isBlacklisted) {
             Text(
-                "NODE OFFLINE: CREDENTIAL REJECTION",
+                "ACCESS DENIED: INVALID CREDENTIALS",
                 color = ErrorRed,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
                 fontWeight = FontWeight.Black,

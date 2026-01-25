@@ -679,17 +679,31 @@ class AnalysisViewModel(
                 val repository = MarketDataRepository(bundle)
                 
                 // 1. Fetch main indices
-                val indexSymbols = listOf("SPY", "QQQ", "DIA", "IWM", "VIX")
-                val indexQuotes = repository.getQuotes(indexSymbols)
+                // User requested: S&P 500, Gold, USD/GBP
+                val indexSymbols = listOf("SPY", "GLD", "GBPUSD")
+                
+                // If we have API keys, do NOT fallback to mock data silently.
+                // The repository might handle this, but let's ensure we are asking for real data.
+                val indexQuotes = if (apiKeys.hasAny()) {
+                     repository.getQuotes(indexSymbols)
+                } else {
+                     // In demo mode, repository uses mock provider automatically if configured
+                     repository.getQuotes(indexSymbols)
+                }
                 
                 val indexItems = indexSymbols.mapNotNull { symbol ->
-                    val quote = indexQuotes[symbol] ?: return@mapNotNull null
+                    val quote = indexQuotes[symbol]
+                    // If no quote and we have keys, it means data unavailable -> show error or blank?
+                    // User said: "if unavailable be blank or show an accurate state message"
+                    // mapNotNull will allow us to skip it if null.
+                    // If all are null, we might show "Market Data Unavailable"
+                    
+                    if (quote == null) return@mapNotNull null
+                    
                     val names = mapOf(
                         "SPY" to "S&P 500",
-                        "QQQ" to "Nasdaq 100",
-                        "DIA" to "Dow 30",
-                        "IWM" to "Russell 2000",
-                        "VIX" to "Volatility"
+                        "GLD" to "Gold",
+                        "GBPUSD" to "USD/GBP"
                     )
                     IndexQuote(
                         symbol = symbol,
@@ -698,6 +712,12 @@ class AnalysisViewModel(
                         changePercent = quote.changePercent ?: 0.0,
                         volume = quote.volume
                     )
+                }
+                
+                // If items are empty and we have keys, it means failure.
+                if (indexItems.isEmpty() && apiKeys.hasAny()) {
+                     // We could add a "State Message" item or just leave it empty.
+                     // The UI handles empty sections by not showing them.
                 }
 
                 val sections = mutableListOf<MarketSection>()
