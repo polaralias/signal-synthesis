@@ -20,6 +20,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,10 +53,7 @@ fun SetupDetailScreen(
                         androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
                             RainbowMcpText(
                                 text = symbol, 
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    letterSpacing = 2.sp
-                                )
+                                style = MaterialTheme.typography.titleLarge
                             )
                             setup?.let {
                                 Spacer(modifier = Modifier.width(12.dp))
@@ -68,7 +66,7 @@ fun SetupDetailScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
@@ -79,8 +77,9 @@ fun SetupDetailScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -112,7 +111,7 @@ fun SetupDetailScreen(
                                 Text("SYNTHESIZING MARKET DATA...", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                             }
                         }
-                        aiSummary?.status == AiSummaryStatus.ERROR -> Text(aiSummary.errorMessage ?: "AI NODE FAILURE", color = com.polaralias.signalsynthesis.ui.theme.NeonRed, fontWeight = FontWeight.Bold)
+                        aiSummary?.status == AiSummaryStatus.ERROR -> Text(aiSummary.errorMessage ?: "AI NODE FAILURE", color = RainbowRed, fontWeight = FontWeight.Black)
                         aiSummary?.status == AiSummaryStatus.READY -> {
                             Text(
                                 aiSummary.summary.orEmpty(), 
@@ -127,7 +126,7 @@ fun SetupDetailScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 aiSummary.risks.forEach { risk ->
                                     Row(modifier = Modifier.padding(vertical = 4.dp)) {
-                                        Text("•", color = com.polaralias.signalsynthesis.ui.theme.NeonRed, fontWeight = FontWeight.Bold)
+                                        Text("•", color = RainbowRed, fontWeight = FontWeight.Black)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(risk, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f))
                                     }
@@ -142,11 +141,12 @@ fun SetupDetailScreen(
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(com.polaralias.signalsynthesis.ui.theme.NeonPurple.copy(alpha = 0.1f))
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(RainbowPurple.copy(alpha = 0.15f))
+                                            .border(1.dp, RainbowPurple.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                                             .padding(12.dp)
                                     ) {
-                                        Text(verdict, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = com.polaralias.signalsynthesis.ui.theme.NeonPurple)
+                                        Text(verdict, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Black, color = RainbowPurple)
                                     }
                                 }
                             }
@@ -218,16 +218,16 @@ fun SetupDetailScreen(
                         .fillMaxWidth()
                         .height(56.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(com.polaralias.signalsynthesis.ui.theme.NeonBlue.copy(alpha = 0.1f))
-                        .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonBlue.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .background(RainbowBlue.copy(alpha = 0.15f))
+                        .border(1.dp, RainbowBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                         .clickable { showRawData = !showRawData },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         if (showRawData) "CONCEAL RAW DATA" else "REVEAL RAW DATA", 
                         style = MaterialTheme.typography.labelSmall, 
-                        fontWeight = FontWeight.ExtraBold, 
-                        color = com.polaralias.signalsynthesis.ui.theme.NeonBlue,
+                        fontWeight = FontWeight.Black, 
+                        color = RainbowBlue,
                         letterSpacing = 2.sp
                     )
                 }

@@ -20,6 +20,7 @@ import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.clickable
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +37,7 @@ fun ApiKeysScreen(
                     title = { 
                         RainbowMcpText(
                             text = "NODE AUTHENTICATION", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -47,14 +45,15 @@ fun ApiKeysScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -77,8 +76,8 @@ fun ApiKeysScreen(
                             Text(
                                 "AUTH PROTOCOL FAILURE",
                                 style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = com.polaralias.signalsynthesis.ui.theme.NeonRed,
+                                fontWeight = FontWeight.Black,
+                                color = RainbowRed,
                                 letterSpacing = 1.sp
                             )
                         }
@@ -95,8 +94,8 @@ fun ApiKeysScreen(
             Text(
                 "ESTABLISH SECURE LINK TO MARKET DECODERS:",
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.secondary,
-                fontWeight = FontWeight.Bold,
+                color = RainbowPurple,
+                fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp,
                 modifier = Modifier.padding(top = 8.dp)
             )
@@ -169,9 +168,9 @@ fun ApiKeysScreen(
             ) {
                 Text(
                     "COMMIT CONFIGURATION",
-                    color = com.polaralias.signalsynthesis.ui.theme.NeonGreen,
+                    color = RainbowGreen,
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Black,
                     letterSpacing = 2.sp
                 )
             }

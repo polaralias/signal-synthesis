@@ -1,0 +1,127 @@
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:kspDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:l8DexDesugarLibDebug UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:mergeDebugStartupProfile UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs NO-SOURCE
+> Task :app:stripDebugDebugSymbols NO-SOURCE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/MainActivity.kt:42:27 Unresolved reference: enableEdgeToEdge
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:70:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:212:37 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:213:39 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:217:179 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:224:37 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:225:39 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:229:129 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:318:41 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:319:43 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/AnalysisScreen.kt:323:46 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:47:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:53:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:79:41 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:96:25 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ApiKeysScreen.kt:170:29 Unresolved reference: RainbowGreen
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/DashboardScreen.kt:49:103 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/DashboardScreen.kt:52:98 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/DashboardScreen.kt:57:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/DashboardScreen.kt:107:49 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/HistoryScreen.kt:44:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/HistoryScreen.kt:51:86 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/HistoryScreen.kt:57:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/HistoryScreen.kt:124:29 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:47:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:53:82 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:58:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:98:73 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:99:73 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:130:91 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/LogViewerScreen.kt:156:106 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:47:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:53:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:129:29 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:134:29 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:142:87 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/MarketAlertsScreen.kt:150:91 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:51:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:57:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:171:37 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:192:25 None of the following functions can be called with the arguments supplied: 
+public fun Text(text: AnnotatedString, modifier: Modifier = ..., color: Color = ..., fontSize: TextUnit = ..., fontStyle: FontStyle? = ..., fontWeight: FontWeight? = ..., fontFamily: FontFamily? = ..., letterSpacing: TextUnit = ..., textDecoration: TextDecoration? = ..., textAlign: TextAlign? = ..., lineHeight: TextUnit = ..., overflow: TextOverflow = ..., softWrap: Boolean = ..., maxLines: Int = ..., minLines: Int = ..., inlineContent: Map<String, InlineTextContent> = ..., onTextLayout: (TextLayoutResult) -> Unit = ..., style: TextStyle = ...): Unit defined in androidx.compose.material3
+public fun Text(text: String, modifier: Modifier = ..., color: Color = ..., fontSize: TextUnit = ..., fontStyle: FontStyle? = ..., fontWeight: FontWeight? = ..., fontFamily: FontFamily? = ..., letterSpacing: TextUnit = ..., textDecoration: TextDecoration? = ..., textAlign: TextAlign? = ..., lineHeight: TextUnit = ..., overflow: TextOverflow = ..., softWrap: Boolean = ..., maxLines: Int = ..., minLines: Int = ..., onTextLayout: ((TextLayoutResult) -> Unit)? = ..., style: TextStyle = ...): Unit defined in androidx.compose.material3
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:196:65 Unresolved reference: RainbowGreen
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:196:83 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:198:114 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:213:72 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:214:70 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt:215:70 Unresolved reference: RainbowGreen
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:68:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:79:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:113:129 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:128:59 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:144:57 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:145:59 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:148:139 Unresolved reference: RainbowPurple
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:220:37 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:221:39 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/SetupDetailScreen.kt:229:33 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/UiComponents.kt:104:25 Overload resolution ambiguity: 
+public val DeepBackground: Color defined in com.polaralias.signalsynthesis.ui.theme in file Color.kt
+public val DeepBackground: Color defined in com.polaralias.signalsynthesis.ui.theme in file Color.kt
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/WatchlistScreen.kt:47:40 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/WatchlistScreen.kt:53:45 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/WatchlistScreen.kt:144:29 Unresolved reference: RainbowBlue
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/WatchlistScreen.kt:168:28 Unresolved reference: RainbowRed
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/theme/Color.kt:5:5 Conflicting declarations: public val DeepBackground: Color, public val DeepBackground: Color
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/theme/Color.kt:27:5 Conflicting declarations: public val DeepBackground: Color, public val DeepBackground: Color
+e: file:///C:/Users/james.DESKTOP-Q8VOBFS/Documents/Development/signal-synthesis/app/src/main/java/com/polaralias/signalsynthesis/ui/theme/Theme.kt:23:18 Overload resolution ambiguity: 
+public val DeepBackground: Color defined in com.polaralias.signalsynthesis.ui.theme in file Color.kt
+public val DeepBackground: Color defined in com.polaralias.signalsynthesis.ui.theme in file Color.kt
+
+> Task :app:compileDebugKotlin FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 25s
+30 actionable tasks: 2 executed, 28 up-to-date

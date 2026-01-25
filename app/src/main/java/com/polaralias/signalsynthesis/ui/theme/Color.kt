@@ -12,9 +12,20 @@ val NeonPurple = Color(0xFF9D50BB)
 val NeonGreen = Color(0xFF00FF87)
 val NeonRed = Color(0xFFFF416C)
 val NeonOrange = Color(0xFFFFA07A)
+val NeonYellow = Color(0xFFFFFF00)
 
-val TextPrimary = Color(0xFFF0F0F0)
-val TextSecondary = Color(0xFFA0A0A0)
+// Google / MCP Spec Palette
+val RainbowRed = Color(0xFFEA4335)
+val RainbowOrange = Color(0xFFFBBC05) // Using yellow for orange in this spec
+val RainbowYellow = Color(0xFFFBBC05)
+val RainbowGreen = Color(0xFF34A853)
+val RainbowTeal = Color(0xFF4285F4) // Blending blue/teal
+val RainbowBlue = Color(0xFF4285F4)
+val RainbowPurple = Color(0xFF9D50BB)
+val RainbowPink = Color(0xFFEA4335)
+
+val TextPrimary = Color(0xFFF8FAFC)
+val TextSecondary = Color(0xFF94A3B8)
 
 val DarkGray = Color(0xFF2C2C2E)
 val MediumGray = Color(0xFF3A3A3C)

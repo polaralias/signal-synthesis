@@ -21,6 +21,7 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +37,7 @@ fun LogViewerScreen(
                     title = { 
                         RainbowMcpText(
                             text = "SYSTEM TELEMETRY", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -47,19 +45,20 @@ fun LogViewerScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     actions = {
                         TextButton(onClick = { com.polaralias.signalsynthesis.util.ActivityLogger.clear() }) {
-                            Text("FLUSH", fontWeight = FontWeight.Bold, color = com.polaralias.signalsynthesis.ui.theme.NeonRed)
+                            Text("FLUSH", fontWeight = FontWeight.Black, color = RainbowRed)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -97,8 +96,8 @@ fun LogViewerScreen(
 @Composable
 private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntry) {
     val accentColor = when (entry.type) {
-        com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST -> com.polaralias.signalsynthesis.ui.theme.NeonBlue
-        com.polaralias.signalsynthesis.util.ActivityType.LLM_REQUEST -> com.polaralias.signalsynthesis.ui.theme.NeonPurple
+        com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST -> RainbowBlue
+        com.polaralias.signalsynthesis.util.ActivityType.LLM_REQUEST -> RainbowPurple
     }
 
     com.polaralias.signalsynthesis.ui.components.GlassCard(
@@ -129,7 +128,7 @@ private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntr
                     text = entry.tag,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface else com.polaralias.signalsynthesis.ui.theme.NeonRed
+                    color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface else RainbowRed
                 )
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
                 Text(
@@ -155,7 +154,7 @@ private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntr
                 text = entry.output,
                 style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                 maxLines = 5,
-                color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f) else com.polaralias.signalsynthesis.ui.theme.NeonRed
+                color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f) else RainbowRed
             )
 
             if (entry.durationMs > 0) {

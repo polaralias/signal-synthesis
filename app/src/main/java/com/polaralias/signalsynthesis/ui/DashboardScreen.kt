@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.*
 import com.polaralias.signalsynthesis.domain.model.*
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,24 +42,22 @@ fun DashboardScreen(
                     title = { 
                         RainbowMcpText(
                             text = "SIGNAL SYNTHESIS",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 4.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         )
                     },
                     actions = {
                         IconButton(onClick = onRefreshMarket) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh Market", tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh Market", tint = RainbowBlue)
                         }
                         IconButton(onClick = onOpenSettings) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = MaterialTheme.colorScheme.secondary)
+                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = RainbowPurple)
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -106,8 +105,8 @@ fun DashboardScreen(
                                     Text(
                                         "Providers Paused",
                                         style = MaterialTheme.typography.labelMedium,
-                                        color = com.polaralias.signalsynthesis.ui.theme.NeonRed,
-                                        fontWeight = FontWeight.Bold
+                                        color = RainbowRed,
+                                        fontWeight = FontWeight.Black
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))

@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,10 +34,7 @@ fun HistoryScreen(
                     title = { 
                         RainbowMcpText(
                             text = "ANALYSIS LOGS", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -44,21 +42,22 @@ fun HistoryScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     actions = {
                         if (uiState.history.isNotEmpty()) {
                             TextButton(onClick = onClearHistory) {
-                                Text("PURGE", fontWeight = FontWeight.Bold, color = com.polaralias.signalsynthesis.ui.theme.NeonRed)
+                                Text("PURGE", fontWeight = FontWeight.Black, color = RainbowRed)
                             }
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -122,8 +121,8 @@ private fun HistoryItem(
                 Text(
                     text = result.intent.name.replace("_", " "),
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = com.polaralias.signalsynthesis.ui.theme.NeonBlue,
+                    fontWeight = FontWeight.Black,
+                    color = RainbowBlue,
                     letterSpacing = 1.sp
                 )
                 Text(

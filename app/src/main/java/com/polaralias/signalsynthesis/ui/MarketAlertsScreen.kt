@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +37,7 @@ fun MarketAlertsScreen(
                     title = { 
                         RainbowMcpText(
                             text = "MARKET ALERTS", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -47,14 +45,15 @@ fun MarketAlertsScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -127,13 +126,13 @@ private fun AlertItem(
                 Text(
                     symbol, 
                     style = MaterialTheme.typography.titleLarge, 
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
+                    fontWeight = FontWeight.Black,
+                    color = RainbowBlue
                 )
                 Text(
                     "ACTIVE TELEMETRY MONITORING", 
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = RainbowPurple,
                     fontWeight = FontWeight.Bold,
                     fontSize = 8.sp,
                     letterSpacing = 1.sp
@@ -141,7 +140,7 @@ private fun AlertItem(
             }
             
             IconButton(onClick = onOpen) {
-                Icon(Icons.Default.Info, contentDescription = "Analysis Info", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.Info, contentDescription = "Analysis Info", tint = RainbowBlue)
             }
             
             IconButton(onClick = onRemove) {
@@ -149,7 +148,7 @@ private fun AlertItem(
             }
             
             IconButton(onClick = onBlock) {
-                Icon(Icons.Default.Block, contentDescription = "Add to Blocklist", tint = com.polaralias.signalsynthesis.ui.theme.NeonRed.copy(alpha = 0.7f))
+                Icon(Icons.Default.Block, contentDescription = "Add to Blocklist", tint = RainbowRed)
             }
         }
     }

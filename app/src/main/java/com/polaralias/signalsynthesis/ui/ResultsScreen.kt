@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,10 +41,7 @@ fun ResultsScreen(
                     title = { 
                         RainbowMcpText(
                             text = "INTELLIGENCE REPORT", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -51,14 +49,15 @@ fun ResultsScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -169,8 +168,8 @@ private fun SetupCard(
                         Text(
                             setup.symbol, 
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            fontWeight = FontWeight.Black,
+                            color = RainbowBlue
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         SourceBadge(setup.source)
@@ -194,10 +193,10 @@ private fun SetupCard(
                         Text(
                             formatPercent(setup.confidence), 
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = if (setup.confidence > 0.7) com.polaralias.signalsynthesis.ui.theme.NeonGreen else com.polaralias.signalsynthesis.ui.theme.NeonBlue
+                            fontWeight = FontWeight.Black,
+                            color = if (setup.confidence > 0.7) RainbowGreen else RainbowBlue
                         )
-                        Text("CONFIDENCE", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp)
+                        Text("CONFIDENCE", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp, color = RainbowBlue.copy(alpha = 0.6f))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     IconButton(onClick = onToggleWatchlist, modifier = Modifier.size(32.dp)) {
@@ -212,9 +211,9 @@ private fun SetupCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                PriceParam("TRIGGER", formatPrice(setup.triggerPrice), com.polaralias.signalsynthesis.ui.theme.NeonBlue)
-                PriceParam("STOP LOSS", formatPrice(setup.stopLoss), com.polaralias.signalsynthesis.ui.theme.NeonRed)
-                PriceParam("TARGET", formatPrice(setup.targetPrice), com.polaralias.signalsynthesis.ui.theme.NeonGreen)
+                PriceParam("TRIGGER", formatPrice(setup.triggerPrice), RainbowBlue)
+                PriceParam("STOP LOSS", formatPrice(setup.stopLoss), RainbowRed)
+                PriceParam("TARGET", formatPrice(setup.targetPrice), RainbowGreen)
             }
             
             Spacer(modifier = Modifier.height(20.dp))

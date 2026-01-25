@@ -10,6 +10,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import android.app.Activity
+import androidx.core.view.WindowCompat
+import androidx.compose.ui.graphics.toArgb
 
 private val DarkColorScheme = darkColorScheme(
     primary = NeonBlue,
@@ -100,6 +105,7 @@ val Typography = Typography(
     )
 )
 
+
 @Composable
 fun SignalSynthesisTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -107,6 +113,18 @@ fun SignalSynthesisTheme(
 ) {
     // We'll stick to Dark Theme primarily for the glassmorphism aesthetic
     val colorScheme = DarkColorScheme
+    val view = LocalView.current
+
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = Color.Transparent.toArgb()
+            window.navigationBarColor = Color.Transparent.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+        }
+    }
 
     MaterialTheme(
         colorScheme = colorScheme,

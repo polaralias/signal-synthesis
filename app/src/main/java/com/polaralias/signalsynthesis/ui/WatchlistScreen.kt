@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +37,7 @@ fun WatchlistScreen(
                     title = { 
                         RainbowMcpText(
                             text = "WATCHLIST", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 4.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -47,14 +45,15 @@ fun WatchlistScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -142,8 +141,8 @@ private fun WatchlistItem(
                 Text(
                     symbol, 
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
+                    fontWeight = FontWeight.Black,
+                    color = RainbowBlue
                 )
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
                 SourceBadge(source)
@@ -167,7 +166,7 @@ private fun WatchlistItem(
                     imageVector = Icons.Default.Block,
                     contentDescription = "Block",
                     modifier = Modifier.size(18.dp),
-                    tint = com.polaralias.signalsynthesis.ui.theme.NeonRed.copy(alpha = 0.7f)
+                    tint = RainbowRed
                 )
             }
         }

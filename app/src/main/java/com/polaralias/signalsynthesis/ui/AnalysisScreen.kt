@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,10 +50,7 @@ fun AnalysisScreen(
                     title = {
                         RainbowMcpText(
                             text = "SYNTHESIS ENGINE",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 4.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         )
                     },
                     actions = {
@@ -70,8 +68,9 @@ fun AnalysisScreen(
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -204,13 +203,31 @@ fun AnalysisScreen(
                 }
             }
 
-            SectionHeader("Keys")
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onOpenKeys) {
-                    Text(if (uiState.hasAnyApiKeys) "Configure Keys" else "Add Keys")
+            SectionHeader("NODE AUTHENTICATION")
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                androidx.compose.foundation.layout.Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(RainbowBlue.copy(alpha = 0.15f))
+                        .border(1.dp, RainbowBlue.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .clickable { onOpenKeys() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(if (uiState.hasAnyApiKeys) "PROTOCOL ACTIVE" else "CONFIG REQUIRED", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = RainbowBlue)
                 }
-                OutlinedButton(onClick = onOpenSettings) {
-                    Text("Settings")
+                androidx.compose.foundation.layout.Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(RainbowPurple.copy(alpha = 0.15f))
+                        .border(1.dp, RainbowPurple.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .clickable { onOpenSettings() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("SYSTEM SETTINGS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = RainbowPurple)
                 }
             }
 
@@ -299,12 +316,12 @@ fun AnalysisScreen(
                             .weight(0.4f)
                             .height(64.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(com.polaralias.signalsynthesis.ui.theme.NeonRed.copy(alpha = 0.1f))
-                            .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonRed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                            .background(RainbowRed.copy(alpha = 0.1f))
+                            .border(1.dp, RainbowRed.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
                             .clickable { onCancelAnalysis() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("STOP", color = com.polaralias.signalsynthesis.ui.theme.NeonRed, fontWeight = FontWeight.Bold)
+                        Text("STOP", color = RainbowRed, fontWeight = FontWeight.Black)
                     }
                 }
             }

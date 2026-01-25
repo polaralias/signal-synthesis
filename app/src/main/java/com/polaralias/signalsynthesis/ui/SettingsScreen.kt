@@ -110,10 +110,7 @@ fun SettingsScreen(
                     title = { 
                         RainbowMcpText(
                             text = "SYSTEM CONFIGURATION", 
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                letterSpacing = 3.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            style = MaterialTheme.typography.titleLarge
                         ) 
                     },
                     navigationIcon = {
@@ -121,14 +118,15 @@ fun SettingsScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = RainbowBlue
                             )
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = MaterialTheme.colorScheme.primary
-                    )
+                        titleContentColor = RainbowBlue
+                    ),
+                    windowInsets = WindowInsets.systemBars
                 )
             },
             containerColor = Color.Transparent
@@ -150,18 +148,18 @@ fun SettingsScreen(
                     AuthStatusItem("AI SYNTHESIS PROTOCOL", llmStatus, uiState.hasLlmKey)
                     
                     Spacer(modifier = Modifier.height(24.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         androidx.compose.foundation.layout.Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(com.polaralias.signalsynthesis.ui.theme.NeonBlue.copy(alpha = 0.1f))
-                                .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonBlue.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .height(52.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(RainbowBlue.copy(alpha = 0.15f))
+                                .border(1.dp, RainbowBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
                                 .clickable { onEditKeys() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Text("EDIT KEYS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = com.polaralias.signalsynthesis.ui.theme.NeonBlue)
+                            Text("CONFIGURE PROTOCOLS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = RainbowBlue, letterSpacing = 1.sp)
                         }
                         
                         androidx.compose.foundation.layout.Box(

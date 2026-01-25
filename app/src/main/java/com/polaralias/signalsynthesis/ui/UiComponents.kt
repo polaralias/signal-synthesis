@@ -59,7 +59,7 @@ fun SectionHeader(title: String) {
                     .size(4.dp, 16.dp)
                     .background(
                         Brush.verticalGradient(
-                            listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+                            listOf(RainbowBlue, RainbowPurple)
                         ),
                         RoundedCornerShape(2.dp)
                     )
@@ -68,7 +68,7 @@ fun SectionHeader(title: String) {
             Text(
                 text = title.uppercase(),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = RainbowBlue,
                 letterSpacing = 2.sp,
                 fontWeight = FontWeight.ExtraBold
             )
@@ -78,6 +78,26 @@ fun SectionHeader(title: String) {
 
 @Composable
 fun AmbientBackground(content: @Composable () -> Unit) {
+    val infiniteTransition = rememberInfiniteTransition(label = "ambient")
+    val moveX by infiniteTransition.animateFloat(
+        initialValue = -50f,
+        targetValue = 50f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(15000, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "moveX"
+    )
+    val moveY by infiniteTransition.animateFloat(
+        initialValue = -30f,
+        targetValue = 30f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(20000, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "moveY"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -86,16 +106,32 @@ fun AmbientBackground(content: @Composable () -> Unit) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(NeonBlue.copy(alpha = 0.08f), Color.Transparent),
-                    center = androidx.compose.ui.geometry.Offset(size.width * 0.2f, size.height * 0.2f),
-                    radius = size.width * 0.8f
+                    colors = listOf(RainbowBlue.copy(alpha = 0.15f), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(
+                        size.width * 0.1f + moveX, 
+                        size.height * 0.1f + moveY
+                    ),
+                    radius = size.width * 1.5f
                 )
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(NeonPurple.copy(alpha = 0.08f), Color.Transparent),
-                    center = androidx.compose.ui.geometry.Offset(size.width * 0.8f, size.height * 0.7f),
-                    radius = size.width * 0.9f
+                    colors = listOf(RainbowRed.copy(alpha = 0.12f), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(
+                        size.width * 0.9f - moveX, 
+                        size.height * 0.9f - moveY
+                    ),
+                    radius = size.width * 1.2f
+                )
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(RainbowGreen.copy(alpha = 0.08f), Color.Transparent),
+                    center = androidx.compose.ui.geometry.Offset(
+                        size.width * 0.5f + moveY, 
+                        size.height * 0.5f + moveX
+                    ),
+                    radius = size.width * 1.0f
                 )
             )
         }
@@ -112,9 +148,9 @@ fun RainbowMcpText(
     val infiniteTransition = rememberInfiniteTransition(label = "rainbow")
     val offset by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = 1000f,
+        targetValue = 2000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing),
+            animation = tween(12000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "offset"
@@ -122,19 +158,24 @@ fun RainbowMcpText(
 
     val brush = Brush.linearGradient(
         colors = listOf(
-            NeonBlue,
-            NeonPurple,
-            NeonGreen,
-            NeonBlue
+            RainbowBlue,
+            RainbowGreen,
+            RainbowYellow,
+            RainbowRed,
+            RainbowBlue
         ),
         start = androidx.compose.ui.geometry.Offset(offset, 0f),
-        end = androidx.compose.ui.geometry.Offset(offset + 300f, 300f),
-        tileMode = TileMode.Mirror
+        end = androidx.compose.ui.geometry.Offset(offset + 1000f, 1000f),
+        tileMode = TileMode.Repeated
     )
 
     Text(
         text = text,
-        style = style.copy(brush = brush),
+        style = style.copy(
+            brush = brush,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 2.sp
+        ),
         modifier = modifier
     )
 }
@@ -142,10 +183,10 @@ fun RainbowMcpText(
 @Composable
 fun IntentBadge(intent: TradingIntent) {
     val color = when (intent) {
-        TradingIntent.DAY_TRADE -> com.polaralias.signalsynthesis.ui.theme.NeonBlue
-        TradingIntent.SWING -> com.polaralias.signalsynthesis.ui.theme.NeonPurple
-        TradingIntent.LONG_TERM -> com.polaralias.signalsynthesis.ui.theme.NeonGreen
-        else -> com.polaralias.signalsynthesis.ui.theme.NeonBlue
+        TradingIntent.DAY_TRADE -> RainbowBlue
+        TradingIntent.SWING -> RainbowPurple
+        TradingIntent.LONG_TERM -> RainbowGreen
+        else -> RainbowBlue
     }
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
@@ -166,12 +207,12 @@ fun IntentBadge(intent: TradingIntent) {
 @Composable
 fun SourceBadge(source: com.polaralias.signalsynthesis.domain.model.TickerSource) {
     val color = when (source) {
-        com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> androidx.compose.ui.graphics.Color.Gray
-        com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> com.polaralias.signalsynthesis.ui.theme.NeonPurple
-        com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> com.polaralias.signalsynthesis.ui.theme.NeonBlue
-        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> com.polaralias.signalsynthesis.ui.theme.NeonGreen
-        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> com.polaralias.signalsynthesis.ui.theme.NeonRed
-        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> com.polaralias.signalsynthesis.ui.theme.NeonOrange
+        com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> Color.Gray
+        com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> RainbowPurple
+        com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> RainbowBlue
+        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> RainbowGreen
+        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> RainbowRed
+        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> RainbowOrange
     }
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
@@ -229,8 +270,8 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
                 Text(
                     text = "⚠️ SYSTEM OFFLINE / MOCK MODE",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = com.polaralias.signalsynthesis.ui.theme.NeonRed,
+                    fontWeight = FontWeight.Black,
+                    color = RainbowRed,
                     letterSpacing = 1.sp
                 )
             }
@@ -244,8 +285,8 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
             Text(
                 text = "TAP TO CONFIGURE AUTHENTICATION KEYS",
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color = com.polaralias.signalsynthesis.ui.theme.NeonRed,
+                fontWeight = FontWeight.Black,
+                color = RainbowRed,
                 fontSize = 10.sp
             )
         }

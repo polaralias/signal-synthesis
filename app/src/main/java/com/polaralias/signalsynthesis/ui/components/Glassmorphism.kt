@@ -22,40 +22,71 @@ import com.polaralias.signalsynthesis.ui.theme.GlassBorder
 @Composable
 fun GlassBox(
     modifier: Modifier = Modifier,
-    blurRadius: Dp = 16.dp,
+    blurRadius: Dp = 8.dp, // Reduced default blur
     cornerRadius: Dp = 16.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(cornerRadius))
-            .then(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    Modifier.blur(blurRadius)
-                } else {
-                    Modifier
-                }
-            )
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        GlassBackground.copy(alpha = 0.4f),
-                        GlassBackground.copy(alpha = 0.1f)
-                    )
-                )
-            )
             .border(
                 width = 0.5.dp,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        GlassBorder.copy(alpha = 0.5f),
-                        GlassBorder.copy(alpha = 0.1f)
+                        Color.White.copy(alpha = 0.2f),
+                        Color.White.copy(alpha = 0.05f)
                     )
                 ),
                 shape = RoundedCornerShape(cornerRadius)
             )
     ) {
-        Box(modifier = Modifier.padding(1.dp)) { // Inner content box to avoid border overlap
+        // Blur Layer (Only for background)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .blur(blurRadius)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF1E202C).copy(alpha = 0.7f),
+                                Color(0xFF1E202C).copy(alpha = 0.5f)
+                            )
+                        )
+                    )
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0xFF1E202C).copy(alpha = 0.9f),
+                                Color(0xFF1E202C).copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+            )
+        }
+
+        // Overlay to give it that "glass" sheen
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(
+                    Brush.linearGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.03f),
+                            Color.Transparent,
+                            Color.White.copy(alpha = 0.01f)
+                        )
+                    )
+                )
+        )
+
+        // Content Layer (Un-blurred)
+        Box(modifier = Modifier.padding(1.dp)) {
             content()
         }
     }
