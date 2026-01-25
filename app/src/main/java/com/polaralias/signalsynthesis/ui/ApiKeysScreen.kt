@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.clickable
 import com.polaralias.signalsynthesis.ui.theme.*
 
@@ -30,7 +32,7 @@ fun ApiKeysScreen(
     onFieldChanged: (KeyField, String) -> Unit,
     onSave: () -> Unit
 ) {
-    AmbientBackground {
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -71,7 +73,7 @@ fun ApiKeysScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("⚠️", style = MaterialTheme.typography.titleMedium)
+                            Icon(Icons.Filled.Warning, contentDescription = null, tint = RainbowRed)
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 "AUTH PROTOCOL FAILURE",
@@ -197,7 +199,7 @@ private fun ApiKeyField(
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = if (isBlacklisted) {
-                { Text("🚫", modifier = Modifier.padding(end = 8.dp)) }
+                { Icon(Icons.Filled.Block, contentDescription = "Blocked", tint = MaterialTheme.colorScheme.error, modifier = Modifier.padding(end = 8.dp)) }
             } else null,
             singleLine = true,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(

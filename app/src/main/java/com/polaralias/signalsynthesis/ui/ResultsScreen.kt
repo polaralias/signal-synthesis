@@ -9,6 +9,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,7 +37,7 @@ fun ResultsScreen(
 ) {
     var symbolToBlock by remember { mutableStateOf<String?>(null) }
 
-    AmbientBackground {
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -200,7 +203,7 @@ private fun SetupCard(
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     IconButton(onClick = onToggleWatchlist, modifier = Modifier.size(32.dp)) {
-                        Text(if (isInWatchlist) "⭐" else "☆", fontSize = 20.sp)
+                        Icon(if (isInWatchlist) Icons.Filled.Star else Icons.Filled.StarBorder, contentDescription = "Watchlist", tint = RainbowBlue)
                     }
                 }
             }
@@ -233,7 +236,7 @@ private fun SetupCard(
                     else -> "Analyze deeper for AI synthesis"
                 }
                 Row(verticalAlignment = Alignment.Top) {
-                    Text("🤖", fontSize = 14.sp)
+                    Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp), tint = RainbowBlue)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         summary, 
@@ -265,4 +268,3 @@ private fun PriceParam(label: String, value: String, color: Color) {
         Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = color)
     }
 }
-

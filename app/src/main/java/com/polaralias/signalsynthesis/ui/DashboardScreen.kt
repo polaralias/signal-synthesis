@@ -35,7 +35,7 @@ fun DashboardScreen(
 ) {
     var symbolToBlock by remember { mutableStateOf<String?>(null) }
 
-    AmbientBackground {
+    Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 CenterAlignedTopAppBar(
@@ -100,7 +100,7 @@ fun DashboardScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text("🚫", style = MaterialTheme.typography.titleMedium)
+                                    Icon(Icons.Filled.Block, contentDescription = null, tint = RainbowRed)
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
                                         "Providers Paused",
@@ -270,12 +270,20 @@ private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = "${if (index.changePercent >= 0) "▲" else "▼"} ${String.format("%.2f", index.changePercent)}%",
-                color = trendColor,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = if (index.changePercent >= 0) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    tint = trendColor,
+                    modifier = Modifier.size(20.dp)
+                )
+                Text(
+                    text = "${String.format("%.2f", index.changePercent)}%",
+                    color = trendColor,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
@@ -432,7 +440,12 @@ private fun AlertStatusCard(enabled: Boolean, count: Int, onOpenAlertsList: () -
                     .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(if (enabled) "🔔" else "🔕", style = MaterialTheme.typography.titleLarge)
+                Icon(
+                    imageVector = if (enabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(24.dp)
+                )
             }
             Spacer(modifier = Modifier.width(20.dp))
             Column {

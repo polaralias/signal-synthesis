@@ -3,8 +3,11 @@ package com.polaralias.signalsynthesis.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -65,12 +68,9 @@ fun SectionHeader(title: String) {
                     )
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Text(
+            RainbowMcpText(
                 text = title.uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                color = RainbowBlue,
-                letterSpacing = 2.sp,
-                fontWeight = FontWeight.ExtraBold
+                style = MaterialTheme.typography.labelMedium
             )
         }
     }
@@ -78,6 +78,7 @@ fun SectionHeader(title: String) {
 
 @Composable
 fun AmbientBackground(content: @Composable () -> Unit) {
+    val isDark = isSystemInDarkTheme()
     val infiniteTransition = rememberInfiniteTransition(label = "ambient")
     val moveX by infiniteTransition.animateFloat(
         initialValue = -50f,
@@ -101,12 +102,12 @@ fun AmbientBackground(content: @Composable () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DeepBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(RainbowBlue.copy(alpha = 0.15f), Color.Transparent),
+                    colors = listOf(RainbowBlue.copy(alpha = if (isDark) 0.15f else 0.05f), Color.Transparent),
                     center = androidx.compose.ui.geometry.Offset(
                         size.width * 0.1f + moveX, 
                         size.height * 0.1f + moveY
@@ -116,7 +117,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(RainbowRed.copy(alpha = 0.12f), Color.Transparent),
+                    colors = listOf(RainbowRed.copy(alpha = if (isDark) 0.12f else 0.04f), Color.Transparent),
                     center = androidx.compose.ui.geometry.Offset(
                         size.width * 0.9f - moveX, 
                         size.height * 0.9f - moveY
@@ -126,7 +127,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(RainbowGreen.copy(alpha = 0.08f), Color.Transparent),
+                    colors = listOf(RainbowGreen.copy(alpha = if (isDark) 0.08f else 0.03f), Color.Transparent),
                     center = androidx.compose.ui.geometry.Offset(
                         size.width * 0.5f + moveY, 
                         size.height * 0.5f + moveX
@@ -188,6 +189,13 @@ fun IntentBadge(intent: TradingIntent) {
         TradingIntent.LONG_TERM -> RainbowGreen
         else -> RainbowBlue
     }
+    val icon = when (intent) {
+        TradingIntent.DAY_TRADE -> Icons.Filled.Timer
+        TradingIntent.SWING -> Icons.Filled.ShowChart
+        TradingIntent.LONG_TERM -> Icons.Filled.CalendarToday
+        else -> Icons.Filled.Help
+    }
+
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
@@ -195,25 +203,44 @@ fun IntentBadge(intent: TradingIntent) {
             .border(0.5.dp, color.copy(alpha = 0.5f), androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
-        Text(
-            text = formatIntent(intent),
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = formatIntent(intent),
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+            )
+        }
     }
 }
 
 @Composable
 fun SourceBadge(source: com.polaralias.signalsynthesis.domain.model.TickerSource) {
     val color = when (source) {
-        com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> Color.Gray
+        com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> MaterialTheme.colorScheme.onSurfaceVariant
         com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> RainbowPurple
         com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> RainbowBlue
         com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> RainbowGreen
         com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> RainbowRed
         com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> RainbowOrange
     }
+
+    val icon = when (source) {
+        com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> Icons.Filled.Bookmarks
+        com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> Icons.Filled.Search
+        com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> Icons.Filled.Edit
+        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> Icons.Filled.TrendingUp
+        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> Icons.Filled.TrendingDown
+        com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> Icons.Filled.Bolt
+    }
+
     androidx.compose.foundation.layout.Box(
         modifier = Modifier
             .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
@@ -221,12 +248,21 @@ fun SourceBadge(source: com.polaralias.signalsynthesis.domain.model.TickerSource
             .border(0.5.dp, color.copy(alpha = 0.3f), androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
             .padding(horizontal = 8.dp, vertical = 2.dp)
     ) {
-        Text(
-            text = formatTickerSource(source),
-            style = MaterialTheme.typography.labelSmall,
-            color = color,
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = formatTickerSource(source),
+                style = MaterialTheme.typography.labelSmall,
+                color = color,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+            )
+        }
     }
 }
 
@@ -241,9 +277,9 @@ fun formatTickerSource(source: com.polaralias.signalsynthesis.domain.model.Ticke
     com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> "Static"
     com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> "Screener"
     com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> "Custom"
-    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> "📈 Gainer"
-    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> "📉 Loser"
-    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> "🔥 Active"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> "Gainer"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> "Loser"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> "Active"
 }
 
 fun formatLargeNumber(value: Long): String {
@@ -267,8 +303,15 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.Warning,
+                    contentDescription = null,
+                    tint = RainbowRed,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "⚠️ SYSTEM OFFLINE / MOCK MODE",
+                    text = "SYSTEM OFFLINE / MOCK MODE",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Black,
                     color = RainbowRed,
