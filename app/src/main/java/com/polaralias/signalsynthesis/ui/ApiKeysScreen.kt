@@ -19,8 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.foundation.clickable
 import com.polaralias.signalsynthesis.ui.theme.*
 
@@ -32,157 +31,179 @@ fun ApiKeysScreen(
     onFieldChanged: (KeyField, String) -> Unit,
     onSave: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    AmbientBackground {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        RainbowMcpText(
-                            text = "NODE AUTHENTICATION", 
-                            style = MaterialTheme.typography.titleLarge
-                        ) 
-                    },
-                    navigationIcon = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = RainbowBlue
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = RainbowBlue
-                    ),
-                    windowInsets = WindowInsets.systemBars
-                )
+                        
+                        RainbowMcpText(
+                            text = "AUTHENTICATION",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
+                        )
+
+                        IconButton(onClick = {}, enabled = false) {
+                            Icon(Icons.Default.Security, contentDescription = null, tint = Color.Transparent)
+                        }
+                    }
+                }
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (uiState.blacklistedProviders.isNotEmpty()) {
-                com.polaralias.signalsynthesis.ui.components.GlassCard(
-                    modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
+                AppHeader(
+                    title = "NODES",
+                    subtitle = "Establish secure market links"
+                )
+
+                Column(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Warning, contentDescription = null, tint = RainbowRed)
-                            Spacer(modifier = Modifier.width(12.dp))
+                    if (uiState.blacklistedProviders.isNotEmpty()) {
+                        com.polaralias.signalsynthesis.ui.components.GlassCard(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Filled.WarningAmber, contentDescription = null, tint = Rainbow4, modifier = Modifier.size(24.dp))
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column {
+                                    Text(
+                                        "PROTOCOL SUSPENDED",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Black,
+                                        color = Rainbow4,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Text(
+                                        "Credentials rejected by some nodes. Automatic retry in progress.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Text(
+                        "MARKET DATA ENCRYPTION",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = BrandPrimary,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+                    )
+                    
+                    ApiKeyField(
+                        value = uiState.keys.alpacaKey,
+                        onValueChange = { onFieldChanged(KeyField.ALPACA_KEY, it) },
+                        label = "Alpaca Key ID",
+                        isBlacklisted = uiState.blacklistedProviders.contains("Alpaca")
+                    )
+                    
+                    ApiKeyField(
+                        value = uiState.keys.alpacaSecret,
+                        onValueChange = { onFieldChanged(KeyField.ALPACA_SECRET, it) },
+                        label = "Alpaca Secret Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.massiveKey,
+                        onValueChange = { onFieldChanged(KeyField.MASSIVE, it) },
+                        label = "Massive Node Access",
+                        isBlacklisted = uiState.blacklistedProviders.contains("Massive")
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.finnhubKey,
+                        onValueChange = { onFieldChanged(KeyField.FINNHUB, it) },
+                        label = "Finnhub Node Access",
+                        isBlacklisted = uiState.blacklistedProviders.contains("Finnhub")
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.fmpKey,
+                        onValueChange = { onFieldChanged(KeyField.FMP, it) },
+                        label = "FMP Node Access",
+                        isBlacklisted = uiState.blacklistedProviders.contains("Fmp")
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.twelveDataKey,
+                        onValueChange = { onFieldChanged(KeyField.TWELVE_DATA, it) },
+                        label = "Twelve Data Access",
+                        isBlacklisted = uiState.blacklistedProviders.contains("TwelveData")
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        "NEURAL CORE PARAMETERS",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = BrandSecondary,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
+
+                    val llmLabel = when (uiState.appSettings.llmProvider) {
+                        LlmProvider.OPENAI -> "OpenAI Authentication"
+                        LlmProvider.GEMINI -> "Google Cloud Signature"
+                    }
+                    ApiKeyField(
+                        value = uiState.keys.llmKey,
+                        onValueChange = { onFieldChanged(KeyField.LLM, it) },
+                        label = llmLabel,
+                        isBlacklisted = false
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    com.polaralias.signalsynthesis.ui.components.GlassBox(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp)
+                            .clickable { onSave() }
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                "AUTH PROTOCOL FAILURE",
-                                style = MaterialTheme.typography.labelMedium,
+                                "COMMIT CONFIGURATION",
+                                color = BrandPrimary,
+                                style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Black,
-                                color = RainbowRed,
-                                letterSpacing = 1.sp
+                                letterSpacing = 2.sp
                             )
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            "One or more market nodes are temporarily suspended due to invalid credentials. Session will reset in 10 minutes.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        )
                     }
+                    
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
-
-            Text(
-                "ESTABLISH SECURE LINK TO MARKET DECODERS:",
-                style = MaterialTheme.typography.labelSmall,
-                color = RainbowPurple,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-            
-            ApiKeyField(
-                value = uiState.keys.alpacaKey,
-                onValueChange = { onFieldChanged(KeyField.ALPACA_KEY, it) },
-                label = "Alpaca API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("Alpaca")
-            )
-            
-            ApiKeyField(
-                value = uiState.keys.alpacaSecret,
-                onValueChange = { onFieldChanged(KeyField.ALPACA_SECRET, it) },
-                label = "Alpaca Secret",
-                isBlacklisted = false
-            )
-
-            ApiKeyField(
-                value = uiState.keys.massiveKey,
-                onValueChange = { onFieldChanged(KeyField.MASSIVE, it) },
-                label = "Massive API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("Massive")
-            )
-
-            ApiKeyField(
-                value = uiState.keys.finnhubKey,
-                onValueChange = { onFieldChanged(KeyField.FINNHUB, it) },
-                label = "Finnhub API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("Finnhub")
-            )
-
-            ApiKeyField(
-                value = uiState.keys.fmpKey,
-                onValueChange = { onFieldChanged(KeyField.FMP, it) },
-                label = "FMP API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("Fmp")
-            )
-
-            ApiKeyField(
-                value = uiState.keys.twelveDataKey,
-                onValueChange = { onFieldChanged(KeyField.TWELVE_DATA, it) },
-                label = "Twelve Data API Key",
-                isBlacklisted = uiState.blacklistedProviders.contains("TwelveData")
-            )
-
-            SectionHeader("AI COGNITIVE HUB")
-            val llmLabel = when (uiState.appSettings.llmProvider) {
-                LlmProvider.OPENAI -> "OpenAI Signature"
-                LlmProvider.GEMINI -> "Gemini Signature"
-            }
-            ApiKeyField(
-                value = uiState.keys.llmKey,
-                onValueChange = { onFieldChanged(KeyField.LLM, it) },
-                label = llmLabel,
-                isBlacklisted = false
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            androidx.compose.foundation.layout.Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                    .background(com.polaralias.signalsynthesis.ui.theme.NeonGreen.copy(alpha = 0.2f))
-                    .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonGreen.copy(alpha = 0.5f), androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
-                    .clickable { onSave() },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "COMMIT CONFIGURATION",
-                    color = RainbowGreen,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 2.sp
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
-}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ApiKeyField(
     value: String,
@@ -194,12 +215,25 @@ private fun ApiKeyField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label) },
+            label = { 
+                Text(
+                    label.uppercase(), 
+                    style = MaterialTheme.typography.labelSmall, 
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                ) 
+            },
             isError = isBlacklisted,
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = if (isBlacklisted) ErrorRed else BrandPrimary,
+                unfocusedBorderColor = if (isBlacklisted) ErrorRed.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f)
+            ),
             trailingIcon = if (isBlacklisted) {
-                { Icon(Icons.Filled.Block, contentDescription = "Blocked", tint = MaterialTheme.colorScheme.error, modifier = Modifier.padding(end = 8.dp)) }
+                { Icon(Icons.Filled.Block, contentDescription = "Blocked", tint = ErrorRed, modifier = Modifier.padding(end = 8.dp)) }
             } else null,
             singleLine = true,
             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
@@ -209,11 +243,14 @@ private fun ApiKeyField(
         )
         if (isBlacklisted) {
             Text(
-                "Provider temporarily paused due to authentication errors.",
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                "NODE OFFLINE: CREDENTIAL REJECTION",
+                color = ErrorRed,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
+                fontWeight = FontWeight.Black,
+                modifier = Modifier.padding(start = 12.dp, top = 4.dp),
+                letterSpacing = 1.sp
             )
         }
     }
 }
+

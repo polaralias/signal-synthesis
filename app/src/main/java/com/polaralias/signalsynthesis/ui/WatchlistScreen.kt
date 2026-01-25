@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
 import com.polaralias.signalsynthesis.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WatchlistScreen(
     uiState: AnalysisUiState,
@@ -33,72 +32,93 @@ fun WatchlistScreen(
     AmbientBackground {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        RainbowMcpText(
-                            text = "WATCHLIST", 
-                            style = MaterialTheme.typography.titleLarge
-                        ) 
-                    },
-                    navigationIcon = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = RainbowBlue
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = RainbowBlue
-                    ),
-                    windowInsets = WindowInsets.systemBars
-                )
+                        
+                        RainbowMcpText(
+                            text = "WATCHLIST",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        )
+
+                        IconButton(onClick = {}, enabled = false) {
+                            Icon(Icons.Default.FilterList, contentDescription = null, tint = Color.Transparent)
+                        }
+                    }
+                }
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-            if (uiState.watchlist.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "NO TRACKED NODES", 
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        letterSpacing = 2.sp
-                    )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Add symbols from results to monitor them here.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(uiState.watchlist) { symbol ->
-                        val setup = uiState.result?.setups?.find { it.symbol == symbol }
-                            ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }
-                        
-                        WatchlistItem(
-                            symbol = symbol,
-                            intent = setup?.intent,
-                            source = setup?.source ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED,
-                            onClick = { onOpenSymbol(symbol) },
-                            onRemove = { onRemove(symbol) },
-                            onBlock = { symbolToBlock = symbol }
-                        )
+            Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                AppHeader(
+                    title = "TRACKED",
+                    subtitle = "Real-time spectrum surveillance nodes"
+                )
+
+                if (uiState.watchlist.isEmpty()) {
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ViewInAr, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+                            )
+                            Spacer(modifier = Modifier.height(32.dp))
+                            Text(
+                                "NO TRACKED NODES", 
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                "Initialize synthesis protocols to identify targets for surveillance.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                textAlign = TextAlign.Center,
+                                lineHeight = 20.sp
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(uiState.watchlist) { symbol ->
+                            val setup = uiState.result?.setups?.find { it.symbol == symbol }
+                                ?: uiState.history.flatMap { it.setups }.find { it.symbol == symbol }
+                            
+                            WatchlistItem(
+                                symbol = symbol,
+                                intent = setup?.intent,
+                                source = setup?.source ?: com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED,
+                                onClick = { onOpenSymbol(symbol) },
+                                onRemove = { onRemove(symbol) },
+                                onBlock = { symbolToBlock = symbol }
+                            )
+                        }
+                        item { Spacer(modifier = Modifier.height(48.dp)) }
                     }
                 }
             }
@@ -129,7 +149,7 @@ private fun WatchlistItem(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -142,31 +162,32 @@ private fun WatchlistItem(
                     symbol, 
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Black,
-                    color = RainbowBlue
+                    color = BrandPrimary,
+                    letterSpacing = 1.sp
                 )
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 SourceBadge(source)
                 intent?.let {
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     IntentBadge(it)
                 }
             }
             
-            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+            IconButton(onClick = onRemove, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Remove",
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
                 )
             }
             
-            IconButton(onClick = onBlock, modifier = Modifier.size(32.dp)) {
+            IconButton(onClick = onBlock, modifier = Modifier.size(36.dp)) {
                 Icon(
                     imageVector = Icons.Default.Block,
                     contentDescription = "Block",
                     modifier = Modifier.size(18.dp),
-                    tint = RainbowRed
+                    tint = ErrorRed.copy(alpha = 0.4f)
                 )
             }
         }

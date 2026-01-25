@@ -65,7 +65,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     },
                     onOpenAlertsList = { navController.navigate(Screen.Alerts.route) },
                     onRemoveTicker = viewModel::removeAlert,
-                    onBlockTicker = viewModel::addToBlocklist
+                    onBlockTicker = viewModel::addToBlocklist,
+                    onOpenWatchlist = { navController.navigate(Screen.Watchlist.route) }
                 )
             }
             composable(Screen.Analysis.route) {

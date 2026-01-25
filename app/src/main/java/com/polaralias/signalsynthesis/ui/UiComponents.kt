@@ -59,18 +59,22 @@ fun SectionHeader(title: String) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(4.dp, 16.dp)
+                    .size(4.dp, 20.dp)
                     .background(
                         Brush.verticalGradient(
-                            listOf(RainbowBlue, RainbowPurple)
+                            listOf(Rainbow1, Rainbow5)
                         ),
                         RoundedCornerShape(2.dp)
                     )
             )
             Spacer(modifier = Modifier.width(12.dp))
-            RainbowMcpText(
+            Text(
                 text = title.uppercase(),
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
+                )
             )
         }
     }
@@ -84,7 +88,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
         initialValue = -50f,
         targetValue = 50f,
         animationSpec = infiniteRepeatable(
-            animation = tween(15000, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            animation = tween(15000, easing = LinearOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "moveX"
@@ -93,7 +97,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
         initialValue = -30f,
         targetValue = 30f,
         animationSpec = infiniteRepeatable(
-            animation = tween(20000, easing = androidx.compose.animation.core.LinearOutSlowInEasing),
+            animation = tween(20000, easing = LinearOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "moveY"
@@ -107,7 +111,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(RainbowBlue.copy(alpha = if (isDark) 0.15f else 0.05f), Color.Transparent),
+                    colors = listOf(Rainbow1.copy(alpha = if (isDark) 0.15f else 0.05f), Color.Transparent),
                     center = androidx.compose.ui.geometry.Offset(
                         size.width * 0.1f + moveX, 
                         size.height * 0.1f + moveY
@@ -117,7 +121,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(RainbowRed.copy(alpha = if (isDark) 0.12f else 0.04f), Color.Transparent),
+                    colors = listOf(Rainbow4.copy(alpha = if (isDark) 0.12f else 0.04f), Color.Transparent),
                     center = androidx.compose.ui.geometry.Offset(
                         size.width * 0.9f - moveX, 
                         size.height * 0.9f - moveY
@@ -127,7 +131,7 @@ fun AmbientBackground(content: @Composable () -> Unit) {
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(RainbowGreen.copy(alpha = if (isDark) 0.08f else 0.03f), Color.Transparent),
+                    colors = listOf(Rainbow2.copy(alpha = if (isDark) 0.08f else 0.03f), Color.Transparent),
                     center = androidx.compose.ui.geometry.Offset(
                         size.width * 0.5f + moveY, 
                         size.height * 0.5f + moveX
@@ -144,26 +148,33 @@ fun AmbientBackground(content: @Composable () -> Unit) {
 fun RainbowMcpText(
     text: String,
     style: androidx.compose.ui.text.TextStyle,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    animate: Boolean = true
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "rainbow")
-    val offset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 2000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(12000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "offset"
-    )
+    val offset by if (animate) {
+        infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 2000f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(10000, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart
+            ),
+            label = "offset"
+        )
+    } else {
+        androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(0f) }
+    }
 
     val brush = Brush.linearGradient(
         colors = listOf(
-            RainbowBlue,
-            RainbowGreen,
-            RainbowYellow,
-            RainbowRed,
-            RainbowBlue
+            Rainbow1,
+            Rainbow2,
+            Rainbow3,
+            Rainbow4,
+            Rainbow5,
+            Rainbow6,
+            Rainbow1
         ),
         start = androidx.compose.ui.geometry.Offset(offset, 0f),
         end = androidx.compose.ui.geometry.Offset(offset + 1000f, 1000f),
@@ -175,11 +186,53 @@ fun RainbowMcpText(
         style = style.copy(
             brush = brush,
             fontWeight = FontWeight.Black,
-            letterSpacing = 2.sp
+            letterSpacing = if (style.fontSize >= 20.sp) 2.sp else 1.sp
         ),
         modifier = modifier
     )
 }
+
+@Composable
+fun AppHeader(
+    title: String,
+    subtitle: String? = null,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            RainbowMcpText(
+                text = "SYNTHESIS",
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 32.sp
+                )
+            )
+        }
+        if (subtitle != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
+    }
+}
+
 
 @Composable
 fun IntentBadge(intent: TradingIntent) {

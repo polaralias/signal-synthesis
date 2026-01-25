@@ -1,0 +1,61 @@
+# Built-in Git Ignore Template: Android
+
+# Built artifacts
+bin/
+gen/
+out/
+app/build/
+build/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+build_errors.txt
+build_log.txt
+build_output.log
+build_output.txt
+build_result.txt
+fast_build.log
+final_build.log
+final_check.log
+output.txt
+output_v2.txt
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# OS-specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Executables
+*.exe
+
+# Keystore files
+*.jks
+*.keystore
+*.pk8
+*.pem
+
+# Backup files
+*.bak
+*.swp
+*~

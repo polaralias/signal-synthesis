@@ -3,6 +3,7 @@ package com.polaralias.signalsynthesis.ui.components
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.padding
@@ -16,43 +17,47 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.polaralias.signalsynthesis.ui.theme.GlassBackground
-import com.polaralias.signalsynthesis.ui.theme.GlassBorder
+import com.polaralias.signalsynthesis.ui.theme.*
 
 @Composable
 fun GlassBox(
     modifier: Modifier = Modifier,
-    blurRadius: Dp = 8.dp, // Reduced default blur
+    blurRadius: Dp = 12.dp,
     cornerRadius: Dp = 16.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
+    val bgColor = if (isDark) {
+        listOf(DarkSurface.copy(alpha = 0.7f), DarkSurface.copy(alpha = 0.5f))
+    } else {
+        listOf(LightSurface.copy(alpha = 0.8f), LightSurface.copy(alpha = 0.6f))
+    }
+    
+    val borderColor = if (isDark) GlassWhiteBorder else GlassBlackBorder
+    val sheenColor = if (isDark) Color.White.copy(alpha = 0.05f) else Color.White.copy(alpha = 0.2f)
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(cornerRadius))
             .border(
-                width = 0.5.dp,
+                width = 1.dp,
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.2f),
-                        Color.White.copy(alpha = 0.05f)
+                        borderColor,
+                        borderColor.copy(alpha = 0.1f)
                     )
                 ),
                 shape = RoundedCornerShape(cornerRadius)
             )
     ) {
-        // Blur Layer (Only for background)
+        // Blur Layer
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Box(
                 modifier = Modifier
                     .matchParentSize()
                     .blur(blurRadius)
                     .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF1E202C).copy(alpha = 0.7f),
-                                Color(0xFF1E202C).copy(alpha = 0.5f)
-                            )
-                        )
+                        Brush.verticalGradient(colors = bgColor)
                     )
             )
         } else {
@@ -61,31 +66,32 @@ fun GlassBox(
                     .matchParentSize()
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF1E202C).copy(alpha = 0.9f),
-                                Color(0xFF1E202C).copy(alpha = 0.8f)
-                            )
+                            colors = if (isDark) {
+                                listOf(DarkSurface.copy(alpha = 0.9f), DarkSurface.copy(alpha = 0.8f))
+                            } else {
+                                listOf(LightSurface.copy(alpha = 0.95f), LightSurface.copy(alpha = 0.9f))
+                            }
                         )
                     )
             )
         }
 
-        // Overlay to give it that "glass" sheen
+        // Sheen Layer
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     Brush.linearGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.03f),
+                            sheenColor,
                             Color.Transparent,
-                            Color.White.copy(alpha = 0.01f)
+                            sheenColor.copy(alpha = 0.1f)
                         )
                     )
                 )
         )
 
-        // Content Layer (Un-blurred)
+        // Content Layer
         Box(modifier = Modifier.padding(1.dp)) {
             content()
         }
@@ -116,3 +122,4 @@ fun GlassCard(
         }
     }
 }
+

@@ -34,13 +34,13 @@ import androidx.compose.foundation.layout.width
 private fun AuthStatusItem(label: String, status: String, isActive: Boolean) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Column {
-            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 10.sp)
-            Text(status, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.ExtraBold, color = if (isActive) com.polaralias.signalsynthesis.ui.theme.NeonGreen else com.polaralias.signalsynthesis.ui.theme.NeonRed, letterSpacing = 1.sp)
+            Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+            Text(status, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = if (isActive) BrandPrimary else ErrorRed, letterSpacing = 1.sp)
         }
         if (isActive) {
-            Icon(Icons.Default.CheckCircle, contentDescription = "Active", tint = com.polaralias.signalsynthesis.ui.theme.NeonGreen, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.CheckCircle, contentDescription = "Active", tint = BrandPrimary, modifier = Modifier.size(20.dp))
         } else {
-            Icon(Icons.Default.Block, contentDescription = "Inactive", tint = com.polaralias.signalsynthesis.ui.theme.NeonRed, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.Cancel, contentDescription = "Inactive", tint = ErrorRed.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -93,346 +93,309 @@ fun SettingsScreen(
     if (showPermissionDeniedDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDeniedDialog = false },
-            title = { Text("Permission Required") },
-            text = { Text("Notifications are required for background alerts. Please enable them in your device settings.") },
+            title = { Text("PROTOCOL ERROR", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black) },
+            text = { Text("Notifications are required for background telemetry. Please enable them in system settings.") },
             confirmButton = {
-                Button(onClick = { showPermissionDeniedDialog = false }) {
-                    Text("OK")
+                TextButton(onClick = { showPermissionDeniedDialog = false }) {
+                    Text("RETRY", fontWeight = FontWeight.Black)
                 }
-            }
+            },
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
     AmbientBackground {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        RainbowMcpText(
-                            text = "SYSTEM CONFIGURATION", 
-                            style = MaterialTheme.typography.titleLarge
-                        ) 
-                    },
-                    navigationIcon = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = RainbowBlue
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = RainbowBlue
-                    ),
-                    windowInsets = WindowInsets.systemBars
-                )
+                        
+                        RainbowMcpText(
+                            text = "CONFIGURATION",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
+                        )
+
+                        IconButton(onClick = {}, enabled = false) {
+                            Icon(Icons.Default.Settings, contentDescription = null, tint = Color.Transparent)
+                        }
+                    }
+                }
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .verticalScroll(androidx.compose.foundation.rememberScrollState())
-                .padding(16.dp)
-        ) {
-            SectionHeader("NODE AUTHENTICATION")
-            com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    val providerStatus = if (uiState.hasAnyApiKeys) "ACTIVE" else "MISSING"
-                    val llmStatus = if (uiState.hasLlmKey) "ACTIVE" else "MISSING"
-                    
-                    AuthStatusItem("MARKET DATA PROTOCOL", providerStatus, uiState.hasAnyApiKeys)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    AuthStatusItem("AI SYNTHESIS PROTOCOL", llmStatus, uiState.hasLlmKey)
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        androidx.compose.foundation.layout.Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(52.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(RainbowBlue.copy(alpha = 0.15f))
-                                .border(1.dp, RainbowBlue.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                                .clickable { onEditKeys() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("CONFIGURE PROTOCOLS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = RainbowBlue, letterSpacing = 1.sp)
-                        }
-                        
-                        androidx.compose.foundation.layout.Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                .clickable { onClearKeys() },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("WIPE ALL", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
-                        }
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("DAILY TELEMETRY USAGE")
-            com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        Text("TOTAL TRANSACTIONS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-                        Text(uiState.dailyApiUsage.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.ExtraBold, color = com.polaralias.signalsynthesis.ui.theme.NeonGreen)
-                    }
-                }
-            }
-            
-            if (uiState.dailyProviderUsage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(12.dp))
-                uiState.dailyProviderUsage.forEach { (provider, categories) ->
-                    val totalForProvider = categories.values.sum()
-                    com.polaralias.signalsynthesis.ui.components.GlassCard(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text(
-                                    text = provider,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Text(
-                                    text = "$totalForProvider",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            categories.forEach { (category, count) ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(start = 8.dp, top = 4.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            ) {
+                AppHeader(
+                    title = "SYSTEM",
+                    subtitle = "Manage neural cores and protocols"
+                )
+
+                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    SectionHeader("NODE AUTHENTICATION")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            val providerStatus = if (uiState.hasAnyApiKeys) "ACTIVE" else "DATA LINK OFFLINE"
+                            val llmStatus = if (uiState.hasLlmKey) "ACTIVE" else "NEURAL CORE OFFLINE"
+                            
+                            AuthStatusItem("MARKET DATA PROTOCOL", providerStatus, uiState.hasAnyApiKeys)
+                            Spacer(modifier = Modifier.height(20.dp))
+                            AuthStatusItem("AI SYNTHESIS PROTOCOL", llmStatus, uiState.hasLlmKey)
+                            
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(52.dp)
+                                        .clickable { onEditKeys() }
                                 ) {
-                                    Text(
-                                        text = formatCategoryName(category).uppercase(),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                        fontSize = 10.sp
-                                    )
-                                    Text(
-                                        text = "$count",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Medium
-                                    )
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("RECONFIGURE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                                    }
+                                }
+                                
+                                com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(52.dp)
+                                        .clickable { onClearKeys() }
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text("PURGE ALL", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = ErrorRed.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            }
-            
-            if (uiState.archivedUsage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                var showArchive by remember { mutableStateOf(false) }
-                
-                TextButton(onClick = { showArchive = !showArchive }) {
-                    Text(if (showArchive) "Hide Previous Days" else "View Previous Days (${uiState.archivedUsage.size})")
-                }
-                
-                if (showArchive) {
-                    uiState.archivedUsage.take(7).forEach { archive ->
-                        androidx.compose.material3.Card(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            colors = androidx.compose.material3.CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(
-                                    text = "${archive.date}: ${archive.totalCalls} calls",
-                                    style = MaterialTheme.typography.titleSmall
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                    SectionHeader("DAILY TELEMETRY USAGE")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Column {
+                                    Text("PROTOCOL TRANSACTIONS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                    Text("Rolling 24h window", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                }
+                                Text(uiState.dailyApiUsage.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = BrandPrimary)
+                            }
+                        }
+                    }
+                    
+                    if (uiState.dailyProviderUsage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        uiState.dailyProviderUsage.forEach { (provider, categories) ->
+                            val totalForProvider = categories.values.sum()
+                            com.polaralias.signalsynthesis.ui.components.GlassCard(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text(
+                                            text = provider.uppercase(),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Black,
+                                            color = BrandSecondary,
+                                            letterSpacing = 1.sp
+                                        )
+                                        Text(
+                                            text = "$totalForProvider",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Black
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    categories.forEach { (category, count) ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, top = 6.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text(
+                                                text = formatCategoryName(category).uppercase(),
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                                fontWeight = FontWeight.Bold,
+                                                letterSpacing = 0.5.sp
+                                            )
+                                            Text(
+                                                text = "$count",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                    SectionHeader("NEURAL CORE")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            var providerExpanded by remember { mutableStateOf(false) }
+                            var analysisModelExpanded by remember { mutableStateOf(false) }
+                            var verdictModelExpanded by remember { mutableStateOf(false) }
+                            var reasoningModelExpanded by remember { mutableStateOf(false) }
+
+                            Text("GLOBAL PROVIDER", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ExposedDropdownMenuBox(
+                                expanded = providerExpanded,
+                                onExpandedChange = { providerExpanded = !providerExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = uiState.appSettings.llmProvider.name,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                                        focusedBorderColor = BrandPrimary,
+                                        containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f)
+                                    )
                                 )
-                                archive.providerBreakdown.forEach { (provider, categories) ->
-                                    val total = categories.values.sum()
-                                    Text(
-                                        text = "  $provider: $total",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        modifier = Modifier.padding(start = 8.dp, top = 2.dp)
-                                    )
+                                ExposedDropdownMenu(
+                                    expanded = providerExpanded,
+                                    onDismissRequest = { providerExpanded = false }
+                                ) {
+                                    for (provider in LlmProvider.values()) {
+                                        DropdownMenuItem(
+                                            text = { Text(if(provider == LlmProvider.OPENAI) "OPENAI" else "GOOGLE GEMINI") },
+                                            onClick = {
+                                                val defaultModel = LlmModel.values().first { it.provider == provider }
+                                                onUpdateSettings(uiState.appSettings.copy(
+                                                    llmProvider = provider,
+                                                    analysisModel = defaultModel,
+                                                    verdictModel = defaultModel,
+                                                    reasoningModel = LlmModel.values().firstOrNull { it.provider == provider && it.name.contains("REASONING") } ?: defaultModel
+                                                ))
+                                                providerExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(24.dp))
+
+                            Text("ANALYSIS CORE (DATA INTERPRETATION)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ExposedDropdownMenuBox(
+                                expanded = analysisModelExpanded,
+                                onExpandedChange = { analysisModelExpanded = !analysisModelExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = formatModelName(uiState.appSettings.analysisModel),
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = analysisModelExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = analysisModelExpanded,
+                                    onDismissRequest = { analysisModelExpanded = false }
+                                ) {
+                                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
+                                    for (model in filteredModels) {
+                                        DropdownMenuItem(
+                                            text = { Text(formatModelName(model)) },
+                                            onClick = {
+                                                onUpdateSettings(uiState.appSettings.copy(analysisModel = model))
+                                                analysisModelExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Text("VERDICT CORE (FINAL THESIS)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ExposedDropdownMenuBox(
+                                expanded = verdictModelExpanded,
+                                onExpandedChange = { verdictModelExpanded = !verdictModelExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = formatModelName(uiState.appSettings.verdictModel),
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = verdictModelExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = verdictModelExpanded,
+                                    onDismissRequest = { verdictModelExpanded = false }
+                                ) {
+                                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
+                                    for (model in filteredModels) {
+                                        DropdownMenuItem(
+                                            text = { Text(formatModelName(model)) },
+                                            onClick = {
+                                                onUpdateSettings(uiState.appSettings.copy(verdictModel = model))
+                                                verdictModelExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Text("REASONING CORE (DEEP SEARCH)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            ExposedDropdownMenuBox(
+                                expanded = reasoningModelExpanded,
+                                onExpandedChange = { reasoningModelExpanded = !reasoningModelExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = formatModelName(uiState.appSettings.reasoningModel),
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = reasoningModelExpanded) },
+                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = reasoningModelExpanded,
+                                    onDismissRequest = { reasoningModelExpanded = false }
+                                ) {
+                                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
+                                    for (model in filteredModels) {
+                                        DropdownMenuItem(
+                                            text = { Text(formatModelName(model)) },
+                                            onClick = {
+                                                onUpdateSettings(uiState.appSettings.copy(reasoningModel = model))
+                                                reasoningModelExpanded = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onEditKeys) {
-                    Text("Edit Keys")
-                }
-                OutlinedButton(onClick = onClearKeys) {
-                    Text("Clear Keys")
-                }
-            }
-            
-            if (uiState.dailyApiUsage > 0) {
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedButton(
-                    onClick = onArchiveUsage,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Archive Today & Reset Counter")
-                }
-                Text(
-                    "Archives today's usage to history and resets the counter. Use this to track usage across multiple analysis sessions.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-
-            SectionHeader("CORE AI INTELLIGENCE")
-            com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
-            var providerExpanded by remember { mutableStateOf(false) }
-            var analysisModelExpanded by remember { mutableStateOf(false) }
-            var verdictModelExpanded by remember { mutableStateOf(false) }
-            var reasoningModelExpanded by remember { mutableStateOf(false) }
-
-            Text("Global Provider", style = MaterialTheme.typography.labelMedium)
-            ExposedDropdownMenuBox(
-                expanded = providerExpanded,
-                onExpandedChange = { providerExpanded = !providerExpanded }
-            ) {
-                TextField(
-                    value = uiState.appSettings.llmProvider.name,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = providerExpanded,
-                    onDismissRequest = { providerExpanded = false }
-                ) {
-                    for (provider in LlmProvider.values()) {
-                        DropdownMenuItem(
-                            text = { Text(if(provider == LlmProvider.OPENAI) "OpenAI" else "Gemini") },
-                            onClick = {
-                                val defaultModel = LlmModel.values().first { it.provider == provider }
-                                onUpdateSettings(uiState.appSettings.copy(
-                                    llmProvider = provider,
-                                    analysisModel = defaultModel,
-                                    verdictModel = defaultModel,
-                                    reasoningModel = LlmModel.values().firstOrNull { it.provider == provider && it.name.contains("REASONING") } ?: defaultModel
-                                ))
-                                providerExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text("Analysis Model (Step 1: Data Interpretation)", style = MaterialTheme.typography.labelMedium)
-            ExposedDropdownMenuBox(
-                expanded = analysisModelExpanded,
-                onExpandedChange = { analysisModelExpanded = !analysisModelExpanded }
-            ) {
-                TextField(
-                    value = formatModelName(uiState.appSettings.analysisModel),
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = analysisModelExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = analysisModelExpanded,
-                    onDismissRequest = { analysisModelExpanded = false }
-                ) {
-                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
-                    for (model in filteredModels) {
-                        DropdownMenuItem(
-                            text = { Text(formatModelName(model)) },
-                            onClick = {
-                                onUpdateSettings(uiState.appSettings.copy(analysisModel = model))
-                                analysisModelExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text("Verdict Model (Step 2: Final Thesis)", style = MaterialTheme.typography.labelMedium)
-            ExposedDropdownMenuBox(
-                expanded = verdictModelExpanded,
-                onExpandedChange = { verdictModelExpanded = !verdictModelExpanded }
-            ) {
-                TextField(
-                    value = formatModelName(uiState.appSettings.verdictModel),
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = verdictModelExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = verdictModelExpanded,
-                    onDismissRequest = { verdictModelExpanded = false }
-                ) {
-                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
-                    for (model in filteredModels) {
-                        DropdownMenuItem(
-                            text = { Text(formatModelName(model)) },
-                            onClick = {
-                                onUpdateSettings(uiState.appSettings.copy(verdictModel = model))
-                                verdictModelExpanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text("Reasoning Model (Deep analysis)", style = MaterialTheme.typography.labelMedium)
-            ExposedDropdownMenuBox(
-                expanded = reasoningModelExpanded,
-                onExpandedChange = { reasoningModelExpanded = !reasoningModelExpanded }
-            ) {
-                TextField(
-                    value = formatModelName(uiState.appSettings.reasoningModel),
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = reasoningModelExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = reasoningModelExpanded,
-                    onDismissRequest = { reasoningModelExpanded = false }
-                ) {
-                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
-                    for (model in filteredModels) {
-                        DropdownMenuItem(
-                            text = { Text(formatModelName(model)) },
-                            onClick = {
-                                onUpdateSettings(uiState.appSettings.copy(reasoningModel = model))
-                                reasoningModelExpanded = false
-                            }
-                        )
-                }
-            }
-        }
-    }
-}
-
-
-            Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(24.dp))
             SectionHeader("QUANTITATIVE TUNING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(20.dp)) {
@@ -472,19 +435,22 @@ fun SettingsScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Output Length
-                    Text("Output Length", style = MaterialTheme.typography.labelMedium)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text("SYNTHESIS DURATION", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
                     var lengthExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = lengthExpanded,
                         onExpandedChange = { lengthExpanded = !lengthExpanded }
                     ) {
-                        TextField(
+                        OutlinedTextField(
                             value = uiState.appSettings.outputLength.name.lowercase().replaceFirstChar { it.uppercase() },
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = lengthExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         ExposedDropdownMenu(
                             expanded = lengthExpanded,
@@ -501,28 +467,32 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                    // Verbosity (OpenAI Only)
                     val isGeminiVal = uiState.appSettings.llmProvider == LlmProvider.GEMINI
                     Text(
-                        text = if (isGeminiVal) "Verbosity (OpenAI Only)" else "Verbosity",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = if (isGeminiVal) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurface
+                        text = if (isGeminiVal) "VERBOSITY (OPENAI EXCLUSIVE)" else "VERBOSITY",
+                        style = MaterialTheme.typography.labelSmall, 
+                        fontWeight = FontWeight.Black,
+                        color = if (isGeminiVal) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        letterSpacing = 1.sp
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     var verbosityExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = verbosityExpanded && !isGeminiVal,
                         onExpandedChange = { if (!isGeminiVal) verbosityExpanded = !verbosityExpanded }
                     ) {
-                        TextField(
+                        OutlinedTextField(
                             value = if (isGeminiVal) "Prompt-guided only" else uiState.appSettings.verbosity.name.lowercase().replaceFirstChar { it.uppercase() },
                             onValueChange = {},
                             readOnly = true,
                             enabled = !isGeminiVal,
                             trailingIcon = { if (!isGeminiVal) ExposedDropdownMenuDefaults.TrailingIcon(expanded = verbosityExpanded) },
                             modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            supportingText = { if (isGeminiVal) Text("Not supported for Gemini models") }
+                            shape = RoundedCornerShape(12.dp),
+                            supportingText = { if (isGeminiVal) Text("GEMINI MODELS USE INTERNAL PROMPT TUNING") }
                         )
                         if (!isGeminiVal) {
                             ExposedDropdownMenu(
@@ -541,21 +511,23 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Risk Tolerance
-                    Text("Risk Tolerance Profile", style = MaterialTheme.typography.labelMedium)
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text("RISK TOLERANCE PROFILE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
                     var riskExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = riskExpanded,
                         onExpandedChange = { riskExpanded = !riskExpanded }
                     ) {
-                        TextField(
+                        OutlinedTextField(
                             value = uiState.appSettings.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = riskExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         ExposedDropdownMenu(
                             expanded = riskExpanded,
@@ -575,20 +547,30 @@ fun SettingsScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("BACKGROUND INTELLIGENCE")
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("AUTONOMOUS MONITORING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "LIVE MONITORING",
-                            modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "LIVE PROTOCOLS",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Black,
+                                color = BrandPrimary,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = if (uiState.alertsEnabled) "SCANNING ${uiState.alertSymbolCount} NODES" else "PROTOCOLS SUSPENDED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (uiState.alertsEnabled) BrandPrimary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
                         Switch(
                             checked = uiState.alertsEnabled,
                             onCheckedChange = { enabled ->
@@ -610,19 +592,17 @@ fun SettingsScreen(
                                 } else {
                                     onToggleAlerts(false)
                                 }
-                            }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = BrandPrimary,
+                                checkedTrackColor = BrandPrimary.copy(alpha = 0.2f)
+                            )
                         )
                     }
-                    Text(
-                        text = if (uiState.alertsEnabled) "SCANNING ${uiState.alertSymbolCount} NODES" else "MONITORING SUSPENDED",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (uiState.alertsEnabled) com.polaralias.signalsynthesis.ui.theme.NeonBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        fontWeight = FontWeight.ExtraBold
-                    )
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
                     SettingsSlider(
-                        label = "POLLING INTERVAL",
+                        label = "POLLING LATENCY",
                         value = uiState.appSettings.alertCheckIntervalMinutes.toDouble(),
                         range = 1.0f..60.0f,
                         steps = 59,
@@ -632,19 +612,19 @@ fun SettingsScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("TECHNICAL TRIGGER THRESHOLDS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     SettingsSlider(
-                        label = "VWAP DIP PROTOCOL",
+                        label = "VWAP DIP TOLERANCE",
                         value = uiState.appSettings.vwapDipPercent,
                         range = 0.1f..5.0f,
                         steps = 49,
                         format = { String.format("%.1f%%", it) },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(vwapDipPercent = it)) }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     SettingsSlider(
                         label = "RSI OVERSOLD LIMIT",
                         value = uiState.appSettings.rsiOversold,
@@ -653,7 +633,7 @@ fun SettingsScreen(
                         format = { it.roundToInt().toString() },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(rsiOversold = it)) }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     SettingsSlider(
                         label = "RSI OVERBOUGHT LIMIT",
                         value = uiState.appSettings.rsiOverbought,
@@ -664,7 +644,7 @@ fun SettingsScreen(
                     )
                     
                     if (uiState.aiThresholdSuggestion != null) {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "AI THRESHOLD OPTIMIZATION",
                             suggestionText = "VWAP: ${String.format("%.1f%%", uiState.aiThresholdSuggestion.vwapDipPercent)} | RSI: ${uiState.aiThresholdSuggestion.rsiOversold.roundToInt()}/${uiState.aiThresholdSuggestion.rsiOverbought.roundToInt()}",
@@ -673,61 +653,69 @@ fun SettingsScreen(
                             onDismiss = onDismissAi
                         )
                     } else {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        androidx.compose.foundation.layout.Box(
+                        Spacer(modifier = Modifier.height(32.dp))
+                        com.polaralias.signalsynthesis.ui.components.GlassBox(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(com.polaralias.signalsynthesis.ui.theme.NeonPurple.copy(alpha = 0.1f))
-                                .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonPurple.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                                .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingThresholds) { showThresholdAiDialog = true },
-                            contentAlignment = Alignment.Center
+                                .height(56.dp)
+                                .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingThresholds) { showThresholdAiDialog = true }
                         ) {
-                            Text(
-                                if (uiState.isSuggestingThresholds) "SYNTHESIZING..." else "OPTIMIZE WITH AI", 
-                                style = MaterialTheme.typography.labelSmall, 
-                                fontWeight = FontWeight.ExtraBold, 
-                                color = com.polaralias.signalsynthesis.ui.theme.NeonPurple
-                            )
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.AutoMode, 
+                                        contentDescription = null, 
+                                        modifier = Modifier.size(18.dp), 
+                                        tint = BrandSecondary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        if (uiState.isSuggestingThresholds) "SYNTHESIZING..." else "OPTIMIZE WITH AI", 
+                                        style = MaterialTheme.typography.labelSmall, 
+                                        fontWeight = FontWeight.Black, 
+                                        color = BrandSecondary,
+                                        letterSpacing = 2.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("STOCK SCREENER TOLERANCE")
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("SCREENER PARAMETERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     SettingsSlider(
-                        label = "CONSERVATIVE LIMIT",
+                        label = "CONSERVATIVE CAP",
                         value = uiState.appSettings.screenerConservativeThreshold,
                         range = 1.0f..100.0f,
                         steps = 99,
                         format = { "$${it.roundToInt()}" },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerConservativeThreshold = it)) }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     SettingsSlider(
-                        label = "MODERATE LIMIT",
+                        label = "MODERATE CAP",
                         value = uiState.appSettings.screenerModerateThreshold,
                         range = 1.0f..500.0f,
                         steps = 499,
                         format = { "$${it.roundToInt()}" },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerModerateThreshold = it)) }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     SettingsSlider(
-                        label = "AGGRESSIVE LIMIT",
+                        label = "AGGRESSIVE CAP",
                         value = uiState.appSettings.screenerAggressiveThreshold,
                         range = 1.0f..2000.0f,
                         steps = 1999,
                         format = { "$${it.roundToInt()}" },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerAggressiveThreshold = it)) }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                     SettingsSlider(
-                        label = "MINIMUM VOLUME",
+                        label = "MINIMUM LIQUIDITY",
                         value = uiState.appSettings.screenerMinVolume.toDouble(),
                         range = 100000f..5000000f,
                         steps = 49,
@@ -740,7 +728,7 @@ fun SettingsScreen(
                     )
                     
                     if (uiState.aiScreenerSuggestion != null) {
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "AI SCREENER OPTIMIZATION",
                             suggestionText = "CONS: $${uiState.aiScreenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${uiState.aiScreenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${uiState.aiScreenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format("%.1fM", uiState.aiScreenerSuggestion.minVolume / 1_000_000.0)}",
@@ -749,61 +737,69 @@ fun SettingsScreen(
                             onDismiss = onDismissScreenerAi
                         )
                     } else {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        androidx.compose.foundation.layout.Box(
+                        Spacer(modifier = Modifier.height(32.dp))
+                        com.polaralias.signalsynthesis.ui.components.GlassBox(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(com.polaralias.signalsynthesis.ui.theme.NeonGreen.copy(alpha = 0.1f))
-                                .border(1.dp, com.polaralias.signalsynthesis.ui.theme.NeonGreen.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                                .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingScreener) { showScreenerAiDialog = true },
-                            contentAlignment = Alignment.Center
+                                .height(56.dp)
+                                .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingScreener) { showScreenerAiDialog = true }
                         ) {
-                            Text(
-                                if (uiState.isSuggestingScreener) "OPTIMIZING..." else "OPTIMIZE SCREENER WITH AI", 
-                                style = MaterialTheme.typography.labelSmall, 
-                                fontWeight = FontWeight.ExtraBold, 
-                                color = com.polaralias.signalsynthesis.ui.theme.NeonGreen
-                            )
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.AutoMode, 
+                                        contentDescription = null, 
+                                        modifier = Modifier.size(18.dp), 
+                                        tint = BrandSecondary
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        if (uiState.isSuggestingScreener) "OPTIMIZING..." else "OPTIMIZE SCREENER", 
+                                        style = MaterialTheme.typography.labelSmall, 
+                                        fontWeight = FontWeight.Black, 
+                                        color = BrandSecondary,
+                                        letterSpacing = 2.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("SYSTEM NODES")
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("SYSTEM OPERATIONS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Column {
-                            Text("ACTIVITY LOGS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontSize = 10.sp)
-                            Text("HISTORICAL TELEMETRY", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                            Text("TELEMETRY LOGS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Text("Real-time traffic audit", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                         }
                         TextButton(onClick = onOpenLogs) {
-                            Text("ACCESS LOGS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.ExtraBold)
+                            Text("ACCESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("CUSTOM TICKERS")
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("CUSTOM TICKER NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
-                    TextField(
+                Column(modifier = Modifier.padding(24.dp)) {
+                    OutlinedTextField(
                         value = newTicker,
                         onValueChange = { 
                             newTicker = it.uppercase()
                             onSearchTickers(it)
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("SEARCH OR ENTER SYMBOL") },
+                        placeholder = { Text("SEARCH OR ENTER SYMBOL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
                         singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedIndicatorColor = MaterialTheme.colorScheme.primary
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = BrandPrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                         ),
                         trailingIcon = {
                             if (newTicker.isNotBlank()) {
@@ -812,57 +808,70 @@ fun SettingsScreen(
                                     newTicker = ""
                                     onClearTickerSearch()
                                 }) {
-                                    Icon(Icons.Default.Add, contentDescription = "Add")
+                                    Icon(Icons.Default.Add, contentDescription = "Add", tint = BrandPrimary)
                                 }
                             }
                         }
                     )
                     
                     if (uiState.tickerSearchResults.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LazyColumn(modifier = Modifier.height(200.dp)) {
-                            items(uiState.tickerSearchResults) { result ->
-                                androidx.compose.material3.ListItem(
-                                    headlineContent = { Text(result.symbol, fontWeight = FontWeight.Bold) },
-                                    supportingContent = { Text(result.name, fontSize = 10.sp) },
-                                    modifier = Modifier.clickable {
-                                        onAddCustomTicker(result.symbol)
-                                        newTicker = ""
-                                        onClearTickerSearch()
-                                    },
-                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                                )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 240.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        ) {
+                            LazyColumn {
+                                items(uiState.tickerSearchResults) { result ->
+                                    androidx.compose.material3.ListItem(
+                                        headlineContent = { Text(result.symbol, fontWeight = FontWeight.Black, color = BrandPrimary) },
+                                        supportingContent = { Text(result.name, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)) },
+                                        modifier = Modifier.clickable {
+                                            onAddCustomTicker(result.symbol)
+                                            newTicker = ""
+                                            onClearTickerSearch()
+                                        },
+                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                                    )
+                                }
                             }
                         }
                     }
                     
                     if (uiState.customTickers.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(20.dp))
                         uiState.customTickers.forEach { ticker ->
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(ticker.symbol, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(ticker.symbol, fontWeight = FontWeight.Black, color = BrandPrimary, fontSize = 16.sp)
+                                    Spacer(modifier = Modifier.width(16.dp))
                                     SourceBadge(ticker.source)
                                 }
-                                IconButton(onClick = { onRemoveCustomTicker(ticker.symbol) }, modifier = Modifier.size(24.dp)) {
-                                    Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(16.dp))
+                                IconButton(onClick = { onRemoveCustomTicker(ticker.symbol) }) {
+                                    Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Remove", modifier = Modifier.size(18.dp), tint = ErrorRed.copy(alpha = 0.4f))
                                 }
                             }
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("BLACK HOLE (BLOCKLIST)")
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("BLACKLISTED NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     if (uiState.blocklist.isEmpty()) {
-                        Text("NO NODES SEGREGATED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                        Box(modifier = Modifier.fillMaxWidth().height(60.dp), contentAlignment = Alignment.Center) {
+                            Text("NO NODES SEGREGATED", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f), fontWeight = FontWeight.Black, letterSpacing = 2.sp)
+                        }
                     } else {
                         uiState.blocklist.forEach { symbol ->
                             Row(
@@ -870,22 +879,22 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(symbol, fontWeight = FontWeight.Bold)
+                                Text(symbol, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                                 TextButton(onClick = { onRemoveFromBlocklist(symbol) }) {
-                                    Text("RESTORE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.ExtraBold)
+                                    Text("RESTORE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                                 }
                             }
                         }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(64.dp))
         }
     }
 
     if (showThresholdAiDialog) {
         AiPromptDialog(
-            title = "Suggest Alert Thresholds",
+            title = "THRESHOLD TUNING",
             aiPrompt = aiPrompt,
             onPromptChange = { aiPrompt = it },
             onDismiss = { showThresholdAiDialog = false },
@@ -898,7 +907,7 @@ fun SettingsScreen(
 
     if (showScreenerAiDialog) {
         AiPromptDialog(
-            title = "Suggest Screener Thresholds",
+            title = "SCREENER TUNING",
             aiPrompt = aiPrompt,
             onPromptChange = { aiPrompt = it },
             onDismiss = { showScreenerAiDialog = false },
@@ -907,8 +916,7 @@ fun SettingsScreen(
                 showScreenerAiDialog = false
             }
         )
-        }
-}
+    }
 }
 
 @Composable
@@ -921,29 +929,43 @@ private fun AiPromptDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { 
+            Text(
+                title, 
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp
+            ) 
+        },
         text = {
             Column {
-                Text("Describe your trading style or risk tolerance (e.g., 'I am a conservative swing trader').")
-                Spacer(modifier = Modifier.height(8.dp))
-                TextField(
+                Text(
+                    "Describe your trading archetype or risk profile (e.g., 'Aggressive day trader seeking high-velocity momentum').",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlinedTextField(
                     value = aiPrompt,
                     onValueChange = onPromptChange,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Enter context...") }
+                    placeholder = { Text("Neural context...") },
+                    shape = RoundedCornerShape(12.dp)
                 )
             }
         },
         confirmButton = {
-            Button(onClick = onConfirm) {
-                Text("Suggest")
+            TextButton(onClick = onConfirm) {
+                Text("SYNTHESIZE", color = BrandPrimary, fontWeight = FontWeight.Black)
             }
         },
         dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text("Cancel")
+            TextButton(onClick = onDismiss) {
+                Text("CANCEL", fontWeight = FontWeight.Black)
             }
-        }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }
 
@@ -957,15 +979,31 @@ private fun SettingsSlider(
     onValueChange: (Double) -> Unit
 ) {
     Column(modifier = Modifier.padding(vertical = 4.dp)) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Text(text = label, modifier = Modifier.weight(1f))
-            Text(text = format(value))
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text(
+                text = label, 
+                style = MaterialTheme.typography.labelSmall, 
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = format(value), 
+                style = MaterialTheme.typography.labelSmall, 
+                fontWeight = FontWeight.Black,
+                color = BrandPrimary
+            )
         }
         Slider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.toDouble()) },
             valueRange = range,
-            steps = steps
+            steps = steps,
+            colors = SliderDefaults.colors(
+                thumbColor = BrandPrimary,
+                activeTrackColor = BrandPrimary,
+                inactiveTrackColor = BrandPrimary.copy(alpha = 0.1f)
+            )
         )
     }
 }
@@ -978,41 +1016,61 @@ private fun AiSuggestionCard(
     onApply: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    androidx.compose.material3.Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        colors = androidx.compose.material3.CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
+    com.polaralias.signalsynthesis.ui.components.GlassCard(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.AutoMode, contentDescription = null, modifier = Modifier.size(16.dp), tint = BrandSecondary)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Black,
+                    color = BrandSecondary,
+                    letterSpacing = 1.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall
+                text = suggestionText, 
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Black,
+                color = BrandSecondary
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "NEURAL RATIONALE",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                letterSpacing = 1.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = suggestionText, style = MaterialTheme.typography.bodyMedium)
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "AI Rationale:",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold
-            )
             Text(
                 text = rationale,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                lineHeight = 18.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
-            Row {
-                Button(onClick = onApply) {
-                    Text("Apply")
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                com.polaralias.signalsynthesis.ui.components.GlassBox(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
+                        .clickable { onApply() }
+                ) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("APPLY", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary)
+                    }
                 }
-                Spacer(modifier = Modifier.padding(4.dp))
-                OutlinedButton(onClick = onDismiss) {
-                    Text("Dismiss")
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.height(44.dp)
+                ) {
+                    Text("DISCARD", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                 }
             }
         }
@@ -1021,26 +1079,27 @@ private fun AiSuggestionCard(
 
 private fun formatModelName(model: LlmModel): String {
     return when (model) {
-        LlmModel.GPT_5_2 -> "GPT-5.2"
-        LlmModel.GPT_5_1 -> "GPT-5.1"
-        LlmModel.GPT_5_MINI -> "GPT-5 Mini"
-        LlmModel.GPT_5_NANO -> "GPT-5 Nano"
-        LlmModel.GPT_5_2_PRO -> "GPT-5.2 Pro"
-        LlmModel.GEMINI_2_5_FLASH -> "Gemini 2.5 Flash"
-        LlmModel.GEMINI_2_5_PRO -> "Gemini 2.5 Pro"
-        LlmModel.GEMINI_3_FLASH -> "Gemini 3 Flash"
-        LlmModel.GEMINI_3_PRO -> "Gemini 3 Pro"
-        else -> model.name
+        LlmModel.GPT_5_2 -> "GPT 5.2"
+        LlmModel.GPT_5_1 -> "GPT 5.1"
+        LlmModel.GPT_5_MINI -> "GPT 5 MINI"
+        LlmModel.GPT_5_NANO -> "GPT 5 NANO"
+        LlmModel.GPT_5_2_PRO -> "GPT 5.2 PRO"
+        LlmModel.GEMINI_2_5_FLASH -> "GEMINI 2.5 FLASH"
+        LlmModel.GEMINI_2_5_PRO -> "GEMINI 2.5 PRO"
+        LlmModel.GEMINI_3_FLASH -> "GEMINI 3 FLASH"
+        LlmModel.GEMINI_3_PRO -> "GEMINI 3 PRO"
+        else -> model.name.replace("_", " ")
     }
 }
 
 private fun formatCategoryName(category: com.polaralias.signalsynthesis.util.ApiUsageCategory): String {
     return when (category) {
-        com.polaralias.signalsynthesis.util.ApiUsageCategory.DISCOVERY -> "Finding Tickers"
-        com.polaralias.signalsynthesis.util.ApiUsageCategory.ANALYSIS -> "Reviewing Trends"
-        com.polaralias.signalsynthesis.util.ApiUsageCategory.FUNDAMENTALS -> "Company Data"
-        com.polaralias.signalsynthesis.util.ApiUsageCategory.ALERTS -> "Alert Checks"
-        com.polaralias.signalsynthesis.util.ApiUsageCategory.SEARCH -> "Ticker Search"
-        com.polaralias.signalsynthesis.util.ApiUsageCategory.OTHER -> "Other"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.DISCOVERY -> "Discovery"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.ANALYSIS -> "Synthesis"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.FUNDAMENTALS -> "Fundamentals"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.ALERTS -> "Monitoring"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.SEARCH -> "Network Search"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.OTHER -> "Protocols"
     }
 }
+

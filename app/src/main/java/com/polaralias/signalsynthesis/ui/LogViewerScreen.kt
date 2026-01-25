@@ -33,71 +33,83 @@ fun LogViewerScreen(
     AmbientBackground {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        RainbowMcpText(
-                            text = "SYSTEM TELEMETRY", 
-                            style = MaterialTheme.typography.titleLarge
-                        ) 
-                    },
-                    navigationIcon = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = RainbowBlue
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
                         }
-                    },
-                    actions = {
-                        TextButton(onClick = { com.polaralias.signalsynthesis.util.ActivityLogger.clear() }) {
-                            Text("FLUSH", fontWeight = FontWeight.Black, color = RainbowRed)
+                        
+                        RainbowMcpText(
+                            text = "TELEMETRY",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
+                        )
+
+                        IconButton(onClick = { com.polaralias.signalsynthesis.util.ActivityLogger.clear() }) {
+                            Icon(Icons.Default.DeleteSweep, contentDescription = "Flush", tint = ErrorRed.copy(alpha = 0.6f))
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = RainbowBlue
-                    ),
-                    windowInsets = WindowInsets.systemBars
-                )
+                    }
+                }
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        if (activities.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "No activity recorded yet.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                AppHeader(
+                    title = "TRAFFIC",
+                    subtitle = "Real-time protocol feedback"
                 )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(activities) { entry ->
-                    ActivityItem(entry)
+
+                if (activities.isEmpty()) {
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.Terminal, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                "NO ACTIVITY RECORDED", 
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(activities) { entry ->
+                            ActivityItem(entry)
+                        }
+                    }
                 }
             }
         }
     }
 }
-}
 
 @Composable
 private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntry) {
     val accentColor = when (entry.type) {
-        com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST -> RainbowBlue
-        com.polaralias.signalsynthesis.util.ActivityType.LLM_REQUEST -> RainbowPurple
+        com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST -> BrandPrimary
+        com.polaralias.signalsynthesis.util.ActivityType.LLM_REQUEST -> BrandSecondary
     }
 
     com.polaralias.signalsynthesis.ui.components.GlassCard(
@@ -110,63 +122,98 @@ private fun ActivityItem(entry: com.polaralias.signalsynthesis.util.ActivityEntr
             ) {
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(accentColor.copy(alpha = 0.2f))
-                        .border(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(accentColor.copy(alpha = 0.1f))
+                        .border(1.dp, accentColor.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = if (entry.type == com.polaralias.signalsynthesis.util.ActivityType.API_REQUEST) "DATA" else "NEURAL",
                         style = MaterialTheme.typography.labelSmall,
                         color = accentColor,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontWeight = FontWeight.Black,
                         letterSpacing = 1.sp
                     )
                 }
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(12.dp))
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = entry.tag,
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface else RainbowRed
+                    fontWeight = FontWeight.Black,
+                    color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface else ErrorRed
                 )
                 androidx.compose.foundation.layout.Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = formatTimestamp(entry.timestamp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    fontWeight = FontWeight.Medium
                 )
             }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
             
-            Text("INPUT_STREAM:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
-            Text(
-                text = entry.input,
-                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                maxLines = 3,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            LogCodeSection(
+                label = "INPUT_STREAM",
+                content = entry.input,
+                maxLines = 3
             )
             
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
             
-            Text("OUTPUT_BUFFER:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
-            Text(
-                text = entry.output,
-                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+            LogCodeSection(
+                label = "OUTPUT_BUFFER",
+                content = entry.output,
                 maxLines = 5,
-                color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f) else RainbowRed
+                color = if (entry.isSuccess) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f) else ErrorRed.copy(alpha = 0.8f)
             )
 
             if (entry.durationMs > 0) {
-                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "LATENCY: ${entry.durationMs}ms",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = accentColor.copy(alpha = 0.6f),
-                    modifier = Modifier.align(Alignment.End),
-                    fontWeight = FontWeight.Bold
-                )
+                androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(12.dp), tint = accentColor.copy(alpha = 0.4f))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${entry.durationMs}MS",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        color = accentColor.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun LogCodeSection(label: String, content: String, maxLines: Int, color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) {
+    Column {
+        Text(
+            label, 
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp), 
+            fontWeight = FontWeight.Black, 
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+            letterSpacing = 1.sp
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(8.dp))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                .padding(8.dp)
+        ) {
+            Text(
+                text = content,
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace, fontSize = 11.sp),
+                maxLines = maxLines,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                color = color
+            )
         }
     }
 }
@@ -176,9 +223,3 @@ private fun formatTimestamp(instant: java.time.Instant): String {
     return instant.atZone(ZoneId.systemDefault()).format(formatter)
 }
 
-@Composable
-fun Box(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    androidx.compose.foundation.layout.Box(modifier = modifier) {
-        content()
-    }
-}

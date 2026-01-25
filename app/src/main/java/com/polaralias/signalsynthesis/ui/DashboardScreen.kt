@@ -31,34 +31,39 @@ fun DashboardScreen(
     onOpenDetail: (String) -> Unit,
     onOpenAlertsList: () -> Unit,
     onRemoveTicker: (String) -> Unit,
-    onBlockTicker: (String) -> Unit
+    onBlockTicker: (String) -> Unit,
+    onOpenWatchlist: () -> Unit // Adding Watchlist navigation
 ) {
     var symbolToBlock by remember { mutableStateOf<String?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    AmbientBackground {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        RainbowMcpText(
-                            text = "SIGNAL SYNTHESIS",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    },
-                    actions = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onRefreshMarket) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh Market", tint = RainbowBlue)
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh Telemetry", tint = BrandPrimary)
                         }
+                        
+                        RainbowMcpText(
+                            text = "SYNTHESIS",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        )
+
                         IconButton(onClick = onOpenSettings) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = RainbowPurple)
+                            Icon(Icons.Default.Tune, contentDescription = "System Config", tint = BrandPrimary)
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = RainbowBlue
-                    ),
-                    windowInsets = WindowInsets.systemBars
-                )
+                    }
+                }
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
@@ -69,60 +74,35 @@ fun DashboardScreen(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                AppHeader(
+                    title = "NEURAL",
+                    subtitle = "Autonomous market intelligence protocol"
+                )
+
                 MockModeBanner(
                     isVisible = !uiState.hasAnyApiKeys,
                     onClick = onOpenSettings
                 )
 
                 Column(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
-                    // Market Overview Section
+                    // Market Pulse Section
                     uiState.marketOverview?.let { overview ->
                         MarketSection(
                             overview = overview,
                             isLoading = uiState.isLoadingMarket
                         )
-                    } ?: run {
-                        if (uiState.isLoadingMarket) {
-                            Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                            }
-                        }
                     }
 
-                    // Provider Blacklist Warning
-                    if (uiState.blacklistedProviders.isNotEmpty()) {
-                        com.polaralias.signalsynthesis.ui.components.GlassCard(
-                            onClick = onOpenSettings,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Block, contentDescription = null, tint = RainbowRed)
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        "Providers Paused",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = RainbowRed,
-                                        fontWeight = FontWeight.Black
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    "The following providers are paused: ${uiState.blacklistedProviders.joinToString(", ")}. Tap to check your API keys.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                )
-                            }
-                        }
-                    }
-
-                    // Quick Analysis Section
+                    // Synthesis Protocols Section
                     QuickAnalysisSection(onIntentSelected = onIntentSelected)
 
-                    // Recent Results Section
+                    // Watchlist Preview Section
+                    WatchlistPreview(onOpenWatchlist = onOpenWatchlist)
+
+                    // Recent Intelligence Section
                     if (uiState.result != null) {
                         RecentResultsSection(
                             uiState = uiState,
@@ -133,12 +113,14 @@ fun DashboardScreen(
                         )
                     }
 
-                    // Alerts Status
+                    // Monitoring Status
                     AlertStatusCard(
                         enabled = uiState.alertsEnabled,
                         count = uiState.alertSymbolCount,
                         onOpenAlertsList = onOpenAlertsList
                     )
+                    
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
         }
@@ -157,6 +139,40 @@ fun DashboardScreen(
 }
 
 @Composable
+private fun WatchlistPreview(onOpenWatchlist: () -> Unit) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            SectionHeader(title = "CORE ASSETS")
+            TextButton(onClick = onOpenWatchlist) {
+                Text("MANAGE", style = MaterialTheme.typography.labelSmall, color = BrandPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+            }
+        }
+        com.polaralias.signalsynthesis.ui.components.GlassCard(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onOpenWatchlist
+        ) {
+            Row(
+                modifier = Modifier.padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Default.ViewQuilt, contentDescription = null, tint = BrandSecondary)
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text("NODE SURVEILLANCE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                    Text("Access sector performance nodes", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+            }
+        }
+    }
+}
+
+@Composable
 private fun MarketSection(
     overview: MarketOverview,
     isLoading: Boolean
@@ -167,16 +183,21 @@ private fun MarketSection(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
         ) {
-            SectionHeader(title = "Market Overview")
+            SectionHeader(title = "MARKET PULSE")
             if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.primary)
+                Box(modifier = Modifier.padding(bottom = 12.dp)) {
+                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = BrandPrimary)
+                }
             } else {
                 Text(
-                    text = "Updated: ${formatTime(overview.lastUpdated)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline
+                    text = "SYNCED ${formatTime(overview.lastUpdated)}",
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                    letterSpacing = 1.sp
                 )
             }
         }
@@ -185,15 +206,15 @@ private fun MarketSection(
             Column {
                 Text(
                     text = section.title.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                    color = BrandSecondary,
                     modifier = Modifier.padding(bottom = 12.dp, start = 4.dp),
-                    letterSpacing = 1.sp,
-                    fontWeight = FontWeight.Bold
+                    letterSpacing = 2.sp,
+                    fontWeight = FontWeight.Black
                 )
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 8.dp)
+                    contentPadding = PaddingValues(bottom = 12.dp)
                 ) {
                     items(section.items) { index ->
                         IndexCard(index, onClick = { selectedIndex = index })
@@ -215,21 +236,28 @@ private fun MarketSection(
 private fun MarketDetailDialog(index: IndexQuote, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("${index.name} (${index.symbol})") },
+        title = { 
+            Column {
+                RainbowMcpText(text = index.symbol, style = MaterialTheme.typography.headlineSmall)
+                Text(index.name.uppercase(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            }
+        },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DetailRow("Current Price", formatPrice(index.price))
-                DetailRow("Change %", "${if (index.changePercent >= 0) "+" else ""}${String.format("%.2f", index.changePercent)}%")
-                index.volume?.let { DetailRow("Volume", formatLargeNumber(it)) }
-                index.open?.let { DetailRow("Open", formatPrice(it)) }
-                index.high?.let { DetailRow("Day High", formatPrice(it)) }
-                index.low?.let { DetailRow("Day Low", formatPrice(it)) }
-                index.previousClose?.let { DetailRow("Prev Close", formatPrice(it)) }
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                DetailRow("CURRENT PRICE", formatPrice(index.price))
+                DetailRow("NODE VOLATILITY", "${if (index.changePercent >= 0) "+" else ""}${String.format("%.2f", index.changePercent)}%")
+                index.volume?.let { DetailRow("TOTAL LIQUIDITY", formatLargeNumber(it)) }
+                index.high?.let { DetailRow("SESSION HIGH", formatPrice(it)) }
+                index.low?.let { DetailRow("SESSION LOW", formatPrice(it)) }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
-        }
+            TextButton(onClick = onDismiss) { 
+                Text("DISMISS", fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp) 
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp)
     )
 }
 
@@ -239,49 +267,55 @@ private fun DetailRow(label: String, value: String) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.outline)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Black)
     }
 }
 
 @Composable
 private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
-    val trendColor = if (index.changePercent >= 0) com.polaralias.signalsynthesis.ui.theme.NeonGreen else com.polaralias.signalsynthesis.ui.theme.NeonRed
+    val isUp = index.changePercent >= 0
+    val trendColor = if (isUp) BrandPrimary else ErrorRed
+    
     com.polaralias.signalsynthesis.ui.components.GlassCard(
-        modifier = Modifier.width(140.dp),
+        modifier = Modifier.width(150.dp),
         onClick = onClick
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(18.dp)) {
             Text(
                 index.symbol,
-                fontWeight = FontWeight.ExtraBold,
+                fontWeight = FontWeight.Black,
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary
+                color = BrandPrimary,
+                letterSpacing = 1.sp
             )
             Text(
-                index.name,
-                style = MaterialTheme.typography.labelSmall,
+                index.name.uppercase(),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
                 maxLines = 1,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.5.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
                 formatPrice(index.price),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Black
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = if (index.changePercent >= 0) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown,
+                    imageVector = if (isUp) Icons.Filled.TrendingUp else Icons.Filled.TrendingDown,
                     contentDescription = null,
-                    tint = trendColor,
-                    modifier = Modifier.size(20.dp)
+                    tint = trendColor.copy(alpha = 0.7f),
+                    modifier = Modifier.size(14.dp)
                 )
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "${String.format("%.2f", index.changePercent)}%",
-                    color = trendColor,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
+                    color = trendColor.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
+                    fontWeight = FontWeight.Black
                 )
             }
         }
@@ -291,15 +325,15 @@ private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
 @Composable
 private fun QuickAnalysisSection(onIntentSelected: (TradingIntent) -> Unit) {
     Column {
-        SectionHeader(title = "AI Engine")
-        Spacer(modifier = Modifier.height(8.dp))
+        SectionHeader(title = "SYNTHESIS PROTOCOLS")
+        Spacer(modifier = Modifier.height(12.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            AnalysisButton("DAY", com.polaralias.signalsynthesis.ui.theme.NeonBlue, Modifier.weight(1f)) { onIntentSelected(TradingIntent.DAY_TRADE) }
-            AnalysisButton("SWING", com.polaralias.signalsynthesis.ui.theme.NeonPurple, Modifier.weight(1f)) { onIntentSelected(TradingIntent.SWING) }
-            AnalysisButton("LONG", com.polaralias.signalsynthesis.ui.theme.NeonGreen, Modifier.weight(1f)) { onIntentSelected(TradingIntent.LONG_TERM) }
+            AnalysisButton("DAY TRADE", BrandPrimary, Icons.Default.FlashOn, Modifier.weight(1f)) { onIntentSelected(TradingIntent.DAY_TRADE) }
+            AnalysisButton("SWING", BrandSecondary, Icons.Default.Timeline, Modifier.weight(1f)) { onIntentSelected(TradingIntent.SWING) }
+            AnalysisButton("POSITION", RainbowGreen, Icons.Default.Event, Modifier.weight(1f)) { onIntentSelected(TradingIntent.LONG_TERM) }
         }
     }
 }
@@ -308,32 +342,31 @@ private fun QuickAnalysisSection(onIntentSelected: (TradingIntent) -> Unit) {
 private fun AnalysisButton(
     label: String,
     color: Color,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    androidx.compose.foundation.layout.Box(
+    com.polaralias.signalsynthesis.ui.components.GlassBox(
         modifier = modifier
-            .height(64.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        color.copy(alpha = 0.2f),
-                        color.copy(alpha = 0.05f)
-                    )
-                )
-            )
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
+            .height(84.dp)
+            .clickable { onClick() }
     ) {
-        Text(
-            text = label,
-            color = color,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = FontWeight.ExtraBold,
-            letterSpacing = 1.sp
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, contentDescription = null, tint = color.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = label,
+                color = color,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
     }
 }
 
@@ -350,21 +383,24 @@ private fun RecentResultsSection(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Bottom
         ) {
-            SectionHeader(title = "Recent Insights")
+            SectionHeader(title = "RECENT SYNERGY")
             TextButton(onClick = onOpenResults) {
-                Text("DISCOVER ALL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text("HISTORICAL", style = MaterialTheme.typography.labelSmall, color = BrandPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
             }
         }
         if (setups.isEmpty()) {
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    "No setups found in last run.", 
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(24.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                )
+                Box(modifier = Modifier.fillMaxWidth().height(80.dp), contentAlignment = Alignment.Center) {
+                    Text(
+                        "NO ACTIVE PROTOCOLS RECORDED", 
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 1.sp
+                    )
+                }
             }
         } else {
             setups.forEach { setup ->
@@ -382,18 +418,26 @@ private fun RecentResultsSection(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(setup.symbol, fontWeight = FontWeight.ExtraBold, style = MaterialTheme.typography.titleMedium)
-                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    setup.symbol, 
+                                    fontWeight = FontWeight.Black, 
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = BrandPrimary,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
                                 SourceBadge(setup.source)
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IntentBadge(setup.intent)
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    setup.setupType, 
-                                    style = MaterialTheme.typography.labelSmall, 
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    setup.setupType.uppercase(), 
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp), 
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
                                 )
                             }
                         }
@@ -401,17 +445,17 @@ private fun RecentResultsSection(
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
                                 formatPercent(setup.confidence), 
-                                fontWeight = FontWeight.ExtraBold, 
-                                style = MaterialTheme.typography.titleMedium,
-                                color = if (setup.confidence > 0.7) com.polaralias.signalsynthesis.ui.theme.NeonGreen else MaterialTheme.colorScheme.primary
+                                fontWeight = FontWeight.Black, 
+                                style = MaterialTheme.typography.titleLarge,
+                                color = if (setup.confidence > 0.7) BrandPrimary else BrandSecondary
                             )
-                            Text("CONFIDENCE", style = MaterialTheme.typography.labelSmall, fontSize = 8.sp)
+                            Text("RELIABILITY", style = MaterialTheme.typography.labelSmall.copy(fontSize = 7.sp), fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                         }
                         
                         Spacer(modifier = Modifier.width(16.dp))
                         
                         IconButton(modifier = Modifier.size(32.dp), onClick = { onRemoveTicker(setup.symbol) }) {
-                            Icon(Icons.Default.Close, contentDescription = "Remove", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                            Icon(Icons.Default.RemoveCircleOutline, contentDescription = "Purge", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
                         }
                     }
                 }
@@ -422,53 +466,55 @@ private fun RecentResultsSection(
 
 @Composable
 private fun AlertStatusCard(enabled: Boolean, count: Int, onOpenAlertsList: () -> Unit) {
-    val color = if (enabled) com.polaralias.signalsynthesis.ui.theme.NeonBlue else com.polaralias.signalsynthesis.ui.theme.MediumGray
+    val color = if (enabled) BrandPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
     
     com.polaralias.signalsynthesis.ui.components.GlassCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = onOpenAlertsList
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(color.copy(alpha = 0.1f))
-                    .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+                    .border(1.dp, color.copy(alpha = 0.2f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (enabled) Icons.Filled.Notifications else Icons.Filled.NotificationsOff,
+                    imageVector = if (enabled) Icons.Filled.Radar else Icons.Filled.SettingsInputAntenna,
                     contentDescription = null,
                     tint = color,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(26.dp)
                 )
             }
             Spacer(modifier = Modifier.width(20.dp))
             Column {
                 Text(
-                    text = if (enabled) "MARKET ALERTS ACTIVE" else "MARKET ALERTS PAUSED",
+                    text = if (enabled) "SURVEILLANCE ACTIVE" else "ANTENNAS OFFLINE",
                     style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = FontWeight.Black,
                     color = color,
                     letterSpacing = 1.sp
                 )
                 Text(
-                    text = if (enabled) "Monitoring $count premium symbols" else "Tap to enable and stay updated",
+                    text = if (enabled) "Monitoring $count premium assets" else "Tap to resume spectral scanning",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
                 )
             }
             Spacer(modifier = Modifier.weight(1f))
             Icon(
-                imageVector = Icons.Default.ArrowForwardIos,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
-                tint = color.copy(alpha = 0.5f)
+                modifier = Modifier.size(12.dp),
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
             )
         }
     }
 }
+
+

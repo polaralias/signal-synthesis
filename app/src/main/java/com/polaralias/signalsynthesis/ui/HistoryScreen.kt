@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
 import com.polaralias.signalsynthesis.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HistoryScreen(
     uiState: AnalysisUiState,
@@ -30,72 +29,87 @@ fun HistoryScreen(
     AmbientBackground {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = { 
-                        RainbowMcpText(
-                            text = "ANALYSIS LOGS", 
-                            style = MaterialTheme.typography.titleLarge
-                        ) 
-                    },
-                    navigationIcon = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = RainbowBlue
-                            )
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
                         }
-                    },
-                    actions = {
+                        
+                        RainbowMcpText(
+                            text = "ARCHIVE",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
+                        )
+
                         if (uiState.history.isNotEmpty()) {
-                            TextButton(onClick = onClearHistory) {
-                                Text("PURGE", fontWeight = FontWeight.Black, color = RainbowRed)
+                            IconButton(onClick = onClearHistory) {
+                                Icon(Icons.Default.DeleteSweep, contentDescription = "Purge", tint = ErrorRed.copy(alpha = 0.6f))
+                            }
+                        } else {
+                            IconButton(onClick = {}, enabled = false) {
+                                Icon(Icons.Default.DeleteSweep, contentDescription = null, tint = Color.Transparent)
                             }
                         }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        titleContentColor = RainbowBlue
-                    ),
-                    windowInsets = WindowInsets.systemBars
-                )
+                    }
+                }
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-            if (uiState.history.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "NO ARCHIVED TELEMETRY", 
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        letterSpacing = 2.sp
-                    )
-                    androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Historical analysis results will manifest here.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
-            } else {
-                LazyColumn(
-                    modifier = Modifier.padding(paddingValues),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(uiState.history) { result ->
-                        HistoryItem(
-                            result = result,
-                            onClick = { onViewResult(result) }
-                        )
+            Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
+                AppHeader(
+                    title = "TELEMETRY",
+                    subtitle = "Historical synthesis reports"
+                )
+
+                if (uiState.history.isEmpty()) {
+                    Box(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Default.History, 
+                                contentDescription = null, 
+                                modifier = Modifier.size(48.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text(
+                                "NO ARCHIVED TELEMETRY", 
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                "Historical sessions will be recorded here after synthesis.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(uiState.history) { result ->
+                            HistoryItem(
+                                result = result,
+                                onClick = { onViewResult(result) }
+                            )
+                        }
                     }
                 }
             }
@@ -122,22 +136,34 @@ private fun HistoryItem(
                     text = result.intent.name.replace("_", " "),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Black,
-                    color = RainbowBlue,
+                    color = BrandPrimary,
                     letterSpacing = 1.sp
                 )
                 Text(
                     text = formatTime(result.generatedAt),
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    fontWeight = FontWeight.Medium
                 )
             }
-            androidx.compose.foundation.layout.Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "${result.totalCandidates} CANDIDATES ANALYZED • ${result.setupCount} SETUPS DISCOVERED",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                fontWeight = FontWeight.Bold
-            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Assessment, 
+                    contentDescription = null, 
+                    modifier = Modifier.size(14.dp), 
+                    tint = BrandSecondary.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "${result.totalCandidates} CANDIDATES • ${result.setupCount} SIGNALS",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.5.sp
+                )
+            }
         }
     }
 }
+
