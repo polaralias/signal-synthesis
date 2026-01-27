@@ -76,7 +76,7 @@ fun DashboardScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     MockModeBanner(
                         isVisible = !uiState.hasAnyApiKeys,
@@ -174,7 +174,7 @@ private fun MarketSection(
     isLoading: Boolean,
     onOpenDetail: (String) -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -203,13 +203,13 @@ private fun MarketSection(
                     text = section.title.uppercase(),
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
                     color = BrandSecondary,
-                    modifier = Modifier.padding(bottom = 12.dp, start = 4.dp),
+                    modifier = Modifier.padding(bottom = 6.dp, start = 4.dp),
                     letterSpacing = 2.sp,
                     fontWeight = FontWeight.Black
                 )
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 12.dp)
+                    contentPadding = PaddingValues(bottom = 4.dp)
                 ) {
                     items(section.items) { index ->
                         IndexCard(index, onClick = { onOpenDetail(index.symbol) })
@@ -247,7 +247,7 @@ private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.5.sp
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Text(
                 formatPrice(index.price),
                 style = MaterialTheme.typography.titleMedium,
@@ -276,7 +276,6 @@ private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
 private fun QuickAnalysisSection(onIntentSelected: (TradingIntent) -> Unit) {
     Column {
         SectionHeader(title = "TRADING STRATEGIES")
-        Spacer(modifier = Modifier.height(12.dp))
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)

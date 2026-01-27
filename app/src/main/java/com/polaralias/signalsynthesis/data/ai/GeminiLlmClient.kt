@@ -23,11 +23,19 @@ class GeminiLlmClient(
             OutputLength.FULL -> 1500
         }
 
-        val level = when (reasoningDepth) {
-            ReasoningDepth.FAST -> "low"
-            ReasoningDepth.BALANCED -> "medium"
-            ReasoningDepth.DEEP -> "high"
-            ReasoningDepth.EXTRA -> "high" // fall back to high
+        val level = if (model.contains("flash")) {
+            when (reasoningDepth) {
+                ReasoningDepth.NONE, ReasoningDepth.MINIMAL -> "minimal"
+                ReasoningDepth.LOW -> "low"
+                ReasoningDepth.MEDIUM -> "medium"
+                ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
+            }
+        } else {
+            // Pro model (only low and high supported)
+            when (reasoningDepth) {
+                ReasoningDepth.NONE, ReasoningDepth.MINIMAL, ReasoningDepth.LOW -> "low"
+                ReasoningDepth.MEDIUM, ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
+            }
         }
 
         val generationConfig = if (model.contains("gemini-3")) {
@@ -40,10 +48,12 @@ class GeminiLlmClient(
             GeminiGenerationConfig(
                 maxOutputTokens = maxTokens,
                 thinkingBudget = when (reasoningDepth) {
-                    ReasoningDepth.FAST -> 500
-                    ReasoningDepth.BALANCED -> 1000
-                    ReasoningDepth.DEEP -> 2000
-                    ReasoningDepth.EXTRA -> 2000
+                    ReasoningDepth.NONE -> 0
+                    ReasoningDepth.MINIMAL -> 250
+                    ReasoningDepth.LOW -> 500
+                    ReasoningDepth.MEDIUM -> 1000
+                    ReasoningDepth.HIGH -> 2000
+                    ReasoningDepth.EXTRA -> 4000
                 }
             )
         }

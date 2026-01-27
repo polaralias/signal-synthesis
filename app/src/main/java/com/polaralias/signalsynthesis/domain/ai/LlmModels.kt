@@ -22,6 +22,6 @@ enum class LlmModel(val provider: LlmProvider, val modelId: String) {
     GEMINI_3_PRO(LlmProvider.GEMINI, "gemini-3-pro")
 }
 
-enum class ReasoningDepth { FAST, BALANCED, DEEP, EXTRA }
+enum class ReasoningDepth { NONE, MINIMAL, LOW, MEDIUM, HIGH, EXTRA }
 enum class OutputLength { SHORT, STANDARD, FULL }
 enum class Verbosity { LOW, MEDIUM, HIGH }

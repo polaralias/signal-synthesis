@@ -137,11 +137,10 @@ fun SettingsScreen(
         ) { paddingValues ->
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(paddingValues)
                     .verticalScroll(androidx.compose.foundation.rememberScrollState())
             ) {
-
-
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
                     SectionHeader("APPEARANCE")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -293,7 +292,7 @@ fun SettingsScreen(
                                 onExpandedChange = { providerExpanded = !providerExpanded }
                             ) {
                                 OutlinedTextField(
-                                    value = uiState.appSettings.llmProvider.name,
+                                    value = if (uiState.appSettings.llmProvider == LlmProvider.OPENAI) "OpenAI" else "Google Gemini",
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
@@ -301,6 +300,7 @@ fun SettingsScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     colors = TextFieldDefaults.outlinedTextFieldColors(
                                         focusedBorderColor = BrandPrimary,
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
                                         containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.02f)
                                     )
                                 )
@@ -425,39 +425,81 @@ fun SettingsScreen(
                                 }
                             }
                         }
+
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 24.dp).alpha(0.1f),
+                                color = BrandPrimary
+                            )
+                        }
                     }
-                }
-            }
-    Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader("QUANTITATIVE TUNING")
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SectionHeader("QUANTITATIVE TUNING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    // Reasoning Depth
-                    Text("Reasoning Depth", style = MaterialTheme.typography.labelMedium)
+                    // Reasoning Depth / Thinking Budget
+                    val isGemini = uiState.appSettings.llmProvider == LlmProvider.GEMINI
+                    val isThinkingModel = uiState.appSettings.analysisModel.name.contains("GEMINI_3") || 
+                                         uiState.appSettings.analysisModel.name.contains("GPT_5")
+                    
+                    Text(
+                        text = if (isGemini) "THINKING LEVEL" else "REASONING EFFORT", 
+                        style = MaterialTheme.typography.labelSmall, 
+                        fontWeight = FontWeight.Black, 
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), 
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     var reasoningExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
                         expanded = reasoningExpanded,
                         onExpandedChange = { reasoningExpanded = !reasoningExpanded }
                     ) {
-                        TextField(
-                            value = uiState.appSettings.reasoningDepth.name.lowercase().replaceFirstChar { it.uppercase() },
+                        OutlinedTextField(
+                            value = when (uiState.appSettings.reasoningDepth) {
+                                ReasoningDepth.NONE -> if (isGemini) (if (uiState.appSettings.analysisModel.name.contains("FLASH")) "Minimal Thinking (Fastest)" else "Low Thinking Effort") else "No Effort (None)"
+                                ReasoningDepth.MINIMAL -> if (isGemini) (if (uiState.appSettings.analysisModel.name.contains("FLASH")) "Minimal Thinking" else "Low Thinking Effort") else "Minimal Effort"
+                                ReasoningDepth.LOW -> if (isGemini) "Low Thinking Effort" else "Low Effort"
+                                ReasoningDepth.MEDIUM -> if (isGemini) (if (uiState.appSettings.analysisModel.name.contains("FLASH")) "Medium Thinking" else "High Thinking (Default)") else "Medium Effort"
+                                ReasoningDepth.HIGH -> if (isGemini) "High Thinking (Dynamic)" else "High Effort"
+                                ReasoningDepth.EXTRA -> if (isGemini) "Maximum Thinking" else "Extreme Effort (X-High)"
+                            },
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = reasoningExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth()
+                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         )
                         ExposedDropdownMenu(
                             expanded = reasoningExpanded,
                             onDismissRequest = { reasoningExpanded = false }
                         ) {
                             val currentModel = uiState.appSettings.analysisModel
+                            val isFlash = currentModel.name.contains("FLASH")
+                            val isPro = currentModel.name.contains("PRO") && currentModel.name.contains("GEMINI_3")
+
                             for (depth in com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.values()) {
-                                // Disable EXTRA unless GPT-5.2 or GPT-5.2 Pro
-                                val isExtraEnabled = currentModel == LlmModel.GPT_5_2 || currentModel == LlmModel.GPT_5_2_PRO
-                                if (depth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.EXTRA && !isExtraEnabled) continue
+                                // Model-specific constraints
+                                val isExtraSupported = currentModel.name.contains("GPT_5_2") || 
+                                                      currentModel.name.contains("PRO") ||
+                                                      currentModel.name.contains("GEMINI_3")
+                                
+                                if (depth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.EXTRA && !isExtraSupported) continue
+
+                                // Gemini Pro Specific Filtering: Only Low and High supported
+                                if (isPro && (depth == ReasoningDepth.MINIMAL || depth == ReasoningDepth.MEDIUM)) continue
 
                                 DropdownMenuItem(
-                                    text = { Text(depth.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                                    text = { 
+                                        Text(when (depth) {
+                                            ReasoningDepth.NONE -> if (isGemini) (if (isFlash) "Minimal (Fastest)" else "Low Effort") else "None"
+                                            ReasoningDepth.MINIMAL -> if (isGemini) "Minimal" else "Minimal"
+                                            ReasoningDepth.LOW -> if (isGemini) "Low" else "Low"
+                                            ReasoningDepth.MEDIUM -> if (isGemini) "Medium / Balanced" else "Medium"
+                                            ReasoningDepth.HIGH -> if (isGemini) "High (Dynamic)" else "High"
+                                            ReasoningDepth.EXTRA -> if (isGemini) "Maximum" else "Extreme (X-High)"
+                                        })
+                                    },
                                     onClick = {
                                         onUpdateSettings(uiState.appSettings.copy(reasoningDepth = depth))
                                         reasoningExpanded = false
@@ -922,6 +964,8 @@ fun SettingsScreen(
                 }
             }
             Spacer(modifier = Modifier.height(64.dp))
+                }
+            }
         }
     }
 

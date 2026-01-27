@@ -54,7 +54,7 @@ fun SectionHeader(title: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp, bottom = 12.dp)
+            .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -354,10 +354,10 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
     com.polaralias.signalsynthesis.ui.components.GlassCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
+            .padding(vertical = 4.dp)
             .clickable { onClick() }
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Warning,
@@ -374,13 +374,13 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {}) {
                     letterSpacing = 1.sp
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "Running in demo mode. Real-time data is disabled until API keys are configured.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "TAP TO CONFIGURE API KEYS",
                 style = MaterialTheme.typography.labelSmall,

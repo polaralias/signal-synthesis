@@ -795,7 +795,7 @@ class AnalysisViewModel(
         val bundle = providerFactory.build(apiKeys)
         val repository = MarketDataRepository(bundle)
         
-        val analysisModel = if (settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.DEEP || 
+        val analysisModel = if (settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.HIGH || 
                                 settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.EXTRA) {
             settings.reasoningModel
         } else {

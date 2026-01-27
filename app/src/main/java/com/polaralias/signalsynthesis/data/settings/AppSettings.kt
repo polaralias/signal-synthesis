@@ -17,7 +17,7 @@ data class AppSettings(
     val analysisModel: LlmModel = LlmModel.GPT_5_1,
     val verdictModel: LlmModel = LlmModel.GPT_5_1,
     val reasoningModel: LlmModel = LlmModel.GPT_5_2,
-    val reasoningDepth: ReasoningDepth = ReasoningDepth.BALANCED,
+    val reasoningDepth: ReasoningDepth = ReasoningDepth.MEDIUM,
     val outputLength: OutputLength = OutputLength.STANDARD,
     val verbosity: Verbosity = Verbosity.MEDIUM,
     val riskTolerance: RiskTolerance = RiskTolerance.MODERATE,

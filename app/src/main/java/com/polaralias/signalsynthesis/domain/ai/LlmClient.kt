@@ -5,7 +5,7 @@ interface LlmClient {
         prompt: String,
         systemPrompt: String? = null,
         apiKey: String,
-        reasoningDepth: ReasoningDepth = ReasoningDepth.BALANCED,
+        reasoningDepth: ReasoningDepth = ReasoningDepth.MEDIUM,
         outputLength: OutputLength = OutputLength.STANDARD,
         verbosity: Verbosity = Verbosity.MEDIUM
     ): String

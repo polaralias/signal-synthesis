@@ -16,7 +16,7 @@ class SynthesizeSetupUseCase(
     suspend fun execute(
         setup: TradeSetup,
         llmKey: String,
-        reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth = com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.BALANCED,
+        reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth = com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.MEDIUM,
         outputLength: com.polaralias.signalsynthesis.domain.ai.OutputLength = com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD,
         verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM,
         onProgress: ((String) -> Unit)? = null

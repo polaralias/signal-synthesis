@@ -36,9 +36,11 @@ class OpenAiLlmClient(
             },
             reasoning = OpenAiReasoning(
                 effort = when (reasoningDepth) {
-                    ReasoningDepth.FAST -> "low"
-                    ReasoningDepth.BALANCED -> "medium"
-                    ReasoningDepth.DEEP -> "high"
+                    ReasoningDepth.NONE -> "none"
+                    ReasoningDepth.MINIMAL -> "minimal"
+                    ReasoningDepth.LOW -> "low"
+                    ReasoningDepth.MEDIUM -> "medium"
+                    ReasoningDepth.HIGH -> "high"
                     ReasoningDepth.EXTRA -> "xhigh"
                 }
             ),
