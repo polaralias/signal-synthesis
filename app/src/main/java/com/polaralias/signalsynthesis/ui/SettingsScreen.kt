@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -424,7 +425,6 @@ fun SettingsScreen(
                                     }
                                 }
                             }
-                        }
 
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 24.dp).alpha(0.1f),
@@ -756,7 +756,6 @@ fun SettingsScreen(
                         }
                     }
                 }
-            }
 
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("SCREENER PARAMETERS")
@@ -840,7 +839,6 @@ fun SettingsScreen(
                         }
                     }
                 }
-            }
 
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("SYSTEM OPERATIONS")
@@ -968,6 +966,8 @@ fun SettingsScreen(
             }
         }
     }
+}
+}
 
     if (showThresholdAiDialog) {
         AiPromptDialog(
