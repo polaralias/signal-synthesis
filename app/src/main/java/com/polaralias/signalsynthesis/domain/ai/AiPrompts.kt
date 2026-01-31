@@ -137,6 +137,8 @@ object AiPrompts {
            - "setup_bias": "bullish", "bearish", or "neutral"
            - "must_review": List of specific items to verify (earnings, liquidity, catalyst, etc.)
            - "rss_needed": true if recent news is required before acting
+           - "expanded_rss_needed": true if broader, multi-source context is required beyond core feeds
+           - "expanded_rss_reason": short rationale for expanded feeds (optional)
         3. For dropped symbols, include reasons in "drop".
         4. "limits_applied": Include "max_keep" used.
         
@@ -148,7 +150,9 @@ object AiPrompts {
               "confidence": 0.85,
               "setup_bias": "bullish",
               "must_review": ["earnings date", "news catalyst"],
-              "rss_needed": true
+              "rss_needed": true,
+              "expanded_rss_needed": false,
+              "expanded_rss_reason": ""
             }
           ],
           "drop": [

@@ -62,7 +62,9 @@ class LlmModelParsingTest {
                   "confidence": 0.81,
                   "setup_bias": "bullish",
                   "must_review": ["invalidations"],
-                  "rss_needed": true
+                  "rss_needed": true,
+                  "expanded_rss_needed": true,
+                  "expanded_rss_reason": "Earnings catalyst + unusual volume"
                 }
               ],
               "drop": [
@@ -76,6 +78,8 @@ class LlmModelParsingTest {
         assertEquals(1, update.keep.size)
         assertEquals("AAPL", update.keep[0].symbol)
         assertTrue(update.keep[0].rssNeeded)
+        assertTrue(update.keep[0].expandedRssNeeded)
+        assertEquals("Earnings catalyst + unusual volume", update.keep[0].expandedRssReason)
         assertEquals(1, update.drop.size)
         assertEquals("XYZ", update.drop[0].symbol)
         assertEquals(10, update.limitsApplied["max_keep"])

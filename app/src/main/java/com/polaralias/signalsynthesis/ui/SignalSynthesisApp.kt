@@ -179,8 +179,11 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onRemoveFromBlocklist = viewModel::removeFromBlocklist,
                     onUpdateStageConfig = viewModel::updateStageConfig,
                     onArchiveUsage = viewModel::archiveUsage,
-                    onAddRssFeed = viewModel::addRssFeed,
-                    onRemoveRssFeed = viewModel::removeRssFeed
+                    onToggleRssTopic = viewModel::toggleRssTopic,
+                    onToggleRssTickerSource = viewModel::toggleRssTickerSource,
+                    onUpdateRssUseTickerFeedsForFinalStage = viewModel::updateRssUseTickerFeedsForFinalStage,
+                    onUpdateRssApplyExpandedToAll = viewModel::updateRssApplyExpandedToAll,
+                    onResetRssDefaults = viewModel::resetRssDefaults
                 )
             }
             composable(Screen.Logs.route) {

@@ -6,7 +6,12 @@ import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.data.settings.RiskTolerance
 import com.polaralias.signalsynthesis.data.settings.AssetClass
 import com.polaralias.signalsynthesis.data.settings.DiscoveryMode
+import com.polaralias.signalsynthesis.data.rss.RssFeedCatalog
 import com.polaralias.signalsynthesis.domain.model.TickerSource
+import com.polaralias.signalsynthesis.domain.rss.RssFeedResolver
+import com.polaralias.signalsynthesis.domain.rss.RssFeedSelection
+import com.polaralias.signalsynthesis.domain.rss.RssFeedStage
+import com.polaralias.signalsynthesis.domain.rss.RssTickerInput
 import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
@@ -39,6 +44,7 @@ class RunAnalysisV2UseCase(
     private val rankSetups = RankSetupsUseCase(clock)
     private val updateDecisions = UpdateDecisionsUseCase(stageModelRouter)
     private val synthesizeFundamentalsAndNews = SynthesizeFundamentalsAndNewsUseCase(stageModelRouter)
+    private val rssFeedResolver = RssFeedResolver()
     
     /**
      * Executes the staged analysis pipeline.
@@ -53,7 +59,8 @@ class RunAnalysisV2UseCase(
         screenerThresholds: Map<String, Double> = emptyMap(),
         maxShortlist: Int = 15,
         maxDecisionKeep: Int = 10,
-        rssFeeds: List<String> = emptyList(),
+        rssSelection: RssFeedSelection? = null,
+        rssCatalog: RssFeedCatalog? = null,
         onProgress: ((String) -> Unit)? = null
     ): AnalysisResult {
         // Step 1: Discover candidates
@@ -193,10 +200,13 @@ class RunAnalysisV2UseCase(
         val setups = filteredSetups.map { setup ->
             val decision = decisionMap[setup.symbol]
             if (decision != null) {
+                val expandedNeeded = decision.expandedRssNeeded
                 setup.copy(
                     setupBias = decision.setupBias,
                     mustReview = decision.mustReview,
-                    rssNeeded = decision.rssNeeded,
+                    rssNeeded = decision.rssNeeded || expandedNeeded,
+                    expandedRssNeeded = expandedNeeded,
+                    expandedRssReason = decision.expandedRssReason?.takeIf { it.isNotBlank() },
                     decisionConfidence = if (decision.confidence > 0.0) decision.confidence else null
                 )
             } else {
@@ -217,14 +227,33 @@ class RunAnalysisV2UseCase(
             )
         }
         
+        val resolvedFeeds = if (rssSelection != null && rssCatalog != null) {
+            val inputs = setups.map { setup ->
+                RssTickerInput(
+                    symbol = setup.symbol,
+                    source = setup.source,
+                    rssNeeded = setup.rssNeeded,
+                    expandedRssNeeded = setup.expandedRssNeeded
+                )
+            }
+            rssFeedResolver.resolve(
+                catalog = rssCatalog,
+                selection = rssSelection,
+                tickers = inputs,
+                stage = RssFeedStage.ANALYSIS
+            )
+        } else null
+
+        val feedUrls = resolvedFeeds?.feedUrls ?: emptyList()
+
         // Step 8: Build RSS Digest for final setups
-        val rssDigest = if (rssDigestBuilder != null && rssFeeds.isNotEmpty() && setups.isNotEmpty()) {
+        val rssDigest = if (rssDigestBuilder != null && feedUrls.isNotEmpty() && setups.isNotEmpty()) {
             onProgress?.invoke("Building RSS digest...")
             try {
-                val rssTargets = setups.filter { it.rssNeeded }.map { it.symbol }.ifEmpty { setups.map { it.symbol } }
+                val rssTargets = setups.map { it.symbol }
                 rssDigestBuilder.execute(
                     tickers = rssTargets,
-                    feedUrls = rssFeeds
+                    feedUrls = feedUrls
                 )
             } catch (e: Exception) {
                 Logger.e("RunAnalysisV2", "RSS digest failed", e)

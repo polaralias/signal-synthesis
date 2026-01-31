@@ -17,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.polaralias.signalsynthesis.domain.model.*
+import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -180,8 +181,24 @@ fun SetupDetailScreen(
 
                     SectionHeader("DEEP DIVE (WEB SEARCH)")
                     val deepDive = uiState.deepDives[symbol]
+                    val expandedTopicsEnabled = uiState.appSettings.rssEnabledTopics.any { key ->
+                        RssFeedDefaults.expandedTopicKeys.contains(key)
+                    }
+                    val expandedActive = expandedTopicsEnabled && (uiState.appSettings.rssApplyExpandedToAll || setup.expandedRssNeeded)
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
+                            if (expandedActive) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.Public, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text("EXPANDED FEEDS USED", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary, letterSpacing = 1.sp)
+                                }
+                                setup.expandedRssReason?.takeIf { it.isNotBlank() }?.let { reason ->
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(reason, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
                             when (deepDive?.status) {
                                 DeepDiveStatus.LOADING -> {
                                     Column(

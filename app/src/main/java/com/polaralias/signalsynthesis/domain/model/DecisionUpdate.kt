@@ -57,16 +57,22 @@ data class KeepItem(
     val confidence: Double = 0.0,
     val setupBias: String = "",
     val mustReview: List<String> = emptyList(),
-    val rssNeeded: Boolean = false
+    val rssNeeded: Boolean = false,
+    val expandedRssNeeded: Boolean = false,
+    val expandedRssReason: String? = null
 ) {
     companion object {
         fun fromJson(obj: JSONObject): KeepItem {
+            val reasonRaw = obj.optString("expanded_rss_reason", "").trim()
+            val reason = reasonRaw.takeIf { it.isNotBlank() && it.lowercase() != "null" }
             return KeepItem(
                 symbol = obj.optString("symbol", ""),
                 confidence = obj.optDouble("confidence", 0.0),
                 setupBias = obj.optString("setup_bias", ""),
                 mustReview = obj.optJSONArray("must_review").toStringList(),
-                rssNeeded = obj.optBoolean("rss_needed", false)
+                rssNeeded = obj.optBoolean("rss_needed", false),
+                expandedRssNeeded = obj.optBoolean("expanded_rss_needed", false),
+                expandedRssReason = reason
             )
         }
     }

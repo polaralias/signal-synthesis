@@ -6,7 +6,7 @@ import com.polaralias.signalsynthesis.domain.ai.ReasoningDepth
 import com.polaralias.signalsynthesis.domain.ai.OutputLength
 import com.polaralias.signalsynthesis.domain.ai.Verbosity
 import com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig
-import com.polaralias.signalsynthesis.domain.model.AnalysisStage
+import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 
 data class AppSettings(
     val quoteRefreshIntervalMinutes: Int = 5,
@@ -43,7 +43,10 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val deepDiveProvider: LlmProvider = LlmProvider.OPENAI,
     val modelRouting: UserModelRoutingConfig = UserModelRoutingConfig(),
-    val rssFeeds: List<String> = emptyList()
+    val rssEnabledTopics: Set<String> = RssFeedDefaults.defaultEnabledTopicKeys(),
+    val rssTickerSources: Set<String> = RssFeedDefaults.defaultTickerSourceIds,
+    val rssUseTickerFeedsForFinalStage: Boolean = true,
+    val rssApplyExpandedToAll: Boolean = false
 )
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }

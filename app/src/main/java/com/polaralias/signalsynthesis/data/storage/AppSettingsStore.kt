@@ -2,7 +2,11 @@ package com.polaralias.signalsynthesis.data.storage
 
 import android.content.Context
 import androidx.core.content.edit
+import com.polaralias.signalsynthesis.data.rss.RssFeedCatalogLoader
+import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import com.polaralias.signalsynthesis.data.settings.AppSettings
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -13,8 +17,33 @@ interface AppSettingsStorage {
 
 class AppSettingsStore(context: Context) : AppSettingsStorage {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val moshi = Moshi.Builder().build()
+    private val stringListAdapter = moshi.adapter<List<String>>(
+        Types.newParameterizedType(List::class.java, String::class.java)
+    )
+    private val rssCatalog by lazy { RssFeedCatalogLoader(context).load() }
 
     override suspend fun loadSettings(): AppSettings = withContext(Dispatchers.IO) {
+        val storedTopicsRaw = prefs.getString(KEY_RSS_ENABLED_TOPICS, null)
+        val storedTopics = parseStringList(storedTopicsRaw).toSet()
+        val storedTickerSourcesRaw = prefs.getString(KEY_RSS_TICKER_SOURCES, null)
+        val storedTickerSources = parseStringList(storedTickerSourcesRaw).toSet()
+        val hasStoredTopics = prefs.contains(KEY_RSS_ENABLED_TOPICS)
+        val hasStoredTickerSources = prefs.contains(KEY_RSS_TICKER_SOURCES)
+        val legacyTopics = if (!hasStoredTopics) migrateLegacyTopics() else emptySet()
+        val enabledTopics = when {
+            hasStoredTopics -> storedTopics
+            legacyTopics.isNotEmpty() -> legacyTopics + RssFeedDefaults.coreTopicKeys
+            else -> RssFeedDefaults.defaultEnabledTopicKeys()
+        }
+        val tickerSources = if (storedTickerSources.isNotEmpty()) {
+            storedTickerSources
+        } else if (!hasStoredTickerSources) {
+            RssFeedDefaults.defaultTickerSourceIds
+        } else {
+            storedTickerSources
+        }
+
         AppSettings(
             quoteRefreshIntervalMinutes = prefs.getInt(KEY_QUOTE_REFRESH, 5),
             alertCheckIntervalMinutes = prefs.getInt(KEY_ALERT_INTERVAL, 15),
@@ -50,7 +79,10 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             themeMode = com.polaralias.signalsynthesis.data.settings.ThemeMode.valueOf(prefs.getString(KEY_THEME_MODE, "SYSTEM") ?: "SYSTEM"),
             deepDiveProvider = com.polaralias.signalsynthesis.domain.ai.LlmProvider.valueOf(prefs.getString(KEY_DEEP_DIVE_PROVIDER, "OPENAI") ?: "OPENAI"),
             modelRouting = com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig.fromJson(prefs.getString(KEY_MODEL_ROUTING, null)),
-            rssFeeds = com.squareup.moshi.Moshi.Builder().build().adapter<List<String>>(List::class.java).fromJson(prefs.getString(KEY_RSS_FEEDS, "[]") ?: "[]") ?: emptyList()
+            rssEnabledTopics = enabledTopics,
+            rssTickerSources = tickerSources,
+            rssUseTickerFeedsForFinalStage = prefs.getBoolean(KEY_RSS_TICKER_FINAL_STAGE, true),
+            rssApplyExpandedToAll = prefs.getBoolean(KEY_RSS_EXPANDED_ALL, false)
         )
     }
 
@@ -90,7 +122,10 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             putString(KEY_THEME_MODE, settings.themeMode.name)
             putString(KEY_DEEP_DIVE_PROVIDER, settings.deepDiveProvider.name)
             putString(KEY_MODEL_ROUTING, settings.modelRouting.toJson())
-            putString(KEY_RSS_FEEDS, com.squareup.moshi.Moshi.Builder().build().adapter<List<String>>(List::class.java).toJson(settings.rssFeeds))
+            putString(KEY_RSS_ENABLED_TOPICS, stringListAdapter.toJson(settings.rssEnabledTopics.toList()))
+            putString(KEY_RSS_TICKER_SOURCES, stringListAdapter.toJson(settings.rssTickerSources.toList()))
+            putBoolean(KEY_RSS_TICKER_FINAL_STAGE, settings.rssUseTickerFeedsForFinalStage)
+            putBoolean(KEY_RSS_EXPANDED_ALL, settings.rssApplyExpandedToAll)
         }
     }
 
@@ -153,6 +188,25 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_DEEP_DIVE_PROVIDER = "deep_dive_provider"
         private const val KEY_MODEL_ROUTING = "model_routing_by_stage"
         private const val KEY_RSS_FEEDS = "user_rss_feeds"
+        private const val KEY_RSS_ENABLED_TOPICS = "rss_enabled_topics"
+        private const val KEY_RSS_TICKER_SOURCES = "rss_ticker_sources"
+        private const val KEY_RSS_TICKER_FINAL_STAGE = "rss_ticker_final_stage"
+        private const val KEY_RSS_EXPANDED_ALL = "rss_expanded_all"
+    }
+
+    private fun migrateLegacyTopics(): Set<String> {
+        val legacy = parseStringList(prefs.getString(KEY_RSS_FEEDS, "[]"))
+        if (legacy.isEmpty()) return emptySet()
+        val urlToKey = rssCatalog.entries.associate { entry -> entry.url to entry.topicKey }
+        return legacy.mapNotNull { urlToKey[it] }.toSet()
+    }
+
+    private fun parseStringList(raw: String?): List<String> {
+        return try {
+            stringListAdapter.fromJson(raw ?: "[]") ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
+        }
     }
 }
 

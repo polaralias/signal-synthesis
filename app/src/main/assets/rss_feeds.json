@@ -1,0 +1,2170 @@
+[
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "analyst_interviews",
+    "topicLabel": "analyst interviews",
+    "url": "https://www.cnbc.com/id/100004033/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "asia_news",
+    "topicLabel": "asia news",
+    "url": "https://www.cnbc.com/id/19832390/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "autos",
+    "topicLabel": "autos",
+    "url": "https://www.cnbc.com/id/10000101/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "buffett_watch",
+    "topicLabel": "buffett watch",
+    "url": "https://www.cnbc.com/id/19206666/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "business",
+    "topicLabel": "business",
+    "url": "https://www.cnbc.com/id/10001147/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "capital_connection",
+    "topicLabel": "capital connection",
+    "url": "https://www.cnbc.com/id/17501773/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "ceo_interviews",
+    "topicLabel": "ceo interviews",
+    "url": "https://www.cnbc.com/id/100004032/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "charting_asia",
+    "topicLabel": "charting asia",
+    "url": "https://www.cnbc.com/id/23103686/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "closing_bell",
+    "topicLabel": "closing bell",
+    "url": "https://www.cnbc.com/id/15838421/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "commentary",
+    "topicLabel": "commentary",
+    "url": "https://www.cnbc.com/id/100370673/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "digital_workshop",
+    "topicLabel": "digital workshop",
+    "url": "https://www.cnbc.com/id/100616801/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "earnings",
+    "topicLabel": "earnings",
+    "url": "https://www.cnbc.com/id/15839135/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "economy",
+    "topicLabel": "economy",
+    "url": "https://www.cnbc.com/id/20910258/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "energy",
+    "topicLabel": "energy",
+    "url": "https://www.cnbc.com/id/19836768/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "europe_news",
+    "topicLabel": "europe news",
+    "url": "https://www.cnbc.com/id/19794221/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "fast_money",
+    "topicLabel": "fast money",
+    "url": "https://www.cnbc.com/id/15838499/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "finance",
+    "topicLabel": "finance",
+    "url": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "financial_advisors",
+    "topicLabel": "financial advisors",
+    "url": "https://www.cnbc.com/id/100646281/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "funny_business",
+    "topicLabel": "funny business",
+    "url": "https://www.cnbc.com/id/17646093/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "futures_now",
+    "topicLabel": "futures now",
+    "url": "https://www.cnbc.com/id/48227449/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "healthcare",
+    "topicLabel": "healthcare",
+    "url": "https://www.cnbc.com/id/10000108/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "investing",
+    "topicLabel": "investing",
+    "url": "https://www.cnbc.com/id/15839069/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "kudlow_report",
+    "topicLabel": "kudlow report",
+    "url": "https://www.cnbc.com/id/15838446/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "latest_video",
+    "topicLabel": "latest video",
+    "url": "https://www.cnbc.com/id/100004038/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "mad_money",
+    "topicLabel": "mad money",
+    "url": "https://www.cnbc.com/id/15838459/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "market_insider",
+    "topicLabel": "market insider",
+    "url": "https://www.cnbc.com/id/20409666/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "media",
+    "topicLabel": "media",
+    "url": "https://www.cnbc.com/id/10000110/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "must_watch",
+    "topicLabel": "must watch",
+    "url": "https://www.cnbc.com/id/101014894/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "netnet",
+    "topicLabel": "netnet",
+    "url": "https://www.cnbc.com/id/38818154/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "options_action",
+    "topicLabel": "options action",
+    "url": "https://www.cnbc.com/id/28282083/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "personal_finance",
+    "topicLabel": "personal finance",
+    "url": "https://www.cnbc.com/id/21324812/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "politics",
+    "topicLabel": "politics",
+    "url": "https://www.cnbc.com/id/10000113/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "power_lunch",
+    "topicLabel": "power lunch",
+    "url": "https://www.cnbc.com/id/15838342/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "real_estate",
+    "topicLabel": "real estate",
+    "url": "https://www.cnbc.com/id/10000115/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "retail",
+    "topicLabel": "retail",
+    "url": "https://www.cnbc.com/id/10000116/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "small_business",
+    "topicLabel": "small business",
+    "url": "https://www.cnbc.com/id/44877279/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "squawk_box",
+    "topicLabel": "squawk box",
+    "url": "https://www.cnbc.com/id/15838368/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "squawk_box_asia",
+    "topicLabel": "squawk box asia",
+    "url": "https://www.cnbc.com/id/15838831/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "squawk_box_europe",
+    "topicLabel": "squawk box europe",
+    "url": "https://www.cnbc.com/id/15838652/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "squawk_on_the_street",
+    "topicLabel": "squawk on the street",
+    "url": "https://www.cnbc.com/id/15838381/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "street_signs",
+    "topicLabel": "street signs",
+    "url": "https://www.cnbc.com/id/15838408/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "suze_orman",
+    "topicLabel": "suze orman",
+    "url": "https://www.cnbc.com/id/15838523/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "technology",
+    "topicLabel": "technology",
+    "url": "https://www.cnbc.com/id/19854910/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "the_call",
+    "topicLabel": "the call",
+    "url": "https://www.cnbc.com/id/37447855/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "top_news",
+    "topicLabel": "top news",
+    "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "top_video",
+    "topicLabel": "top video",
+    "url": "https://www.cnbc.com/id/15839263/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "trader_talk",
+    "topicLabel": "trader talk",
+    "url": "https://www.cnbc.com/id/20398120/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "travel",
+    "topicLabel": "travel",
+    "url": "https://www.cnbc.com/id/10000739/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "us_news",
+    "topicLabel": "us news",
+    "url": "https://www.cnbc.com/id/15837362/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "wealth",
+    "topicLabel": "wealth",
+    "url": "https://www.cnbc.com/id/10001054/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "world_news",
+    "topicLabel": "world news",
+    "url": "https://www.cnbc.com/id/100727362/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnbc",
+    "sourceLabel": "CNBC",
+    "topicId": "worldwide_exchange",
+    "topicLabel": "worldwide exchange",
+    "url": "https://www.cnbc.com/id/15838355/device/rss/rss.html",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "all_stories",
+    "topicLabel": "all stories",
+    "url": "http://rss.cnn.com/rss/money_latest.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "autos",
+    "topicLabel": "autos",
+    "url": "http://rss.cnn.com/rss/money_autos.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "college",
+    "topicLabel": "college",
+    "url": "http://rss.cnn.com/rss/money_pf_college.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "companies",
+    "topicLabel": "companies",
+    "url": "http://rss.cnn.com/rss/money_news_companies.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "economy",
+    "topicLabel": "economy",
+    "url": "http://rss.cnn.com/rss/money_news_economy.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "funds",
+    "topicLabel": "funds",
+    "url": "http://rss.cnn.com/rss/money_funds.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "insurance",
+    "topicLabel": "insurance",
+    "url": "http://rss.cnn.com/rss/money_pf_insurance.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "international",
+    "topicLabel": "international",
+    "url": "http://rss.cnn.com/rss/money_news_international.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "lifestyle",
+    "topicLabel": "lifestyle",
+    "url": "http://rss.cnn.com/rss/money_lifestyle.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "luxury",
+    "topicLabel": "luxury",
+    "url": "http://rss.cnn.com/rss/money_luxury.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "markets",
+    "topicLabel": "markets",
+    "url": "http://rss.cnn.com/rss/money_markets.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "media",
+    "topicLabel": "media",
+    "url": "http://rss.cnn.com/rss/money_media.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "most_popular",
+    "topicLabel": "most popular",
+    "url": "http://rss.cnn.com/rss/money_mostpopular.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "personal_finance",
+    "topicLabel": "personal finance",
+    "url": "http://rss.cnn.com/rss/money_pf.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "real_estate",
+    "topicLabel": "real estate",
+    "url": "http://rss.cnn.com/rss/money_realestate.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "retirement",
+    "topicLabel": "retirement",
+    "url": "http://rss.cnn.com/rss/money_retirement.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "small_business",
+    "topicLabel": "small business",
+    "url": "http://rss.cnn.com/rss/money_smbusiness.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "taxes",
+    "topicLabel": "taxes",
+    "url": "http://rss.cnn.com/rss/money_pf_taxes.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "technology",
+    "topicLabel": "technology",
+    "url": "http://rss.cnn.com/rss/money_technology.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "the_buzz",
+    "topicLabel": "the buzz",
+    "url": "http://rss.cnn.com/cnnmoneymorningbuzz",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "top_stories",
+    "topicLabel": "top stories",
+    "url": "http://rss.cnn.com/rss/money_topstories.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "cnn_money",
+    "sourceLabel": "CNN Money",
+    "topicId": "video",
+    "topicLabel": "video",
+    "url": "http://rss.cnn.com/rss/money_video_business.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "fortune",
+    "sourceLabel": "Fortune",
+    "topicId": "breaking_business_news",
+    "topicLabel": "breaking business news",
+    "url": "https://fortune.com/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "ft",
+    "sourceLabel": "FT",
+    "topicId": "news",
+    "topicLabel": "news",
+    "url": "https://www.ft.com/?format=rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "all_brokers",
+    "topicLabel": "all brokers",
+    "url": "https://www.investing.com/rss/brokers.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "all_news",
+    "topicLabel": "all news",
+    "url": "https://www.investing.com/rss/news.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "bonds_analysis_and_opinion",
+    "topicLabel": "bonds analysis and opinion",
+    "url": "https://www.investing.com/rss/bonds.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "bonds_corportate_bonds_analysis",
+    "topicLabel": "bonds corportate bonds analysis",
+    "url": "https://www.investing.com/rss/bonds_Corporate.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "bonds_fundamental_analysis",
+    "topicLabel": "bonds fundamental analysis",
+    "url": "https://www.investing.com/rss/bonds_Fundamental.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "bonds_government_bonds_analysis",
+    "topicLabel": "bonds government bonds analysis",
+    "url": "https://www.investing.com/rss/bonds_Government.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "bonds_opinion",
+    "topicLabel": "bonds opinion",
+    "url": "https://www.investing.com/rss/bonds_Opinion.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "bonds_technical_analysis",
+    "topicLabel": "bonds technical analysis",
+    "url": "https://www.investing.com/rss/bonds_Technical.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "broker_interviews",
+    "topicLabel": "broker interviews",
+    "url": "https://www.investing.com/rss/brokers_interviews.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "broker_promotions",
+    "topicLabel": "broker promotions",
+    "url": "https://www.investing.com/rss/brokers_promotions.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "central_bank_speeches",
+    "topicLabel": "central bank speeches",
+    "url": "https://www.investing.com/rss/central_banks.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_agriculture_analysis",
+    "topicLabel": "commodities agriculture analysis",
+    "url": "https://www.investing.com/rss/commodities_Agriculture.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_analysis_and_opinion",
+    "topicLabel": "commodities analysis and opinion",
+    "url": "https://www.investing.com/rss/commodities.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_and_futures_news",
+    "topicLabel": "commodities and futures news",
+    "url": "https://www.investing.com/rss/news_11.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_energy_analysis",
+    "topicLabel": "commodities energy analysis",
+    "url": "https://www.investing.com/rss/commodities_Energy.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_fundamental_analysis",
+    "topicLabel": "commodities fundamental analysis",
+    "url": "https://www.investing.com/rss/commodities_Fundamental.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_metals_analysis",
+    "topicLabel": "commodities metals analysis",
+    "url": "https://www.investing.com/rss/commodities_Metals.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_opinion",
+    "topicLabel": "commodities opinion",
+    "url": "https://www.investing.com/rss/commodities_Opinion.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_strategy",
+    "topicLabel": "commodities strategy",
+    "url": "https://www.investing.com/rss/commodities_Strategy.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "commodities_technical_analysis",
+    "topicLabel": "commodities technical analysis",
+    "url": "https://www.investing.com/rss/commodities_Technical.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "coronavirus_news_and_updates",
+    "topicLabel": "coronavirus news and updates",
+    "url": "https://www.investing.com/rss/news.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "cryptocurrency_news",
+    "topicLabel": "cryptocurrency news",
+    "url": "https://www.investing.com/rss/news_301.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "cryptocurrency_opinion_and_analysis",
+    "topicLabel": "cryptocurrency opinion and analysis",
+    "url": "https://www.investing.com/rss/302.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "economic_indicators_news",
+    "topicLabel": "economic indicators news",
+    "url": "https://www.investing.com/rss/news_95.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "economy_news",
+    "topicLabel": "economy news",
+    "url": "https://www.investing.com/rss/news_14.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "editor_picks",
+    "topicLabel": "editor picks",
+    "url": "https://www.investing.com/rss/290.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "financial_webinars",
+    "topicLabel": "financial webinars",
+    "url": "https://www.investing.com/rss/159.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_brokers_press_releases",
+    "topicLabel": "forex brokers press releases",
+    "url": "https://www.investing.com/rss/brokers_press.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_fundamental_analysis",
+    "topicLabel": "forex fundamental analysis",
+    "url": "https://www.investing.com/rss/forex_Fundamental.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_news",
+    "topicLabel": "forex news",
+    "url": "https://www.investing.com/rss/news_1.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_opinion",
+    "topicLabel": "forex opinion",
+    "url": "https://www.investing.com/rss/forex_Opinion.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_opinion_and_analysis",
+    "topicLabel": "forex opinion and analysis",
+    "url": "https://www.investing.com/rss/forex.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_signals",
+    "topicLabel": "forex signals",
+    "url": "https://www.investing.com/rss/forex_Signals.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "forex_technical_analysis",
+    "topicLabel": "forex technical analysis",
+    "url": "https://www.investing.com/rss/forex_Technical.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "investing_com_analysis",
+    "topicLabel": "investing.com analysis",
+    "url": "https://www.investing.com/rss/121899.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "investing_news",
+    "topicLabel": "investing news",
+    "url": "https://www.investing.com/rss/investing_news.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "latest_news",
+    "topicLabel": "latest news",
+    "url": "https://www.investing.com/rss/news_477.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "market_overview",
+    "topicLabel": "market overview",
+    "url": "https://www.investing.com/rss/market_overview.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "market_overview_fundamental_analysis",
+    "topicLabel": "market overview fundamental analysis",
+    "url": "https://www.investing.com/rss/market_overview_Fundamental.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "market_overview_investing_ideas",
+    "topicLabel": "market overview investing ideas",
+    "url": "https://www.investing.com/rss/market_overview_investing_ideas.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "market_overview_opinion",
+    "topicLabel": "market overview opinion",
+    "url": "https://www.investing.com/rss/market_overview_Opinion.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "market_overview_technical_analysis",
+    "topicLabel": "market overview technical analysis",
+    "url": "https://www.investing.com/rss/market_overview_Technical.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "most_popular_analysis",
+    "topicLabel": "most popular analysis",
+    "url": "https://www.investing.com/rss/286.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "most_popular_news",
+    "topicLabel": "most popular news",
+    "url": "https://www.investing.com/rss/news_285.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "politics_news",
+    "topicLabel": "politics news",
+    "url": "https://www.investing.com/rss/news_289.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_market_news",
+    "topicLabel": "stock market news",
+    "url": "https://www.investing.com/rss/news_25.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_analysis_and_opinion",
+    "topicLabel": "stock markets analysis and opinion",
+    "url": "https://www.investing.com/rss/stock.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_etfs",
+    "topicLabel": "stock markets etfs",
+    "url": "https://www.investing.com/rss/stock_ETFs.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_fundamental_analysis",
+    "topicLabel": "stock markets fundamental analysis",
+    "url": "https://www.investing.com/rss/stock_Fundamental.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_futures",
+    "topicLabel": "stock markets futures",
+    "url": "https://www.investing.com/rss/stock_Futures.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_indices_analysis",
+    "topicLabel": "stock markets indices analysis",
+    "url": "https://www.investing.com/rss/stock_Indices.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_opinion",
+    "topicLabel": "stock markets opinion",
+    "url": "https://www.investing.com/rss/stock_Opinion.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_options_analysis",
+    "topicLabel": "stock markets options analysis",
+    "url": "https://www.investing.com/rss/stock_Options.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_stock_analysis",
+    "topicLabel": "stock markets stock analysis",
+    "url": "https://www.investing.com/rss/stock_Stocks.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_stock_picks",
+    "topicLabel": "stock markets stock picks",
+    "url": "https://www.investing.com/rss/stock_stock_picks.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "stock_markets_technical_analysis",
+    "topicLabel": "stock markets technical analysis",
+    "url": "https://www.investing.com/rss/stock_Technical.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "investing_com",
+    "sourceLabel": "Investing.com",
+    "topicId": "world_news",
+    "topicLabel": "world news",
+    "url": "https://www.investing.com/rss/news_287.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "automotive_reviews",
+    "topicLabel": "automotive reviews",
+    "url": "http://www.marketwatch.com/rss/Autoreviews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "banking",
+    "topicLabel": "banking",
+    "url": "http://www.marketwatch.com/rss/financial",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "breaking_news_bulletins",
+    "topicLabel": "breaking news bulletins",
+    "url": "http://feeds.marketwatch.com/marketwatch/bulletins",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "commentary",
+    "topicLabel": "commentary",
+    "url": "http://www.marketwatch.com/rss/commentary",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "financial_services",
+    "topicLabel": "financial services",
+    "url": "http://www.marketwatch.com/rss/financial",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "internet",
+    "topicLabel": "internet",
+    "url": "http://www.marketwatch.com/rss/internet",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "marketpulse",
+    "topicLabel": "marketpulse",
+    "url": "http://www.marketwatch.com/rss/marketpulse",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "mutual_funds",
+    "topicLabel": "mutual funds",
+    "url": "http://www.marketwatch.com/rss/mutualfunds",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "newsletters_and_research",
+    "topicLabel": "newsletters and research",
+    "url": "http://www.marketwatch.com/rss/newslettersandresearch",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "personal_finance",
+    "topicLabel": "personal finance",
+    "url": "http://www.marketwatch.com/rss/pf",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "real_time_headlines",
+    "topicLabel": "real-time headlines",
+    "url": "http://www.marketwatch.com/rss/realtimeheadlines",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "software",
+    "topicLabel": "software",
+    "url": "http://www.marketwatch.com/rss/software",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "stocks_to_watch",
+    "topicLabel": "stocks to watch",
+    "url": "http://www.marketwatch.com/rss/StockstoWatch",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "marketwatch",
+    "sourceLabel": "MarketWatch",
+    "topicId": "top_stories",
+    "topicLabel": "top stories",
+    "url": "http://www.marketwatch.com/rss/topstories",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "artifical_intelligence",
+    "topicLabel": "artifical intelligence",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Artificial+Intelligence",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "blockchain",
+    "topicLabel": "blockchain",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Blockchain",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "commodities",
+    "topicLabel": "commodities",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Commodities",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "corporate_governance",
+    "topicLabel": "corporate governance",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Corporate+Governance",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "cryptocurrency",
+    "topicLabel": "cryptocurrency",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Cryptocurrencies",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "dividends",
+    "topicLabel": "dividends",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Dividends",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "earnings",
+    "topicLabel": "earnings",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Earnings",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "etfs",
+    "topicLabel": "etfs",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=ETFs",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "financial_advisors",
+    "topicLabel": "financial advisors",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Financial+Advisors",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "fintech",
+    "topicLabel": "fintech",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=FinTech",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "innovation",
+    "topicLabel": "innovation",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Innovation",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "investing",
+    "topicLabel": "investing",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Investing",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "ipos",
+    "topicLabel": "ipos",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=IPOs",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "markets",
+    "topicLabel": "markets",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Markets",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "nasdaq_inc_news",
+    "topicLabel": "nasdaq inc news",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Nasdaq",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "options",
+    "topicLabel": "options",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Options",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "original_content",
+    "topicLabel": "original content",
+    "url": "https://www.nasdaq.com/feed/nasdaq-original/rss.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "retirement",
+    "topicLabel": "retirement",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Retirement",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "saving_money",
+    "topicLabel": "saving money",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Saving%20Money",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "stocks",
+    "topicLabel": "stocks",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Stocks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "technology",
+    "topicLabel": "technology",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?category=Technology",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "nasdaq",
+    "sourceLabel": "Nasdaq",
+    "topicId": "ticker",
+    "topicLabel": "ticker",
+    "url": "https://www.nasdaq.com/feed/rssoutbound?symbol={}",
+    "isTickerTemplate": true
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "finance",
+    "topicLabel": "$finance",
+    "url": "https://www.reddit.com/r/finance/.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "investing",
+    "topicLabel": "$investing",
+    "url": "https://www.reddit.com/r/investing/.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "news",
+    "topicLabel": "$news",
+    "url": "https://www.reddit.com/r/news/.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "stockmarket",
+    "topicLabel": "$stockmarket",
+    "url": "https://www.reddit.com/r/StockMarket/.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "stocks",
+    "topicLabel": "$stocks",
+    "url": "https://www.reddit.com/r/stocks/.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "ticker",
+    "topicLabel": "ticker",
+    "url": "https://www.reddit.com/r/{}/.rss",
+    "isTickerTemplate": true
+  },
+  {
+    "sourceId": "reddit",
+    "sourceLabel": "Reddit",
+    "topicId": "wallstreetbets",
+    "topicLabel": "$wallstreetbets",
+    "url": "https://www.reddit.com/r/wallstreetbets/.rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "business",
+    "topicLabel": "business",
+    "url": "http://feeds.reuters.com/reuters/businessNews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "energy_and_environment",
+    "topicLabel": "energy and environment",
+    "url": "http://feeds.reuters.com/reuters/environment",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "politics",
+    "topicLabel": "politics",
+    "url": "http://feeds.reuters.com/reuters/politicsNews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "technology",
+    "topicLabel": "technology",
+    "url": "http://feeds.reuters.com/reuters/technologyNews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "top_news",
+    "topicLabel": "top news",
+    "url": "http://feeds.reuters.com/reuters/topNews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "us_news",
+    "topicLabel": "us news",
+    "url": "http://feeds.reuters.com/Reuters/domesticNews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "wealth",
+    "topicLabel": "wealth",
+    "url": "http://feeds.reuters.com/news/wealth",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "reuters",
+    "sourceLabel": "Reuters",
+    "topicId": "world_news",
+    "topicLabel": "world news",
+    "url": "http://feeds.reuters.com/Reuters/worldNews",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "all_news",
+    "topicLabel": "all news",
+    "url": "https://seekingalpha.com/market_currents.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "australia",
+    "topicLabel": "australia",
+    "url": "https://seekingalpha.com/tag/australia.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "basic_materials",
+    "topicLabel": "basic materials",
+    "url": "https://seekingalpha.com/sector/basic-materials.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "basic_materials_analysis",
+    "topicLabel": "basic materials analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/basic-materials",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "brazil",
+    "topicLabel": "brazil",
+    "url": "https://seekingalpha.com/tag/brazil.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "canada",
+    "topicLabel": "canada",
+    "url": "https://seekingalpha.com/tag/canada.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "china",
+    "topicLabel": "china",
+    "url": "https://seekingalpha.com/tag/china.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "closed_end_funds",
+    "topicLabel": "closed end funds",
+    "url": "https://seekingalpha.com/feed/etfs-and-funds/closed-end-funds",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "commodities",
+    "topicLabel": "commodities",
+    "url": "https://seekingalpha.com/feed/market-outlook/commodities",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "commodities_news",
+    "topicLabel": "commodities news",
+    "url": "https://seekingalpha.com/news/commodities/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "conglomerates",
+    "topicLabel": "conglomerates",
+    "url": "https://seekingalpha.com/sector/conglomerates.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "conglomerates_analysis",
+    "topicLabel": "conglomerates analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/conglomerates",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "consumer_analysis",
+    "topicLabel": "consumer analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/consumer-goods",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "consumer_goods",
+    "topicLabel": "consumer goods",
+    "url": "https://seekingalpha.com/sector/consumer-goods.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "consumer_news",
+    "topicLabel": "consumer news",
+    "url": "https://seekingalpha.com/news/consumer/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "cryptocurrency",
+    "topicLabel": "cryptocurrency",
+    "url": "https://seekingalpha.com/feed/market-outlook/cryptocurrency",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "dividend_editor_picks",
+    "topicLabel": "dividend editor picks",
+    "url": "https://seekingalpha.com/feed/dividends/editors-picks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "dividend_ideas",
+    "topicLabel": "dividend ideas",
+    "url": "https://seekingalpha.com/feed/dividends/dividend-ideas",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "dividend_quick_picks",
+    "topicLabel": "dividend quick picks",
+    "url": "https://seekingalpha.com/feed/dividends/dividend-quick-picks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "dividend_strategy",
+    "topicLabel": "dividend strategy",
+    "url": "https://seekingalpha.com/feed/dividends/dividend-strategy",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "dividends",
+    "topicLabel": "dividends",
+    "url": "https://seekingalpha.com/feed/dividends",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "dollar_currencies",
+    "topicLabel": "dollar/currencies",
+    "url": "https://seekingalpha.com/tag/forex.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "earnings",
+    "topicLabel": "earnings",
+    "url": "https://seekingalpha.com/news/earnings/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "economy",
+    "topicLabel": "economy",
+    "url": "https://seekingalpha.com/feed/market-outlook/economy",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "editor_picks",
+    "topicLabel": "editor picks",
+    "url": "https://seekingalpha.com/tag/editors-picks.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "energy_news",
+    "topicLabel": "energy news",
+    "url": "https://seekingalpha.com/news/energy/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "etf_analysis",
+    "topicLabel": "etf analysis",
+    "url": "https://seekingalpha.com/feed/etfs-and-funds/etf-analysis",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "etfs",
+    "topicLabel": "etfs",
+    "url": "https://seekingalpha.com/tag/etf-portfolio-strategy.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "etfs_and_funds",
+    "topicLabel": "etfs and funds",
+    "url": "https://seekingalpha.com/feed/etfs-and-funds",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "etfs_and_funds_editor_picks",
+    "topicLabel": "etfs and funds editor picks",
+    "url": "https://seekingalpha.com/feed/etfs-and-funds/editors-picks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "financial",
+    "topicLabel": "financial",
+    "url": "https://seekingalpha.com/sector/financial.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "financial_news",
+    "topicLabel": "financial news",
+    "url": "https://seekingalpha.com/news/financials/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "financials_analysis",
+    "topicLabel": "financials analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/financial",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "fixed_income",
+    "topicLabel": "fixed income",
+    "url": "https://seekingalpha.com/feed/investing-strategy/fixed-income",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "forex",
+    "topicLabel": "forex",
+    "url": "https://seekingalpha.com/feed/market-outlook/forex",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "germany",
+    "topicLabel": "germany",
+    "url": "https://seekingalpha.com/tag/germany.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "healthcare",
+    "topicLabel": "healthcare",
+    "url": "https://seekingalpha.com/sector/healthcare.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "healthcare_analysis",
+    "topicLabel": "healthcare analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/healthcare",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "healthcare_news",
+    "topicLabel": "healthcare news",
+    "url": "https://seekingalpha.com/news/healthcare/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "india",
+    "topicLabel": "india",
+    "url": "https://seekingalpha.com/tag/india.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "industrial_goods",
+    "topicLabel": "industrial goods",
+    "url": "https://seekingalpha.com/sector/industrial-goods.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "industrials_analysis",
+    "topicLabel": "industrials analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/industrial-goods",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "investing_strategy",
+    "topicLabel": "investing strategy",
+    "url": "https://seekingalpha.com/feed/investing-strategy",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "investing_strategy_editor_picks",
+    "topicLabel": "investing strategy editor picks",
+    "url": "https://seekingalpha.com/feed/investing-strategy/editors-picks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "ipo_analysis",
+    "topicLabel": "ipo analysis",
+    "url": "https://seekingalpha.com/tag/ipo-analysis.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "ireland",
+    "topicLabel": "ireland",
+    "url": "https://seekingalpha.com/tag/ireland.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "israel",
+    "topicLabel": "israel",
+    "url": "https://seekingalpha.com/tag/israel.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "japan",
+    "topicLabel": "japan",
+    "url": "https://seekingalpha.com/tag/japan.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "latest_articles",
+    "topicLabel": "latest articles",
+    "url": "https://seekingalpha.com/feed.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "long_ideas",
+    "topicLabel": "long ideas",
+    "url": "https://seekingalpha.com/tag/long-ideas.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "market_outlook_editor_picks",
+    "topicLabel": "market outlook editor picks",
+    "url": "https://seekingalpha.com/feed/market-outlook/editors-picks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "merger_and_acquisition",
+    "topicLabel": "merger and acquisition",
+    "url": "https://seekingalpha.com/news/m-a/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "metals",
+    "topicLabel": "metals",
+    "url": "https://seekingalpha.com/feed/market-outlook/gold-and-precious-metals",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "most_popular_articles",
+    "topicLabel": "most popular articles",
+    "url": "https://seekingalpha.com/listing/most-popular-articles.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "mutual_funds",
+    "topicLabel": "mutual funds",
+    "url": "https://seekingalpha.com/feed/etfs-and-funds/mutual-funds",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "podcasts",
+    "topicLabel": "podcasts",
+    "url": "https://seekingalpha.com/feed/podcast",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "portfolio_strategy",
+    "topicLabel": "portfolio strategy",
+    "url": "https://seekingalpha.com/feed/investing-strategy/portfolio-strategy",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "quick_picks",
+    "topicLabel": "quick picks",
+    "url": "https://seekingalpha.com/feed/stock-ideas/quick-picks",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "real_estate",
+    "topicLabel": "real estate",
+    "url": "https://seekingalpha.com/sector/real-estate.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "reit",
+    "topicLabel": "reit",
+    "url": "https://seekingalpha.com/feed/dividends/reits",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "retirement",
+    "topicLabel": "retirement",
+    "url": "https://seekingalpha.com/feed/investing-strategy/retirement",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "services",
+    "topicLabel": "services",
+    "url": "https://seekingalpha.com/sector/services.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "services_analysis",
+    "topicLabel": "services analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/services",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "spain",
+    "topicLabel": "spain",
+    "url": "https://seekingalpha.com/tag/spain.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "stock_ideas",
+    "topicLabel": "stock ideas",
+    "url": "https://seekingalpha.com/feed/stock-ideas",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "technology",
+    "topicLabel": "technology",
+    "url": "https://seekingalpha.com/sector/technology.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "technology_analysis",
+    "topicLabel": "technology analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/technology",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "technology_news",
+    "topicLabel": "technology news",
+    "url": "https://seekingalpha.com/news/tech/feed",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "ticker",
+    "topicLabel": "ticker",
+    "url": "https://seekingalpha.com/api/sa/combined/{}.xml",
+    "isTickerTemplate": true
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "todays_market",
+    "topicLabel": "todays market",
+    "url": "https://seekingalpha.com/feed/market-outlook/todays-market",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "transcripts",
+    "topicLabel": "transcripts",
+    "url": "https://seekingalpha.com/sector/transcripts.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "united_kingdom",
+    "topicLabel": "united kingdom",
+    "url": "https://seekingalpha.com/tag/united-kingdom.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "us",
+    "topicLabel": "us",
+    "url": "https://seekingalpha.com/tag/us.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "utilities",
+    "topicLabel": "utilities",
+    "url": "https://seekingalpha.com/sector/utilities.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "utilities_analysis",
+    "topicLabel": "utilities analysis",
+    "url": "https://seekingalpha.com/feed/stock-ideas/utilities",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "seeking_alpha",
+    "sourceLabel": "Seeking Alpha",
+    "topicId": "wall_street_breakfast",
+    "topicLabel": "wall street breakfast",
+    "url": "https://seekingalpha.com/tag/wall-st-breakfast.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "wsj",
+    "sourceLabel": "WSJ",
+    "topicId": "lifestyle",
+    "topicLabel": "lifestyle",
+    "url": "https://feeds.a.dj.com/rss/RSSLifestyle.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "wsj",
+    "sourceLabel": "WSJ",
+    "topicId": "markets_news",
+    "topicLabel": "markets news",
+    "url": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "wsj",
+    "sourceLabel": "WSJ",
+    "topicId": "opinion",
+    "topicLabel": "opinion",
+    "url": "https://feeds.a.dj.com/rss/RSSOpinion.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "wsj",
+    "sourceLabel": "WSJ",
+    "topicId": "technology_news",
+    "topicLabel": "technology news",
+    "url": "https://feeds.a.dj.com/rss/RSSWSJD.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "wsj",
+    "sourceLabel": "WSJ",
+    "topicId": "us_business",
+    "topicLabel": "us business",
+    "url": "https://feeds.a.dj.com/rss/WSJcomUSBusiness.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "wsj",
+    "sourceLabel": "WSJ",
+    "topicId": "world_news",
+    "topicLabel": "world news",
+    "url": "https://feeds.a.dj.com/rss/RSSWorldNews.xml",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "yahoo_finance",
+    "sourceLabel": "Yahoo Finance",
+    "topicId": "most_viewed_stories",
+    "topicLabel": "most viewed stories",
+    "url": "http://finance.yahoo.com/rss/popularstories",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "yahoo_finance",
+    "sourceLabel": "Yahoo Finance",
+    "topicId": "ticker",
+    "topicLabel": "ticker",
+    "url": "https://feeds.finance.yahoo.com/rss/2.0/headline?s={}&region=US&lang=en-US",
+    "isTickerTemplate": true
+  },
+  {
+    "sourceId": "yahoo_finance",
+    "sourceLabel": "Yahoo Finance",
+    "topicId": "top_stories",
+    "topicLabel": "top stories",
+    "url": "https://finance.yahoo.com/rss/topstories",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "zacks",
+    "sourceLabel": "Zacks",
+    "topicId": "all_commentary_articles",
+    "topicLabel": "all commentary articles",
+    "url": "http://feed.zacks.com/commentary/AllStories/rss",
+    "isTickerTemplate": false
+  },
+  {
+    "sourceId": "zacks",
+    "sourceLabel": "Zacks",
+    "topicId": "small_cap_research_press_release",
+    "topicLabel": "small cap research press release",
+    "url": "https://scr.zacks.com/rss/pressrelease.aspx",
+    "isTickerTemplate": false
+  }
+]

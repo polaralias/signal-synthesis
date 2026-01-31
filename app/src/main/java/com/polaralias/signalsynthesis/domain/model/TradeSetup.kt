@@ -30,5 +30,7 @@ data class TradeSetup(
     val setupBias: String = "",
     val mustReview: List<String> = emptyList(),
     val rssNeeded: Boolean = false,
+    val expandedRssNeeded: Boolean = false,
+    val expandedRssReason: String? = null,
     val decisionConfidence: Double? = null
 )

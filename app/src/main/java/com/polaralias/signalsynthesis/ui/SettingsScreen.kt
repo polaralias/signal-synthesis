@@ -25,12 +25,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.polaralias.signalsynthesis.data.settings.AppSettings
+import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
+import com.polaralias.signalsynthesis.data.rss.RssFeedTier
 import com.polaralias.signalsynthesis.domain.ai.*
 import com.polaralias.signalsynthesis.ui.theme.*
 import kotlin.math.roundToInt
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 
 @Composable
@@ -72,19 +71,20 @@ fun SettingsScreen(
     onRemoveFromBlocklist: (String) -> Unit,
     onUpdateStageConfig: (com.polaralias.signalsynthesis.domain.model.AnalysisStage, StageModelConfig) -> Unit = { _, _ -> },
     onArchiveUsage: () -> Unit = {},
-    onAddRssFeed: (String, (Boolean, String) -> Unit) -> Unit = { _, _ -> },
-    onRemoveRssFeed: (String) -> Unit = {}
+    onToggleRssTopic: (String) -> Unit = {},
+    onToggleRssTickerSource: (String) -> Unit = {},
+    onUpdateRssUseTickerFeedsForFinalStage: (Boolean) -> Unit = {},
+    onUpdateRssApplyExpandedToAll: (Boolean) -> Unit = {},
+    onResetRssDefaults: () -> Unit = {}
 ) {
     var showThresholdAiDialog by remember { mutableStateOf(false) }
     var showScreenerAiDialog by remember { mutableStateOf(false) }
     var aiPrompt by remember { mutableStateOf("") }
     var newTicker by remember { mutableStateOf("") }
-    var newRssFeed by remember { mutableStateOf("") }
-    var isAddingRss by remember { mutableStateOf(false) }
-    var rssAddResult by remember { mutableStateOf<String?>(null) }
+    var rssSearchQuery by remember { mutableStateOf("") }
+    val rssExpandedProviders = remember { mutableStateMapOf<String, Boolean>() }
     
     val context = LocalContext.current
-    val keyboardController = LocalSoftwareKeyboardController.current
 
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
     val monthlyUsageTotal = uiState.dailyApiUsage + uiState.archivedUsage.sumOf { it.totalCalls }
@@ -1165,74 +1165,171 @@ fun SettingsScreen(
             SectionHeader("MARKET DATA FEEDS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
-                    Text("RSS/ATOM SOURCES", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                    Text("CURATED RSS CATALOG", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    RssToggleRow(
+                        title = "ENABLE TICKER FEEDS FOR FINAL STAGE",
+                        description = "Use ticker-specific sources when RSS is required for final setups.",
+                        checked = uiState.appSettings.rssUseTickerFeedsForFinalStage,
+                        onCheckedChange = onUpdateRssUseTickerFeedsForFinalStage
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    if (uiState.appSettings.rssFeeds.isEmpty()) {
-                        Text("No custom feeds configured.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    RssToggleRow(
+                        title = "APPLY EXPANDED FEEDS TO ALL DEEP DIVES",
+                        description = "Overrides per-ticker gating for deep dives and web search.",
+                        checked = uiState.appSettings.rssApplyExpandedToAll,
+                        onCheckedChange = onUpdateRssApplyExpandedToAll
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text("TICKER FEED SOURCES", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val tickerSources = uiState.rssCatalog?.sources
+                        ?.filter { source -> source.topics.any { it.isTickerTemplate } }
+                        .orEmpty()
+
+                    if (tickerSources.isEmpty()) {
+                        Text("Catalog unavailable or no ticker sources found.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                     } else {
-                        uiState.appSettings.rssFeeds.forEach { feedUrl ->
+                        tickerSources.forEach { source ->
+                            val enabled = uiState.appSettings.rssTickerSources.contains(source.id)
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                    Icon(Icons.Default.RssFeed, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(feedUrl, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
-                                }
-                                IconButton(onClick = { onRemoveRssFeed(feedUrl) }, modifier = Modifier.size(24.dp)) {
-                                    Icon(Icons.Default.Delete, contentDescription = "Remove", tint = ErrorRed.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
-                                }
+                                Text(
+                                    source.label.uppercase(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = if (enabled) BrandPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { onToggleRssTickerSource(source.id) }
+                                )
+                                Checkbox(checked = enabled, onCheckedChange = { onToggleRssTickerSource(source.id) })
                             }
-                            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Box {
-                        OutlinedTextField(
-                            value = newRssFeed,
-                            onValueChange = { newRssFeed = it },
-                            label = { Text("ADD FEED URL", style = MaterialTheme.typography.labelSmall) },
-                            modifier = Modifier.fillMaxWidth().padding(end = 50.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                            enabled = !isAddingRss,
-                            colors = TextFieldDefaults.outlinedTextFieldColors(
-                                focusedBorderColor = BrandPrimary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                            )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TextButton(onClick = onResetRssDefaults, modifier = Modifier.align(Alignment.End)) {
+                        Text("RESET TO DEFAULTS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text("TOPIC CATALOG", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = rssSearchQuery,
+                        onValueChange = { rssSearchQuery = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("SEARCH PROVIDERS OR TOPICS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = TextFieldDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = BrandPrimary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                         )
-                        if (isAddingRss) {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterEnd).size(24.dp).padding(4.dp), color = BrandPrimary)
-                        } else {
-                            IconButton(
-                                onClick = { 
-                                    if (newRssFeed.isNotBlank()) {
-                                        isAddingRss = true
-                                        rssAddResult = null
-                                        keyboardController?.hide()
-                                        onAddRssFeed(newRssFeed) { success, message ->
-                                            isAddingRss = false
-                                            rssAddResult = message
-                                            if (success) {
-                                                newRssFeed = ""
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val catalog = uiState.rssCatalog
+                    if (catalog == null || catalog.sources.isEmpty()) {
+                        Text("RSS catalog not loaded.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    } else {
+                        val query = rssSearchQuery.trim().lowercase()
+                        catalog.sources.forEach { source ->
+                            val topics = source.topics.filter { !it.isTickerTemplate }
+                            val filteredTopics = if (query.isBlank()) {
+                                topics
+                            } else {
+                                topics.filter { topic ->
+                                    topic.label.lowercase().contains(query) || source.label.lowercase().contains(query)
+                                }
+                            }
+                            if (filteredTopics.isNotEmpty()) {
+                                val expanded = rssExpandedProviders[source.id] ?: false
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            rssExpandedProviders[source.id] = !expanded
+                                        }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        source.label.uppercase(),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black,
+                                        color = BrandPrimary,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Spacer(modifier = Modifier.weight(1f))
+                                    Icon(
+                                        imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                        contentDescription = null,
+                                        tint = BrandPrimary
+                                    )
+                                }
+
+                                val visibleTopics = if (expanded || query.isNotBlank()) {
+                                    filteredTopics
+                                } else {
+                                    filteredTopics.take(6)
+                                }
+
+                                visibleTopics.forEach { topic ->
+                                    val topicKey = "${source.id}:${topic.id}"
+                                    val enabled = uiState.appSettings.rssEnabledTopics.contains(topicKey)
+                                    val tier = RssFeedDefaults.tierFor(topicKey)
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clickable { onToggleRssTopic(topicKey) }
+                                        ) {
+                                            Text(topic.label, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
+                                            if (tier != RssFeedTier.OTHER) {
+                                                val tierColor = if (tier == RssFeedTier.CORE) BrandPrimary else BrandSecondary
+                                                Text(
+                                                    text = tier.name,
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                    color = tierColor.copy(alpha = 0.7f),
+                                                    letterSpacing = 1.sp
+                                                )
                                             }
                                         }
+                                        Checkbox(checked = enabled, onCheckedChange = { onToggleRssTopic(topicKey) })
                                     }
-                                },
-                                modifier = Modifier.align(Alignment.CenterEnd)
-                            ) {
-                                Icon(Icons.Default.Add, contentDescription = "Add", tint = BrandPrimary)
+                                }
+
+                                if (query.isBlank() && filteredTopics.size > visibleTopics.size) {
+                                    TextButton(onClick = { rssExpandedProviders[source.id] = true }) {
+                                        Text("SHOW ${filteredTopics.size - visibleTopics.size} MORE", style = MaterialTheme.typography.labelSmall, color = BrandSecondary)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
-                    }
-                    rssAddResult?.let {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(it, style = MaterialTheme.typography.labelSmall, color = if (it.startsWith("Added")) BrandPrimary else ErrorRed)
                     }
                 }
             }
@@ -1378,6 +1475,43 @@ private fun SettingsSlider(
                 thumbColor = BrandPrimary,
                 activeTrackColor = BrandPrimary,
                 inactiveTrackColor = BrandPrimary.copy(alpha = 0.1f)
+            )
+        )
+    }
+}
+
+@Composable
+private fun RssToggleRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Black,
+                color = BrandPrimary,
+                letterSpacing = 1.sp
+            )
+            Text(
+                description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+            )
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = BrandPrimary,
+                checkedTrackColor = BrandPrimary.copy(alpha = 0.2f)
             )
         )
     }

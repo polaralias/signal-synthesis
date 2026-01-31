@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.ui
 
 import com.polaralias.signalsynthesis.data.provider.ApiKeys
+import com.polaralias.signalsynthesis.data.rss.RssFeedCatalog
 import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.MarketOverview
@@ -68,6 +69,7 @@ data class AnalysisUiState(
     val watchlist: List<String> = emptyList(),
     val history: List<AnalysisResult> = emptyList(),
     val appSettings: AppSettings = AppSettings(),
+    val rssCatalog: RssFeedCatalog? = null,
     val aiThresholdSuggestion: AiThresholdSuggestion? = null,
     val isSuggestingThresholds: Boolean = false,
     val aiScreenerSuggestion: AiScreenerSuggestion? = null,

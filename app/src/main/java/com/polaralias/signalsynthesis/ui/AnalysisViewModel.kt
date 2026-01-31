@@ -26,12 +26,18 @@ import com.polaralias.signalsynthesis.domain.usecase.BuildRssDigestUseCase
 import com.polaralias.signalsynthesis.domain.usecase.ShortlistCandidatesUseCase
 import com.polaralias.signalsynthesis.data.rss.RssDao
 import com.polaralias.signalsynthesis.data.rss.RssFeedClient
+import com.polaralias.signalsynthesis.data.rss.RssFeedCatalogLoader
+import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import com.polaralias.signalsynthesis.util.Logger
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.IndexQuote
 import com.polaralias.signalsynthesis.domain.model.MarketOverview
 import com.polaralias.signalsynthesis.domain.model.MarketSection
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
+import com.polaralias.signalsynthesis.domain.rss.RssFeedResolver
+import com.polaralias.signalsynthesis.domain.rss.RssFeedSelection
+import com.polaralias.signalsynthesis.domain.rss.RssFeedStage
+import com.polaralias.signalsynthesis.domain.rss.RssTickerInput
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +45,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.ZoneId
 import java.security.MessageDigest
@@ -110,12 +115,8 @@ class AnalysisViewModel(
         )
     }
 
-    private val verifyRssFeedUseCase by lazy {
-        com.polaralias.signalsynthesis.domain.usecase.VerifyRssFeedUseCase(
-            RssFeedClient(rssDao = rssDao),
-            stageModelRouter
-        )
-    }
+    private val rssCatalog by lazy { RssFeedCatalogLoader(application).load() }
+    private val rssFeedResolver = RssFeedResolver()
 
     init {
         refreshKeys()
@@ -247,7 +248,8 @@ class AnalysisViewModel(
                             "moderate" to state.appSettings.screenerModerateThreshold,
                             "aggressive" to state.appSettings.screenerAggressiveThreshold
                         ),
-                        rssFeeds = DEFAULT_RSS_FEEDS,
+                        rssSelection = rssSelectionFrom(state.appSettings),
+                        rssCatalog = rssCatalog,
                         onProgress = { msg ->
                             _uiState.update { it.copy(progressMessage = msg) }
                         }
@@ -536,12 +538,28 @@ class AnalysisViewModel(
                 // Fetch recent RSS headlines for this ticker to pass them to LLM
                 val rssClient = com.polaralias.signalsynthesis.data.rss.RssFeedClient(rssDao = rssDao)
                 val rssDigestBuilder = com.polaralias.signalsynthesis.domain.usecase.BuildRssDigestUseCase(rssClient, rssDao)
-                val rssDigestResponse = rssDigestBuilder.execute(
-                    tickers = listOf(symbol),
-                    feedUrls = DEFAULT_RSS_FEEDS,
-                    timeWindowHours = 72
+                val rssSelection = rssSelectionFrom(state.appSettings)
+                val resolvedFeeds = rssFeedResolver.resolve(
+                    catalog = rssCatalog,
+                    selection = rssSelection,
+                    tickers = listOf(
+                        RssTickerInput(
+                            symbol = symbol,
+                            source = setup.source,
+                            rssNeeded = setup.rssNeeded,
+                            expandedRssNeeded = setup.expandedRssNeeded
+                        )
+                    ),
+                    stage = RssFeedStage.DEEP_DIVE
                 )
-                val rssDigest = rssDigestResponse.itemsBySymbol[symbol]
+                val rssDigestResponse = if (resolvedFeeds.feedUrls.isNotEmpty()) {
+                    rssDigestBuilder.execute(
+                        tickers = listOf(symbol),
+                        feedUrls = resolvedFeeds.feedUrls,
+                        timeWindowHours = 72
+                    )
+                } else null
+                val rssDigest = rssDigestResponse?.itemsBySymbol?.get(symbol)
 
                 // Create a data snapshot
                 val snapshot = "Technical: ${setup.intradayStats?.rsi14 ?: "N/A"} RSI, ${setup.intradayStats?.vwap ?: "N/A"} VWAP. " +
@@ -721,43 +739,35 @@ class AnalysisViewModel(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    fun addRssFeed(url: String, callback: (Boolean, String) -> Unit) {
-        viewModelScope.launch(ioDispatcher) {
-             try {
-                 val result = verifyRssFeedUseCase.execute(url)
-                 if (result.isValid) {
-                     val current = _uiState.value.appSettings.rssFeeds
-                     if (!current.contains(url)) {
-                         val updated = current + url
-                         val newSettings = _uiState.value.appSettings.copy(rssFeeds = updated)
-                         appSettingsStore.saveSettings(newSettings)
-                     }
-                     withContext(Dispatchers.Main) {
-                        callback(true, "Added: ${result.title}")
-                     }
-                 } else {
-                     withContext(Dispatchers.Main) {
-                        callback(false, "Invalid feed: ${result.description}")
-                     }
-                 }
-             } catch (e: Exception) {
-                 withContext(Dispatchers.Main) {
-                    callback(false, "Error: ${e.message}")
-                 }
-                 Logger.e("AnalysisViewModel", "Error adding RSS feed", e)
-             }
-        }
+    fun toggleRssTopic(topicKey: String) {
+        val current = _uiState.value.appSettings.rssEnabledTopics
+        val updated = if (current.contains(topicKey)) current - topicKey else current + topicKey
+        updateAppSettings(_uiState.value.appSettings.copy(rssEnabledTopics = updated))
     }
 
-    fun removeRssFeed(url: String) {
-        viewModelScope.launch(ioDispatcher) {
-            val current = _uiState.value.appSettings.rssFeeds
-            if (current.contains(url)) {
-                val updated = current - url
-                val newSettings = _uiState.value.appSettings.copy(rssFeeds = updated)
-                appSettingsStore.saveSettings(newSettings)
-            }
-        }
+    fun toggleRssTickerSource(sourceId: String) {
+        val current = _uiState.value.appSettings.rssTickerSources
+        val updated = if (current.contains(sourceId)) current - sourceId else current + sourceId
+        updateAppSettings(_uiState.value.appSettings.copy(rssTickerSources = updated))
+    }
+
+    fun updateRssUseTickerFeedsForFinalStage(enabled: Boolean) {
+        updateAppSettings(_uiState.value.appSettings.copy(rssUseTickerFeedsForFinalStage = enabled))
+    }
+
+    fun updateRssApplyExpandedToAll(enabled: Boolean) {
+        updateAppSettings(_uiState.value.appSettings.copy(rssApplyExpandedToAll = enabled))
+    }
+
+    fun resetRssDefaults() {
+        updateAppSettings(
+            _uiState.value.appSettings.copy(
+                rssEnabledTopics = RssFeedDefaults.defaultEnabledTopicKeys(),
+                rssTickerSources = RssFeedDefaults.defaultTickerSourceIds,
+                rssUseTickerFeedsForFinalStage = true,
+                rssApplyExpandedToAll = false
+            )
+        )
     }
 
     fun updateAlertsEnabled(enabled: Boolean) {
@@ -1180,6 +1190,15 @@ class AnalysisViewModel(
         }
     }
 
+    private fun rssSelectionFrom(settings: AppSettings): RssFeedSelection {
+        return RssFeedSelection(
+            enabledTopicKeys = settings.rssEnabledTopics,
+            enabledTickerSourceIds = settings.rssTickerSources,
+            useTickerFeedsForFinalStage = settings.rssUseTickerFeedsForFinalStage,
+            forceExpandedForAll = settings.rssApplyExpandedToAll
+        )
+    }
+
     fun clearCaches() {
         cachedRepository?.clearAllCaches()
     }
@@ -1207,7 +1226,8 @@ class AnalysisViewModel(
                     appSettings = settings,
                     customTickers = custom.map { ticker -> TickerEntry(ticker) },
                     blocklist = blocklist,
-                    isPaused = settings.isAnalysisPaused
+                    isPaused = settings.isAnalysisPaused,
+                    rssCatalog = rssCatalog
                 ) 
             }
         }
@@ -1340,13 +1360,6 @@ class AnalysisViewModel(
         }
     }
 
-    companion object {
-        private val DEFAULT_RSS_FEEDS = listOf(
-            "https://finance.yahoo.com/rss/",
-            "http://feeds.marketwatch.com/marketwatch/topstories/",
-            "https://www.benzinga.com/feeds/news"
-        )
-    }
 }
 
 enum class KeyField {
