@@ -13,6 +13,9 @@ interface RssDao {
     @Query("SELECT * FROM rss_items WHERE publishedAt >= :since ORDER BY publishedAt DESC")
     suspend fun getAllRecentItems(since: Long): List<RssItemEntity>
 
+    @Query("SELECT * FROM rss_items WHERE feedUrl = :url ORDER BY publishedAt DESC LIMIT :limit")
+    suspend fun getItemsForFeed(url: String, limit: Int): List<RssItemEntity>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertItems(items: List<RssItemEntity>)
 

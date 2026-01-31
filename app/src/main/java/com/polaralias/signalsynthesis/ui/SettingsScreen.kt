@@ -31,6 +31,9 @@ import com.polaralias.signalsynthesis.domain.ai.*
 import com.polaralias.signalsynthesis.ui.theme.*
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.testTag
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 private fun AuthStatusItem(label: String, status: String, isActive: Boolean) {
@@ -56,7 +59,7 @@ fun SettingsScreen(
     onClearKeys: () -> Unit,
     onUpdateSettings: (AppSettings) -> Unit,
     onToggleAlerts: (Boolean) -> Unit,
-    onSuggestAi: (String) -> Unit,
+    onSuggestSettingsAi: (String, Set<AiSettingsArea>) -> Unit,
     onApplyAi: () -> Unit,
     onDismissAi: () -> Unit,
     onOpenLogs: () -> Unit,
@@ -65,9 +68,12 @@ fun SettingsScreen(
     onRemoveCustomTicker: (String) -> Unit,
     onSearchTickers: (String) -> Unit,
     onClearTickerSearch: () -> Unit,
-    onSuggestScreenerAi: (String) -> Unit,
     onApplyScreenerAi: () -> Unit,
     onDismissScreenerAi: () -> Unit,
+    onApplyRiskAi: () -> Unit,
+    onDismissRiskAi: () -> Unit,
+    onApplyRssAi: () -> Unit,
+    onDismissRssAi: () -> Unit,
     onRemoveFromBlocklist: (String) -> Unit,
     onUpdateStageConfig: (com.polaralias.signalsynthesis.domain.model.AnalysisStage, StageModelConfig) -> Unit = { _, _ -> },
     onArchiveUsage: () -> Unit = {},
@@ -75,14 +81,15 @@ fun SettingsScreen(
     onToggleRssTickerSource: (String) -> Unit = {},
     onUpdateRssUseTickerFeedsForFinalStage: (Boolean) -> Unit = {},
     onUpdateRssApplyExpandedToAll: (Boolean) -> Unit = {},
-    onResetRssDefaults: () -> Unit = {}
+    onResetRssDefaults: () -> Unit = {},
+    onRequestRssPreview: (String) -> Unit = {}
 ) {
-    var showThresholdAiDialog by remember { mutableStateOf(false) }
-    var showScreenerAiDialog by remember { mutableStateOf(false) }
-    var aiPrompt by remember { mutableStateOf("") }
+    var showSettingsAiDialog by remember { mutableStateOf(false) }
     var newTicker by remember { mutableStateOf("") }
     var rssSearchQuery by remember { mutableStateOf("") }
     val rssExpandedProviders = remember { mutableStateMapOf<String, Boolean>() }
+    var rssPreviewSource by remember { mutableStateOf<com.polaralias.signalsynthesis.data.rss.RssFeedSource?>(null) }
+    var rssPreviewTopicId by remember { mutableStateOf<String?>(null) }
     
     val context = LocalContext.current
 
@@ -490,6 +497,88 @@ fun SettingsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
+                    SectionHeader("AI SETTINGS SUGGESTIONS")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.AutoMode, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "SUGGEST ALL SETTINGS",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = BrandSecondary,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Select which areas to configure, then provide a single prompt for the AI.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingSettings) { showSettingsAiDialog = true }
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = if (uiState.isSuggestingSettings) "SYNTHESIZING..." else "SUGGEST ALL SETTINGS",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black,
+                                        color = if (uiState.hasLlmKey) BrandSecondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        letterSpacing = 1.sp
+                                    )
+                                }
+                            }
+                            if (!uiState.hasLlmKey) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Add an AI key to enable suggestions.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                            }
+                            if (uiState.lastAiSettingsPrompt.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "LAST PROMPT",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = uiState.lastAiSettingsPrompt,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                    maxLines = 3
+                                )
+                                if (uiState.lastAiSettingsSelection.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "LAST AREAS",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                        letterSpacing = 1.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = uiState.lastAiSettingsSelection.joinToString(", ") { it.name.replace("_", " ").lowercase().replaceFirstChar { ch -> ch.uppercase() } },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
                     SectionHeader("QUANTITATIVE TUNING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(20.dp)) {
@@ -856,31 +945,11 @@ fun SettingsScreen(
                         )
                     } else {
                         Spacer(modifier = Modifier.height(32.dp))
-                        com.polaralias.signalsynthesis.ui.components.GlassBox(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingThresholds) { showThresholdAiDialog = true }
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.AutoMode, 
-                                        contentDescription = null, 
-                                        modifier = Modifier.size(18.dp), 
-                                        tint = BrandSecondary
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        if (uiState.isSuggestingThresholds) "SYNTHESIZING..." else "OPTIMIZE WITH AI", 
-                                        style = MaterialTheme.typography.labelSmall, 
-                                        fontWeight = FontWeight.Black, 
-                                        color = BrandSecondary,
-                                        letterSpacing = 2.sp
-                                    )
-                                }
-                            }
-                        }
+                        Text(
+                            text = "Run \"Suggest all settings\" to generate AI threshold tuning.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
                     }
                 }
             }
@@ -940,31 +1009,11 @@ fun SettingsScreen(
                         )
                     } else {
                         Spacer(modifier = Modifier.height(32.dp))
-                        com.polaralias.signalsynthesis.ui.components.GlassBox(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingScreener) { showScreenerAiDialog = true }
-                        ) {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.AutoMode, 
-                                        contentDescription = null, 
-                                        modifier = Modifier.size(18.dp), 
-                                        tint = BrandSecondary
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        if (uiState.isSuggestingScreener) "OPTIMIZING..." else "OPTIMIZE SCREENER", 
-                                        style = MaterialTheme.typography.labelSmall, 
-                                        fontWeight = FontWeight.Black, 
-                                        color = BrandSecondary,
-                                        letterSpacing = 2.sp
-                                    )
-                                }
-                            }
-                        }
+                        Text(
+                            text = "Run \"Suggest all settings\" to generate AI screener parameters.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
                     }
                 }
             }
@@ -1168,6 +1217,24 @@ fun SettingsScreen(
                     Text("CURATED RSS CATALOG", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    if (uiState.aiRssSuggestion != null) {
+                        AiSuggestionCard(
+                            title = "AI RSS SELECTION",
+                            suggestionText = formatRssSuggestionSummary(uiState.aiRssSuggestion, uiState.rssCatalog),
+                            rationale = uiState.aiRssSuggestion.rationale,
+                            onApply = onApplyRssAi,
+                            onDismiss = onDismissRssAi
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                    } else {
+                        Text(
+                            text = "Run \"Suggest all settings\" to get AI RSS curation.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
+
                     RssToggleRow(
                         title = "ENABLE TICKER FEEDS FOR FINAL STAGE",
                         description = "Use ticker-specific sources when RSS is required for final setups.",
@@ -1277,6 +1344,24 @@ fun SettingsScreen(
                                         letterSpacing = 1.sp
                                     )
                                     Spacer(modifier = Modifier.weight(1f))
+                                    TextButton(
+                                        onClick = {
+                                            val previewTopics = source.topics.filter { !it.isTickerTemplate }
+                                            if (previewTopics.isNotEmpty()) {
+                                                rssPreviewSource = source
+                                                rssPreviewTopicId = previewTopics.first().id
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                                    ) {
+                                        Text(
+                                            "PREVIEW",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Black,
+                                            color = BrandSecondary,
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
                                     Icon(
                                         imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                                         contentDescription = null,
@@ -1331,6 +1416,24 @@ fun SettingsScreen(
                             }
                         }
                     }
+
+                    if (uiState.aiRiskSuggestion != null) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        AiSuggestionCard(
+                            title = "AI RISK PROFILE",
+                            suggestionText = uiState.aiRiskSuggestion.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
+                            rationale = uiState.aiRiskSuggestion.rationale,
+                            onApply = onApplyRiskAi,
+                            onDismiss = onDismissRiskAi
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Run \"Suggest all settings\" to get an AI risk profile.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                    }
                 }
             }
 
@@ -1364,76 +1467,273 @@ fun SettingsScreen(
     }
     }
 
-    if (showThresholdAiDialog) {
-        AiPromptDialog(
-            title = "THRESHOLD TUNING",
-            aiPrompt = aiPrompt,
-            onPromptChange = { aiPrompt = it },
-            onDismiss = { showThresholdAiDialog = false },
-            onConfirm = {
-                onSuggestAi(aiPrompt)
-                showThresholdAiDialog = false
+    if (showSettingsAiDialog) {
+        AiSettingsDialog(
+            lastPrompt = uiState.lastAiSettingsPrompt,
+            lastSelection = uiState.lastAiSettingsSelection,
+            isBusy = uiState.isSuggestingSettings,
+            onDismiss = { showSettingsAiDialog = false },
+            onConfirm = { prompt, selected ->
+                onSuggestSettingsAi(prompt, selected)
+                showSettingsAiDialog = false
             }
         )
     }
 
-    if (showScreenerAiDialog) {
-        AiPromptDialog(
-            title = "SCREENER TUNING",
-            aiPrompt = aiPrompt,
-            onPromptChange = { aiPrompt = it },
-            onDismiss = { showScreenerAiDialog = false },
-            onConfirm = {
-                onSuggestScreenerAi(aiPrompt)
-                showScreenerAiDialog = false
+    rssPreviewSource?.let { source ->
+        RssPreviewDialog(
+            source = source,
+            selectedTopicId = rssPreviewTopicId,
+            previewStates = uiState.rssPreviewStates,
+            onSelectTopic = { topicId -> rssPreviewTopicId = topicId },
+            onRequestPreview = onRequestRssPreview,
+            onDismiss = {
+                rssPreviewSource = null
+                rssPreviewTopicId = null
             }
         )
     }
 }
 
 @Composable
-private fun AiPromptDialog(
-    title: String,
-    aiPrompt: String,
-    onPromptChange: (String) -> Unit,
+private fun AiSettingsDialog(
+    lastPrompt: String,
+    lastSelection: Set<AiSettingsArea>,
+    isBusy: Boolean,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: (String, Set<AiSettingsArea>) -> Unit
 ) {
+    val defaultSelection = if (lastSelection.isEmpty()) {
+        setOf(AiSettingsArea.RSS, AiSettingsArea.RISK, AiSettingsArea.THRESHOLDS, AiSettingsArea.SCREENER)
+    } else {
+        lastSelection
+    }
+    var prompt by remember(lastPrompt) { mutableStateOf(lastPrompt) }
+    var includeRss by remember(defaultSelection) { mutableStateOf(defaultSelection.contains(AiSettingsArea.RSS)) }
+    var includeRisk by remember(defaultSelection) { mutableStateOf(defaultSelection.contains(AiSettingsArea.RISK)) }
+    var includeThresholds by remember(defaultSelection) { mutableStateOf(defaultSelection.contains(AiSettingsArea.THRESHOLDS)) }
+    var includeScreener by remember(defaultSelection) { mutableStateOf(defaultSelection.contains(AiSettingsArea.SCREENER)) }
+
+    val selectedAreas = mutableSetOf<AiSettingsArea>().apply {
+        if (includeRss) add(AiSettingsArea.RSS)
+        if (includeRisk) add(AiSettingsArea.RISK)
+        if (includeThresholds) add(AiSettingsArea.THRESHOLDS)
+        if (includeScreener) add(AiSettingsArea.SCREENER)
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
+        title = {
             Text(
-                title, 
+                "SUGGEST ALL SETTINGS",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 1.sp
-            ) 
+            )
         },
         text = {
             Column {
                 Text(
-                    "Describe your trading archetype or risk profile (e.g., 'Aggressive day trader seeking high-velocity momentum').",
+                    "Select the areas to configure and share your trading context.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = includeRss, onCheckedChange = { includeRss = it })
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("RSS FEEDS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = includeRisk, onCheckedChange = { includeRisk = it })
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("RISK PROFILE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = includeThresholds, onCheckedChange = { includeThresholds = it })
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("TECHNICAL THRESHOLDS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = includeScreener, onCheckedChange = { includeScreener = it })
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("SCREENER MARKERS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                if (lastPrompt.isNotBlank()) {
+                    Text(
+                        "PREVIOUS PROMPT",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        lastPrompt,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        maxLines = 2
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 OutlinedTextField(
-                    value = aiPrompt,
-                    onValueChange = onPromptChange,
+                    value = prompt,
+                    onValueChange = { prompt = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Neural context...") },
+                    placeholder = { Text("Risk, style, regions, themes...") },
                     shape = RoundedCornerShape(12.dp)
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(
+                onClick = { onConfirm(prompt, selectedAreas) },
+                enabled = selectedAreas.isNotEmpty() && !isBusy
+            ) {
                 Text("SYNTHESIZE", color = BrandPrimary, fontWeight = FontWeight.Black)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
                 Text("CANCEL", fontWeight = FontWeight.Black)
+            }
+        },
+        shape = RoundedCornerShape(24.dp),
+        containerColor = MaterialTheme.colorScheme.surface
+    )
+}
+
+@Composable
+private fun RssPreviewDialog(
+    source: com.polaralias.signalsynthesis.data.rss.RssFeedSource,
+    selectedTopicId: String?,
+    previewStates: Map<String, RssPreviewState>,
+    onSelectTopic: (String) -> Unit,
+    onRequestPreview: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val topics = source.topics.filter { !it.isTickerTemplate }
+    val selectedTopic = topics.firstOrNull { it.id == selectedTopicId } ?: topics.firstOrNull()
+    val feedUrl = selectedTopic?.url
+
+    LaunchedEffect(feedUrl) {
+        if (feedUrl != null) {
+            onRequestPreview(feedUrl)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "${source.label.uppercase()} PREVIEW",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp
+            )
+        },
+        text = {
+            Column {
+                if (topics.isEmpty()) {
+                    Text(
+                        "No topics available for preview.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                } else {
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(topics) { topic ->
+                            FilterChip(
+                                selected = topic.id == selectedTopic?.id,
+                                onClick = { onSelectTopic(topic.id) },
+                                label = { Text(topic.label.uppercase(), style = MaterialTheme.typography.labelSmall) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val previewState = feedUrl?.let { previewStates[it] } ?: RssPreviewState()
+                    when (previewState.status) {
+                        RssPreviewStatus.LOADING -> {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = BrandSecondary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    "Loading feed preview...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            }
+                        }
+                        RssPreviewStatus.ERROR -> {
+                            Text(
+                                previewState.errorMessage ?: "Preview unavailable.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = ErrorRed.copy(alpha = 0.7f)
+                            )
+                        }
+                        RssPreviewStatus.READY -> {
+                            if (previewState.items.isEmpty()) {
+                                Text(
+                                    "No recent items.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 320.dp)
+                                ) {
+                                    items(previewState.items) { item ->
+                                        Column(modifier = Modifier.padding(bottom = 12.dp)) {
+                                            Text(
+                                                item.title,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                formatRssTimestamp(item.publishedAt),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                            )
+                                            if (item.snippet.isNotBlank()) {
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    item.snippet,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                                )
+                                            }
+                                        }
+                                        androidx.compose.material3.HorizontalDivider(
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                    }
+                                }
+                            }
+                        }
+                        RssPreviewStatus.IDLE -> {
+                            Text(
+                                "Select a topic to preview.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("CLOSE", fontWeight = FontWeight.Black)
             }
         },
         shape = RoundedCornerShape(24.dp),
@@ -1584,6 +1884,38 @@ private fun AiSuggestionCard(
             }
         }
     }
+}
+
+private fun formatRssSuggestionSummary(
+    suggestion: AiRssSuggestion,
+    catalog: com.polaralias.signalsynthesis.data.rss.RssFeedCatalog?
+): String {
+    val topicLabels = suggestion.enabledTopicKeys.mapNotNull { key ->
+        catalog?.entryByKey(key)?.let { "${it.sourceLabel}: ${it.topicLabel}" }
+    }
+    val topicsText = if (topicLabels.isNotEmpty()) {
+        val preview = topicLabels.take(4).joinToString(", ")
+        val extra = if (topicLabels.size > 4) " +${topicLabels.size - 4} more" else ""
+        preview + extra
+    } else {
+        "${suggestion.enabledTopicKeys.size} topics"
+    }
+    val tickerText = if (suggestion.tickerSourceIds.isEmpty()) {
+        "None"
+    } else {
+        suggestion.tickerSourceIds.joinToString(", ") { id ->
+            id.replace("_", " ").lowercase().replaceFirstChar { it.uppercase() }
+        }
+    }
+    return "TOPICS: $topicsText | TICKER SOURCES: $tickerText"
+}
+
+private fun formatRssTimestamp(epochMillis: Long): String {
+    if (epochMillis <= 0L) return "--"
+    val formatter = DateTimeFormatter.ofPattern("MMM d, HH:mm")
+    return Instant.ofEpochMilli(epochMillis)
+        .atZone(ZoneId.systemDefault())
+        .format(formatter)
 }
 
 private fun formatModelName(model: LlmModel): String {

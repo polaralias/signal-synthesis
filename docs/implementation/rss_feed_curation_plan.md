@@ -63,6 +63,7 @@ Replace user-entered URLs with curated source/topic toggles.
 - **SettingsScreen**:
   - Remove “Add feed URL” field.
   - Show curated providers with expandable topic lists (search/filter) + an “Enable ticker feeds” section.
+  - Add a **provider-level RSS preview** modal: open from each provider header, with a toggle/selector to swipe through that provider’s topics/feeds inside the preview (so users don’t have to open 20+ previews).
   - Include “Reset to defaults” for RSS topics.
 
 ### 5) Ticker-specific sources (from financial_resource)
@@ -161,3 +162,18 @@ Ticker templates present in the DB:
 - Core + Expanded are the only global RSS sources; no user-entered feed URLs.
 - Start with 2 ticker-feed sources (Yahoo + Seeking Alpha), optional third (Nasdaq).
 - **LLM prompt guidance**: `rssNeeded` should not be overly strict with a bias toward `true` when recent catalysts or material news could affect the setup which will often be the case.
+
+## AI Suggestions Consolidation (settings-wide)
+Goal: replace individual per-setting suggestion buttons with a single **Suggest all settings** flow that can apply to a subset of areas.
+
+**Proposed UX**
+- Entry point: “Suggest all settings” (single button in Settings).
+- Area selection: checklist with per-area toggles (e.g., **RSS**, **Risk**, **Financial markers**, etc.).
+- Prompt input: one text box for the user’s context (risk tolerance, trading style, regions, themes, etc.).
+- Run once: AI analysis spans all settings, but outputs are **only applied to selected areas**.
+- Review/apply: show suggested diffs per area; user can apply all or tweak.
+- History: show last prompt + last AI outputs; allow “Apply last suggestion” per area or re-run with a new prompt.
+
+**Notes for RSS**
+- RSS suggestions choose provider/topic toggles (not URLs).
+- Preview remains available at provider level to validate the suggestions.

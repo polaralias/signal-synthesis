@@ -164,7 +164,7 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onClearKeys = viewModel::clearKeys,
                     onToggleAlerts = viewModel::updateAlertsEnabled,
                     onUpdateSettings = viewModel::updateAppSettings,
-                    onSuggestAi = viewModel::suggestThresholdsWithAi,
+                    onSuggestSettingsAi = viewModel::suggestSettingsWithAi,
                     onApplyAi = viewModel::applyAiThresholdSuggestion,
                     onDismissAi = viewModel::dismissAiSuggestion,
                     onOpenLogs = { navController.navigate(Screen.Logs.route) },
@@ -173,9 +173,12 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onRemoveCustomTicker = viewModel::removeCustomTicker,
                     onSearchTickers = viewModel::searchTickers,
                     onClearTickerSearch = viewModel::clearTickerSearch,
-                    onSuggestScreenerAi = viewModel::suggestScreenerWithAi,
                     onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
                     onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion,
+                    onApplyRiskAi = viewModel::applyAiRiskSuggestion,
+                    onDismissRiskAi = viewModel::dismissAiRiskSuggestion,
+                    onApplyRssAi = viewModel::applyAiRssSuggestion,
+                    onDismissRssAi = viewModel::dismissAiRssSuggestion,
                     onRemoveFromBlocklist = viewModel::removeFromBlocklist,
                     onUpdateStageConfig = viewModel::updateStageConfig,
                     onArchiveUsage = viewModel::archiveUsage,
@@ -183,7 +186,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onToggleRssTickerSource = viewModel::toggleRssTickerSource,
                     onUpdateRssUseTickerFeedsForFinalStage = viewModel::updateRssUseTickerFeedsForFinalStage,
                     onUpdateRssApplyExpandedToAll = viewModel::updateRssApplyExpandedToAll,
-                    onResetRssDefaults = viewModel::resetRssDefaults
+                    onResetRssDefaults = viewModel::resetRssDefaults,
+                    onRequestRssPreview = viewModel::requestRssPreview
                 )
             }
             composable(Screen.Logs.route) {

@@ -80,6 +80,38 @@ object AiPrompts {
         }
     """
 
+    const val SETTINGS_SUGGESTION_SYSTEM = """
+        You are a trading settings optimizer. Return JSON only. Provide suggestions for all settings areas.
+        
+        Output schema (JSON ONLY):
+        {
+          "thresholds": {
+            "vwapDipPercent": double,
+            "rsiOversold": double,
+            "rsiOverbought": double,
+            "rationale": "short explanation"
+          },
+          "screener": {
+            "conservativeLimit": double,
+            "moderateLimit": double,
+            "aggressiveLimit": double,
+            "minVolume": long,
+            "rationale": "short explanation"
+          },
+          "risk": {
+            "riskTolerance": "CONSERVATIVE|MODERATE|AGGRESSIVE",
+            "rationale": "short explanation"
+          },
+          "rss": {
+            "enabledTopicKeys": ["source_id:topic_id"],
+            "tickerSourceIds": ["source_id"],
+            "rationale": "short explanation"
+          }
+        }
+        
+        Use only the RSS topic keys and ticker source IDs provided by the user prompt.
+    """
+
     const val SHORTLIST_PROMPT = """
         You are a trading strategist assistant. Your task is to shortlist a set of tradeable symbols for deeper analysis.
         

@@ -116,6 +116,7 @@ class AnalysisViewModel(
     }
 
     private val rssCatalog by lazy { RssFeedCatalogLoader(application).load() }
+    private val rssFeedClient by lazy { RssFeedClient(rssDao = rssDao) }
     private val rssFeedResolver = RssFeedResolver()
 
     init {
@@ -647,6 +648,107 @@ class AnalysisViewModel(
         }
     }
 
+    fun suggestSettingsWithAi(prompt: String, selectedAreas: Set<AiSettingsArea>) {
+        val llmKey = _uiState.value.keys.openAiKey.ifBlank { _uiState.value.keys.geminiKey }
+        if (llmKey.isBlank()) return
+
+        _uiState.update {
+            it.copy(
+                isSuggestingSettings = true,
+                lastAiSettingsPrompt = prompt,
+                lastAiSettingsSelection = selectedAreas
+            )
+        }
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val topicsList = rssCatalog.sources
+                    .flatMap { source ->
+                        source.topics.filter { !it.isTickerTemplate }.map { topic ->
+                            "- ${source.id}:${topic.id} | ${source.label} / ${topic.label}"
+                        }
+                    }
+                val tickerSources = rssCatalog.entries
+                    .filter { it.isTickerTemplate }
+                    .map { it.sourceId }
+                    .distinct()
+                    .sorted()
+
+                val areasLabel = if (selectedAreas.isEmpty()) "ALL" else selectedAreas.joinToString(", ")
+                val topicsSection = if (topicsList.isEmpty()) "None" else topicsList.joinToString("\n")
+                val tickerSection = if (tickerSources.isEmpty()) "None" else tickerSources.joinToString(", ")
+                val current = _uiState.value.appSettings
+
+                val userPrompt = buildString {
+                    appendLine("User context: $prompt")
+                    appendLine("Areas to apply: $areasLabel")
+                    appendLine("Current settings:")
+                    appendLine("- riskTolerance: ${current.riskTolerance}")
+                    appendLine("- thresholds: VWAP ${String.format("%.2f", current.vwapDipPercent)}%, RSI ${current.rsiOversold}/${current.rsiOverbought}")
+                    appendLine("- screener: CONS ${current.screenerConservativeThreshold}, MOD ${current.screenerModerateThreshold}, AGGR ${current.screenerAggressiveThreshold}, VOL ${current.screenerMinVolume}")
+                    appendLine("- rssEnabledTopics: ${current.rssEnabledTopics.size} selected")
+                    appendLine("- rssTickerSources: ${current.rssTickerSources.joinToString(", ")}")
+                    appendLine("Allowed RSS topic keys:")
+                    appendLine(topicsSection)
+                    appendLine("Allowed RSS ticker source IDs:")
+                    appendLine(tickerSection)
+                }
+
+                val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.SETTINGS_SUGGESTION_SYSTEM.trimIndent()
+                val request = com.polaralias.signalsynthesis.domain.ai.LlmStageRequest(
+                    systemPrompt = systemPrompt,
+                    userPrompt = userPrompt,
+                    stage = com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
+                    expectedSchemaId = "AiSettingsSuggestion"
+                )
+                val startTime = System.currentTimeMillis()
+                val response = stageModelRouter.run(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE, request)
+                val duration = System.currentTimeMillis() - startTime
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("SettingsSuggestion", prompt, response.rawText, true, duration)
+
+                val payload = parseAiSettingsSuggestion(response.rawText)
+                val riskTolerance = payload.risk?.riskTolerance?.let { normalizeRiskTolerance(it) }
+                val riskSuggestion = riskTolerance?.let {
+                    AiRiskSuggestion(it, payload.risk?.rationale.orEmpty())
+                }
+                val validTopicKeys = payload.rss?.enabledTopicKeys
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotEmpty() && rssCatalog.entryByKey(it) != null }
+                    .orEmpty()
+                val validTickerSources = payload.rss?.tickerSourceIds
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotEmpty() && tickerSources.contains(it) }
+                    .orEmpty()
+                val rssSuggestion = if (validTopicKeys.isNotEmpty() || validTickerSources.isNotEmpty()) {
+                    AiRssSuggestion(
+                        enabledTopicKeys = validTopicKeys.distinct(),
+                        tickerSourceIds = validTickerSources.distinct(),
+                        rationale = payload.rss?.rationale.orEmpty()
+                    )
+                } else {
+                    null
+                }
+
+                _uiState.update {
+                    it.copy(
+                        aiThresholdSuggestion = payload.thresholds,
+                        aiScreenerSuggestion = payload.screener,
+                        aiRiskSuggestion = riskSuggestion,
+                        aiRssSuggestion = rssSuggestion,
+                        isSuggestingSettings = false
+                    )
+                }
+            } catch (ex: Exception) {
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("SettingsSuggestion", prompt, ex.message ?: "Failed", false, 0)
+                _uiState.update {
+                    it.copy(
+                        isSuggestingSettings = false,
+                        errorMessage = "AI settings suggestion failed: ${ex.message}"
+                    )
+                }
+            }
+        }
+    }
+
     fun applyAiScreenerSuggestion() {
         _uiState.value.aiScreenerSuggestion?.let { suggestion ->
             val updated = _uiState.value.appSettings.copy(
@@ -662,6 +764,35 @@ class AnalysisViewModel(
 
     fun dismissAiScreenerSuggestion() {
         _uiState.update { it.copy(aiScreenerSuggestion = null) }
+    }
+
+    fun applyAiRiskSuggestion() {
+        _uiState.value.aiRiskSuggestion?.let { suggestion ->
+            val updated = _uiState.value.appSettings.copy(
+                riskTolerance = suggestion.riskTolerance
+            )
+            updateAppSettings(updated)
+            _uiState.update { it.copy(aiRiskSuggestion = null) }
+        }
+    }
+
+    fun dismissAiRiskSuggestion() {
+        _uiState.update { it.copy(aiRiskSuggestion = null) }
+    }
+
+    fun applyAiRssSuggestion() {
+        _uiState.value.aiRssSuggestion?.let { suggestion ->
+            val updated = _uiState.value.appSettings.copy(
+                rssEnabledTopics = suggestion.enabledTopicKeys.toSet(),
+                rssTickerSources = suggestion.tickerSourceIds.toSet()
+            )
+            updateAppSettings(updated)
+            _uiState.update { it.copy(aiRssSuggestion = null) }
+        }
+    }
+
+    fun dismissAiRssSuggestion() {
+        _uiState.update { it.copy(aiRssSuggestion = null) }
     }
 
     fun applyAiThresholdSuggestion() {
@@ -739,6 +870,37 @@ class AnalysisViewModel(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
+    fun requestRssPreview(feedUrl: String) {
+        val existing = _uiState.value.rssPreviewStates[feedUrl]
+        if (existing?.status == RssPreviewStatus.LOADING) return
+
+        updateRssPreviewState(feedUrl, RssPreviewState(status = RssPreviewStatus.LOADING))
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                rssFeedClient.fetchFeed(feedUrl)
+                val items = rssDao.getItemsForFeed(feedUrl, 15)
+                    .map { item ->
+                        RssPreviewItem(
+                            title = item.title,
+                            link = item.link,
+                            publishedAt = item.publishedAt,
+                            snippet = item.snippet
+                        )
+                    }
+                updateRssPreviewState(feedUrl, RssPreviewState(status = RssPreviewStatus.READY, items = items))
+            } catch (ex: Exception) {
+                Logger.e("AnalysisViewModel", "RSS preview failed for $feedUrl", ex)
+                updateRssPreviewState(
+                    feedUrl,
+                    RssPreviewState(
+                        status = RssPreviewStatus.ERROR,
+                        errorMessage = ex.message ?: "RSS preview failed."
+                    )
+                )
+            }
+        }
+    }
+
     fun toggleRssTopic(topicKey: String) {
         val current = _uiState.value.appSettings.rssEnabledTopics
         val updated = if (current.contains(topicKey)) current - topicKey else current + topicKey
@@ -768,6 +930,14 @@ class AnalysisViewModel(
                 rssApplyExpandedToAll = false
             )
         )
+    }
+
+    private fun updateRssPreviewState(feedUrl: String, state: RssPreviewState) {
+        _uiState.update { current ->
+            val updated = current.rssPreviewStates.toMutableMap()
+            updated[feedUrl] = state
+            current.copy(rssPreviewStates = updated)
+        }
     }
 
     fun updateAlertsEnabled(enabled: Boolean) {
@@ -1264,6 +1434,47 @@ class AnalysisViewModel(
                     .toList()
                 _uiState.update { it.copy(blacklistedProviders = activeBlacklist) }
             }
+        }
+    }
+
+    private data class AiSettingsSuggestionPayload(
+        val thresholds: AiThresholdSuggestion? = null,
+        val screener: AiScreenerSuggestion? = null,
+        val risk: AiRiskSuggestionPayload? = null,
+        val rss: AiRssSuggestionPayload? = null
+    )
+
+    private data class AiRiskSuggestionPayload(
+        val riskTolerance: String? = null,
+        val rationale: String? = null
+    )
+
+    private data class AiRssSuggestionPayload(
+        val enabledTopicKeys: List<String>? = null,
+        val tickerSourceIds: List<String>? = null,
+        val rationale: String? = null
+    )
+
+    private fun parseAiSettingsSuggestion(json: String): AiSettingsSuggestionPayload {
+        try {
+            val moshi = com.squareup.moshi.Moshi.Builder()
+                .add(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+                .build()
+            val adapter = moshi.adapter(AiSettingsSuggestionPayload::class.java)
+            val validJson = json.replace(Regex("```json|```"), "").trim()
+            return adapter.fromJson(validJson) ?: AiSettingsSuggestionPayload()
+        } catch (e: Exception) {
+            Logger.e("AnalysisViewModel", "Failed to parse AI settings suggestion", e)
+            return AiSettingsSuggestionPayload()
+        }
+    }
+
+    private fun normalizeRiskTolerance(value: String): com.polaralias.signalsynthesis.data.settings.RiskTolerance? {
+        return when (value.trim().uppercase()) {
+            "CONSERVATIVE", "LOW", "LOW_RISK" -> com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE
+            "MODERATE", "MEDIUM", "BALANCED" -> com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE
+            "AGGRESSIVE", "HIGH", "HIGH_RISK" -> com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE
+            else -> null
         }
     }
 

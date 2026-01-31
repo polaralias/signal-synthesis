@@ -70,10 +70,16 @@ data class AnalysisUiState(
     val history: List<AnalysisResult> = emptyList(),
     val appSettings: AppSettings = AppSettings(),
     val rssCatalog: RssFeedCatalog? = null,
+    val rssPreviewStates: Map<String, RssPreviewState> = emptyMap(),
     val aiThresholdSuggestion: AiThresholdSuggestion? = null,
     val isSuggestingThresholds: Boolean = false,
     val aiScreenerSuggestion: AiScreenerSuggestion? = null,
     val isSuggestingScreener: Boolean = false,
+    val aiRiskSuggestion: AiRiskSuggestion? = null,
+    val aiRssSuggestion: AiRssSuggestion? = null,
+    val isSuggestingSettings: Boolean = false,
+    val lastAiSettingsPrompt: String = "",
+    val lastAiSettingsSelection: Set<AiSettingsArea> = emptySet(),
     val isPrefetching: Boolean = false,
     val prefetchCount: Int = 0,
     val aiSummaries: Map<String, AiSummaryState> = emptyMap(),
@@ -129,6 +135,44 @@ data class AiThresholdSuggestion(
     val rsiOversold: Double,
     val rsiOverbought: Double,
     val rationale: String
+)
+
+enum class AiSettingsArea {
+    RSS,
+    RISK,
+    THRESHOLDS,
+    SCREENER
+}
+
+data class AiRiskSuggestion(
+    val riskTolerance: com.polaralias.signalsynthesis.data.settings.RiskTolerance,
+    val rationale: String
+)
+
+data class AiRssSuggestion(
+    val enabledTopicKeys: List<String>,
+    val tickerSourceIds: List<String>,
+    val rationale: String
+)
+
+enum class RssPreviewStatus {
+    IDLE,
+    LOADING,
+    READY,
+    ERROR
+}
+
+data class RssPreviewItem(
+    val title: String,
+    val link: String,
+    val publishedAt: Long,
+    val snippet: String
+)
+
+data class RssPreviewState(
+    val status: RssPreviewStatus = RssPreviewStatus.IDLE,
+    val items: List<RssPreviewItem> = emptyList(),
+    val errorMessage: String? = null
 )
 
 enum class AiSummaryStatus {
