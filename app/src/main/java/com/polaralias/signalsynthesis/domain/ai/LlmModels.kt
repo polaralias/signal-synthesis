@@ -6,22 +6,28 @@ enum class LlmProvider {
 }
 
 enum class LlmModel(val provider: LlmProvider, val modelId: String) {
-    // OpenAI Models (as per Phase 3 Spec)
+    // OpenAI Models (current generation)
     GPT_5_2(LlmProvider.OPENAI, "gpt-5.2"),
     GPT_5_1(LlmProvider.OPENAI, "gpt-5.1"),
     GPT_5_MINI(LlmProvider.OPENAI, "gpt-5-mini"),
     GPT_5_NANO(LlmProvider.OPENAI, "gpt-5-nano"),
-    GPT_5_2_PRO(LlmProvider.OPENAI, "gpt-5.2-pro"),
-    GPT_4_O_MINI(LlmProvider.OPENAI, "gpt-4o-mini"),
 
-
-    // Gemini Models (as per Phase 3 Spec)
-    GEMINI_2_5_FLASH(LlmProvider.GEMINI, "gemini-2.5-flash"),
-    GEMINI_2_5_PRO(LlmProvider.GEMINI, "gemini-2.5-pro"),
+    // Gemini Models (latest generation)
     GEMINI_3_FLASH(LlmProvider.GEMINI, "gemini-3-flash"),
     GEMINI_3_PRO(LlmProvider.GEMINI, "gemini-3-pro")
 }
 
-enum class ReasoningDepth { NONE, MINIMAL, LOW, MEDIUM, HIGH, EXTRA }
+/**
+ * Maps to 'reasoning_effort' for OpenAI and 'thinking_level' for Gemini.
+ */
+enum class ReasoningDepth { 
+    NONE,
+    MINIMAL, 
+    LOW, 
+    MEDIUM, 
+    HIGH, 
+    EXTRA 
+}
+
 enum class OutputLength { SHORT, STANDARD, FULL }
 enum class Verbosity { LOW, MEDIUM, HIGH }

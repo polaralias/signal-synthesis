@@ -150,6 +150,7 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     symbol = Uri.decode(symbol),
                     onBack = { navController.popBackStack() },
                     onRequestSummary = viewModel::requestAiSummary,
+                    onRequestDeepDive = viewModel::requestDeepDive,
                     onRequestChartData = viewModel::requestChartData,
                     onToggleWatchlist = viewModel::toggleWatchlist
                 )
@@ -174,12 +175,16 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onApplyScreenerAi = viewModel::applyAiScreenerSuggestion,
                     onDismissScreenerAi = viewModel::dismissAiScreenerSuggestion,
                     onRemoveFromBlocklist = viewModel::removeFromBlocklist,
-                    onArchiveUsage = viewModel::archiveUsage
+                    onUpdateStageConfig = viewModel::updateStageConfig,
+                    onArchiveUsage = viewModel::archiveUsage,
+                    onAddRssFeed = viewModel::addRssFeed,
+                    onRemoveRssFeed = viewModel::removeRssFeed
                 )
             }
             composable(Screen.Logs.route) {
                 LogViewerScreen(
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onRunShortlistHarness = viewModel::runShortlistHarness
                 )
             }
         }

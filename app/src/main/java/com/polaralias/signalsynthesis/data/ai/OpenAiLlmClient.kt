@@ -29,31 +29,29 @@ class OpenAiLlmClient(
                     content = prompt
                 )
             ),
-            maxOutputTokens = when (outputLength) {
+            maxCompletionTokens = when (outputLength) {
                 OutputLength.SHORT -> 400
                 OutputLength.STANDARD -> 800
                 OutputLength.FULL -> 1500
             },
-            reasoning = OpenAiReasoning(
-                effort = when (reasoningDepth) {
-                    ReasoningDepth.NONE -> "none"
-                    ReasoningDepth.MINIMAL -> "minimal"
-                    ReasoningDepth.LOW -> "low"
-                    ReasoningDepth.MEDIUM -> "medium"
-                    ReasoningDepth.HIGH -> "high"
-                    ReasoningDepth.EXTRA -> "xhigh"
-                }
-            ),
-            text = OpenAiText(
-                verbosity = when (verbosity) {
-                    Verbosity.LOW -> "low"
-                    Verbosity.MEDIUM -> "medium"
-                    Verbosity.HIGH -> "high"
-                }
-            )
+            reasoningEffort = mapReasoningEffort(reasoningDepth)
         )
         val response = service.createChatCompletion("Bearer $apiKey", request)
         return response.choices.firstOrNull()?.message?.content.orEmpty()
+    }
+
+    private fun mapReasoningEffort(depth: ReasoningDepth): String? {
+        if (model.startsWith("o1") || model.startsWith("gpt-5")) {
+            return when (depth) {
+                ReasoningDepth.NONE -> "minimal"
+                ReasoningDepth.MINIMAL -> "minimal"
+                ReasoningDepth.LOW -> "low"
+                ReasoningDepth.MEDIUM -> "medium"
+                ReasoningDepth.HIGH -> "high"
+                ReasoningDepth.EXTRA -> "xhigh"
+            }
+        }
+        return null
     }
 
     companion object {

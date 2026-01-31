@@ -99,12 +99,12 @@ class AnalysisViewModelTest {
     }
 
     @Test
-    fun updateCustomTickersUpdatesState() = runTest(testDispatcher) {
+    fun addCustomTickerUpdatesState() = runTest(testDispatcher) {
         val viewModel = createViewModel()
-        viewModel.updateCustomTickers("AAPL, MSFT")
+        viewModel.addCustomTicker("AAPL")
 
         val state = viewModel.uiState.value
-        assertEquals("AAPL, MSFT", state.customTickers)
+        assertTrue(state.customTickers.any { it.symbol == "AAPL" })
     }
 
     private fun createViewModel(
@@ -120,6 +120,8 @@ class AnalysisViewModelTest {
             dbRepository = FakeDatabaseRepository(),
             appSettingsStore = FakeAppSettingsStore(),
             aiSummaryRepository = AiSummaryRepository(FakeAiSummaryDao()),
+            rssDao = FakeRssDao(),
+            application = FakeApplication(),
             clock = clock,
             ioDispatcher = testDispatcher
         )
@@ -150,7 +152,7 @@ class AnalysisViewModelTest {
     }
 
     private class FakeWorkScheduler : WorkScheduler {
-        override fun scheduleAlerts(enabled: Boolean) {}
+        override fun scheduleAlerts(enabled: Boolean, intervalMinutes: Int) {}
     }
 
     private class FakeDatabaseRepository : DatabaseRepository {
@@ -173,6 +175,14 @@ class AnalysisViewModelTest {
         override suspend fun insert(summary: com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity) {}
         override suspend fun delete(summary: com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity) {}
         override suspend fun clear() {}
+    }
+
+    private class FakeRssDao : com.polaralias.signalsynthesis.data.rss.RssDao {
+        override suspend fun getFeedState(url: String): com.polaralias.signalsynthesis.data.rss.RssFeedStateEntity? = null
+        override suspend fun insertFeedState(state: com.polaralias.signalsynthesis.data.rss.RssFeedStateEntity) {}
+        override suspend fun getAllRecentItems(since: Long): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
+        override suspend fun insertItems(items: List<com.polaralias.signalsynthesis.data.rss.RssItemEntity>) {}
+        override suspend fun deleteOldItems(threshold: Long) {}
     }
 
     private class FakeLlmClientFactory : com.polaralias.signalsynthesis.data.ai.LlmClientFactory() {
@@ -199,4 +209,6 @@ class AnalysisViewModelTest {
             """.trimIndent()
         }
     }
+
+    private class FakeApplication : android.app.Application()
 }

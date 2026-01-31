@@ -1,66 +1,78 @@
 package com.polaralias.signalsynthesis.domain.usecase
 
 import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
-import com.polaralias.signalsynthesis.domain.ai.LlmClient
+import com.polaralias.signalsynthesis.domain.ai.*
 import com.polaralias.signalsynthesis.domain.model.AiSynthesis
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
+import com.polaralias.signalsynthesis.domain.model.AnalysisStage
 import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONArray
 import org.json.JSONObject
 
 class SynthesizeSetupUseCase(
     private val repository: MarketDataRepository,
-    private val analysisClient: LlmClient,
-    private val verdictClient: LlmClient
+    private val stageModelRouter: StageModelRouter
 ) {
     suspend fun execute(
         setup: TradeSetup,
         llmKey: String,
-        reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth = com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.MEDIUM,
-        outputLength: com.polaralias.signalsynthesis.domain.ai.OutputLength = com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD,
-        verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM,
+        reasoningDepth: ReasoningDepth = ReasoningDepth.MEDIUM,
+        outputLength: OutputLength = OutputLength.STANDARD,
+        verbosity: Verbosity = Verbosity.MEDIUM,
         onProgress: ((String) -> Unit)? = null
     ): AiSynthesis {
-        // Step 1: Data Analysis
+        if (llmKey.isBlank()) {
+            throw IllegalArgumentException("LLM key required for AI synthesis.")
+        }
+        // Step 1: Data Analysis (interpret context + technicals)
         onProgress?.invoke("Data Interpretation...")
         val analysisPrompt = buildAnalysisPrompt(setup)
         Logger.i("LLM", "Step 1: Data Analysis for ${setup.symbol}")
         
         val startTime1 = System.currentTimeMillis()
         val analysisReport = try {
-            val res = analysisClient.generate(
-                prompt = analysisPrompt,
-                apiKey = llmKey,
-                reasoningDepth = reasoningDepth,
-                outputLength = outputLength,
-                verbosity = verbosity
+            val request = LlmStageRequest(
+                systemPrompt = AiPrompts.SYSTEM_ANALYST,
+                userPrompt = analysisPrompt,
+                stage = AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS,
+                maxOutputTokens = when (outputLength) {
+                    OutputLength.SHORT -> 400
+                    OutputLength.STANDARD -> 800
+                    OutputLength.FULL -> 1500
+                }
             )
+            val response = stageModelRouter.run(AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS, request)
             val duration = System.currentTimeMillis() - startTime1
-            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("DataAnalysis", analysisPrompt, res, true, duration)
-            res
+            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("DataAnalysis", analysisPrompt, response.rawText, true, duration)
+            response.rawText
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime1
             com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("DataAnalysis", analysisPrompt, e.message ?: "Failed", false, duration)
             throw e
         }
 
-        // Step 2: Trading Verdict
+        // Step 2: Trading Verdict (final plan)
         val verdictPrompt = buildVerdictPrompt(setup, analysisReport)
         Logger.i("LLM", "Step 2: Trading Verdict for ${setup.symbol}")
         onProgress?.invoke("Formulating Verdict...")
         
         val startTime2 = System.currentTimeMillis()
         val rawVerdictResponse = try {
-            val res = verdictClient.generate(
-                prompt = verdictPrompt,
-                apiKey = llmKey,
-                reasoningDepth = reasoningDepth,
-                outputLength = outputLength,
-                verbosity = verbosity
+            val request = LlmStageRequest(
+                systemPrompt = AiPrompts.SYSTEM_ANALYST,
+                userPrompt = verdictPrompt,
+                stage = AnalysisStage.DECISION_UPDATE,
+                expectedSchemaId = "AiSynthesis",
+                maxOutputTokens = when (outputLength) {
+                    OutputLength.SHORT -> 400
+                    OutputLength.STANDARD -> 800
+                    OutputLength.FULL -> 1500
+                }
             )
+            val response = stageModelRouter.run(AnalysisStage.DECISION_UPDATE, request)
             val duration = System.currentTimeMillis() - startTime2
-            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("TradingVerdict", verdictPrompt, res, true, duration)
-            res
+            com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("TradingVerdict", verdictPrompt, response.rawText, true, duration)
+            response.rawText
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime2
             com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("TradingVerdict", verdictPrompt, e.message ?: "Failed", false, duration)
@@ -105,7 +117,7 @@ class SynthesizeSetupUseCase(
 
         val reasons = if (setup.reasons.isEmpty()) "None" else setup.reasons.joinToString("; ")
 
-        return com.polaralias.signalsynthesis.domain.ai.AiPrompts.STEP_1_DATA_ANALYSIS
+        return AiPrompts.STEP_1_DATA_ANALYSIS
             .replace("{symbol}", setup.symbol)
             .replace("{technicalIndicators}", technicalLines.joinToString("\n"))
             .replace("{context}", contextLines.joinToString("\n"))
@@ -114,7 +126,7 @@ class SynthesizeSetupUseCase(
     }
 
     private fun buildVerdictPrompt(setup: TradeSetup, analysisReport: String): String {
-        return com.polaralias.signalsynthesis.domain.ai.AiPrompts.STEP_2_TRADING_VERDICT
+        return AiPrompts.STEP_2_TRADING_VERDICT
             .replace("{symbol}", setup.symbol)
             .replace("{intent}", setup.intent.name)
             .replace("{setupType}", setup.setupType)

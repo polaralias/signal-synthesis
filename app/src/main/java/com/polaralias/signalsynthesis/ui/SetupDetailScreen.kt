@@ -30,6 +30,7 @@ fun SetupDetailScreen(
     symbol: String,
     onBack: () -> Unit,
     onRequestSummary: (String) -> Unit,
+    onRequestDeepDive: (String) -> Unit,
     onRequestChartData: (String) -> Unit,
     onToggleWatchlist: (String) -> Unit
 ) {
@@ -171,6 +172,104 @@ fun SetupDetailScreen(
                                 else -> {
                                     Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
                                         Text("Initializing AI service...", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    SectionHeader("DEEP DIVE (WEB SEARCH)")
+                    val deepDive = uiState.deepDives[symbol]
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            when (deepDive?.status) {
+                                DeepDiveStatus.LOADING -> {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp, color = BrandSecondary)
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        Text("SCANNING GLOBAL NEWS & DATA...", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary, letterSpacing = 2.sp)
+                                    }
+                                }
+                                DeepDiveStatus.READY -> {
+                                    deepDive.data?.let { data ->
+                                        Text(data.summary, style = MaterialTheme.typography.bodyMedium, lineHeight = 24.sp)
+                                        
+                                        if (data.drivers.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(24.dp))
+                                            Text("PRIMARY DRIVERS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = Rainbow2, letterSpacing = 2.sp)
+                                            data.drivers.forEach { driver ->
+                                                Row(modifier = Modifier.padding(vertical = 8.dp)) {
+                                                    val icon = if (driver.direction.contains("bull", ignoreCase = true)) Icons.Filled.TrendingUp else Icons.Filled.TrendingDown
+                                                    val color = if (driver.direction.contains("bull", ignoreCase = true)) SuccessGreen else if (driver.direction.contains("bear", ignoreCase = true)) ErrorRed else BrandPrimary
+                                                    Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Column {
+                                                        Text(driver.type.uppercase(), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = color.copy(alpha = 0.7f))
+                                                        Text(driver.detail, style = MaterialTheme.typography.bodySmall)
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if (data.sources.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(24.dp))
+                                            Text("SOURCES", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 2.sp)
+                                            Spacer(modifier = Modifier.height(12.dp))
+                                            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                                            data.sources.forEach { source ->
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = 8.dp)
+                                                        .clickable { if (source.url.isNotBlank()) uriHandler.openUri(source.url) },
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(Icons.Filled.Link, contentDescription = null, modifier = Modifier.size(16.dp), tint = BrandPrimary.copy(alpha = 0.5f))
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Column {
+                                                        Text(source.title, style = MaterialTheme.typography.bodySmall, color = BrandPrimary, fontWeight = FontWeight.Bold)
+                                                        Text("${source.publisher} • ${source.publishedAt}", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        Button(
+                                            onClick = { onRequestDeepDive(symbol) },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = BrandSecondary.copy(alpha = 0.1f)),
+                                            shape = RoundedCornerShape(12.dp),
+                                            border = BorderStroke(1.dp, BrandSecondary.copy(alpha = 0.2f))
+                                        ) {
+                                            Text("REFRESH DEEP DIVE", color = BrandSecondary, fontWeight = FontWeight.Black)
+                                        }
+                                    }
+                                }
+                                DeepDiveStatus.ERROR -> {
+                                    Text(deepDive.errorMessage ?: "Deep dive failed", color = ErrorRed)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(onClick = { onRequestDeepDive(symbol) }, modifier = Modifier.fillMaxWidth()) {
+                                        Text("RETRY")
+                                    }
+                                }
+                                else -> {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                                        Text("Execute targeted web search and recent news analysis for this ticker.", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                                        Spacer(modifier = Modifier.height(24.dp))
+                                        Button(
+                                            onClick = { onRequestDeepDive(symbol) },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = BrandSecondary),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Icon(Icons.Default.Radar, contentDescription = null, modifier = Modifier.size(18.dp))
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Text("INITIATE DEEP DIVE", fontWeight = FontWeight.Black)
+                                        }
                                     }
                                 }
                             }

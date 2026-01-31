@@ -26,5 +26,9 @@ data class TradeSetup(
     val profile: CompanyProfile? = null,
     val metrics: FinancialMetrics? = null,
     val sentiment: SentimentData? = null,
-    val source: TickerSource = TickerSource.PREDEFINED
+    val source: TickerSource = TickerSource.PREDEFINED,
+    val setupBias: String = "",
+    val mustReview: List<String> = emptyList(),
+    val rssNeeded: Boolean = false,
+    val decisionConfidence: Double? = null
 )

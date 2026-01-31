@@ -35,7 +35,9 @@ import com.polaralias.signalsynthesis.data.settings.ThemeMode
 
 class MainActivity : ComponentActivity() {
     private val db by lazy {
-        Room.databaseBuilder(applicationContext, AppDatabase::class.java, "signal-synthesis-db").build()
+        Room.databaseBuilder(applicationContext, AppDatabase::class.java, "signal-synthesis-db")
+            .fallbackToDestructiveMigration()
+            .build()
     }
     private val viewModel: AnalysisViewModel by viewModels {
         AnalysisViewModelFactory(this, db)
@@ -99,20 +101,20 @@ private class AnalysisViewModelFactory(
             val alertStore = AlertSettingsStore(activity)
             val workManager = WorkManager.getInstance(activity)
             val workScheduler = WorkManagerScheduler(workManager)
-            val llmClientFactory = com.polaralias.signalsynthesis.data.ai.LlmClientFactory()
             val dbRepository = RoomDatabaseRepository(db.watchlistDao(), db.historyDao())
             val appSettingsStore = AppSettingsStore(activity)
             val aiSummaryRepository = AiSummaryRepository(db.aiSummaryDao())
+            val rssDao = db.rssDao()
             @Suppress("UNCHECKED_CAST")
             return AnalysisViewModel(
                 providerFactory = providerFactory,
                 keyStore = keyStore,
                 alertStore = alertStore,
                 workScheduler = workScheduler,
-                llmClientFactory = llmClientFactory,
                 dbRepository = dbRepository,
                 appSettingsStore = appSettingsStore,
                 aiSummaryRepository = aiSummaryRepository,
+                rssDao = rssDao,
                 application = activity.application
             ) as T
         }

@@ -28,8 +28,9 @@ import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.domain.ai.*
 import com.polaralias.signalsynthesis.ui.theme.*
 import kotlin.math.roundToInt
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 
 @Composable
 private fun AuthStatusItem(label: String, status: String, isActive: Boolean) {
@@ -67,13 +68,21 @@ fun SettingsScreen(
     onApplyScreenerAi: () -> Unit,
     onDismissScreenerAi: () -> Unit,
     onRemoveFromBlocklist: (String) -> Unit,
-    onArchiveUsage: () -> Unit = {}
+    onUpdateStageConfig: (com.polaralias.signalsynthesis.domain.model.AnalysisStage, StageModelConfig) -> Unit = { _, _ -> },
+    onArchiveUsage: () -> Unit = {},
+    onAddRssFeed: (String, (Boolean, String) -> Unit) -> Unit = { _, _ -> },
+    onRemoveRssFeed: (String) -> Unit = {}
 ) {
     var showThresholdAiDialog by remember { mutableStateOf(false) }
     var showScreenerAiDialog by remember { mutableStateOf(false) }
     var aiPrompt by remember { mutableStateOf("") }
     var newTicker by remember { mutableStateOf("") }
+    var newRssFeed by remember { mutableStateOf("") }
+    var isAddingRss by remember { mutableStateOf(false) }
+    var rssAddResult by remember { mutableStateOf<String?>(null) }
+    
     val context = LocalContext.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
 
@@ -938,6 +947,83 @@ fun SettingsScreen(
             }
             
             Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("MARKET DATA FEEDS")
+            com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text("RSS/ATOM SOURCES", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    if (uiState.appSettings.rssFeeds.isEmpty()) {
+                        Text("No custom feeds configured.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    } else {
+                        uiState.appSettings.rssFeeds.forEach { feedUrl ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                    Icon(Icons.Default.RssFeed, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(feedUrl, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1)
+                                }
+                                IconButton(onClick = { onRemoveRssFeed(feedUrl) }, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Default.Delete, contentDescription = "Remove", tint = ErrorRed.copy(alpha = 0.6f), modifier = Modifier.size(16.dp))
+                                }
+                            }
+                            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Box {
+                        OutlinedTextField(
+                            value = newRssFeed,
+                            onValueChange = { newRssFeed = it },
+                            label = { Text("ADD FEED URL", style = MaterialTheme.typography.labelSmall) },
+                            modifier = Modifier.fillMaxWidth().padding(end = 50.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                            enabled = !isAddingRss,
+                            colors = TextFieldDefaults.outlinedTextFieldColors(
+                                focusedBorderColor = BrandPrimary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
+                        )
+                        if (isAddingRss) {
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterEnd).size(24.dp).padding(4.dp), color = BrandPrimary)
+                        } else {
+                            IconButton(
+                                onClick = { 
+                                    if (newRssFeed.isNotBlank()) {
+                                        isAddingRss = true
+                                        rssAddResult = null
+                                        keyboardController?.hide()
+                                        onAddRssFeed(newRssFeed) { success, message ->
+                                            isAddingRss = false
+                                            rssAddResult = message
+                                            if (success) {
+                                                newRssFeed = ""
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = "Add", tint = BrandPrimary)
+                            }
+                        }
+                    }
+                    rssAddResult?.let {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(it, style = MaterialTheme.typography.labelSmall, color = if (it.startsWith("Added")) BrandPrimary else ErrorRed)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("BLACKLISTED NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -1160,9 +1246,6 @@ private fun formatModelName(model: LlmModel): String {
         LlmModel.GPT_5_1 -> "GPT 5.1"
         LlmModel.GPT_5_MINI -> "GPT 5 MINI"
         LlmModel.GPT_5_NANO -> "GPT 5 NANO"
-        LlmModel.GPT_5_2_PRO -> "GPT 5.2 PRO"
-        LlmModel.GEMINI_2_5_FLASH -> "GEMINI 2.5 FLASH"
-        LlmModel.GEMINI_2_5_PRO -> "GEMINI 2.5 PRO"
         LlmModel.GEMINI_3_FLASH -> "GEMINI 3 FLASH"
         LlmModel.GEMINI_3_PRO -> "GEMINI 3 PRO"
         else -> model.name.replace("_", " ")

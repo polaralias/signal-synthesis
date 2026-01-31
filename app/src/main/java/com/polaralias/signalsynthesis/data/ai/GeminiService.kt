@@ -39,8 +39,15 @@ interface GeminiService {
 data class GeminiRequest(
     val contents: List<GeminiContent>,
     val systemInstruction: GeminiContent? = null,
+    val tools: List<GeminiTool>? = null,
     val generationConfig: GeminiGenerationConfig = GeminiGenerationConfig()
 )
+
+data class GeminiTool(
+    @Json(name = "google_search") val googleSearch: GoogleSearchTool? = null
+)
+
+class GoogleSearchTool
 
 data class GeminiContent(
     val role: String? = null,
@@ -48,7 +55,7 @@ data class GeminiContent(
 )
 
 data class GeminiPart(
-    val text: String
+    val text: String? = null
 )
 
 data class GeminiGenerationConfig(
@@ -66,5 +73,38 @@ data class GeminiResponse(
 )
 
 data class GeminiCandidate(
-    val content: GeminiContent? = null
+    val content: GeminiContent? = null,
+    val groundingMetadata: GeminiGroundingMetadata? = null
+)
+
+data class GeminiGroundingMetadata(
+    val searchEntrypoint: GeminiSearchEntrypoint? = null,
+    val groundingChunks: List<GeminiGroundingChunk>? = null,
+    val groundingSupports: List<GeminiGroundingSupport>? = null,
+    val webSearchQueries: List<String>? = null
+)
+
+data class GeminiSearchEntrypoint(
+    val renderedContent: String? = null
+)
+
+data class GeminiGroundingChunk(
+    val web: GeminiWebGroundingChunk? = null
+)
+
+data class GeminiWebGroundingChunk(
+    val uri: String? = null,
+    val title: String? = null
+)
+
+data class GeminiGroundingSupport(
+    val segment: GeminiSegment? = null,
+    val groundingChunkIndices: List<Int>? = null,
+    val confidenceScores: List<Double>? = null
+)
+
+data class GeminiSegment(
+    val startIndex: Int? = null,
+    val endIndex: Int? = null,
+    val text: String? = null
 )

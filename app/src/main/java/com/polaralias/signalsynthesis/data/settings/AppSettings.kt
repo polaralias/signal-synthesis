@@ -5,6 +5,8 @@ import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import com.polaralias.signalsynthesis.domain.ai.ReasoningDepth
 import com.polaralias.signalsynthesis.domain.ai.OutputLength
 import com.polaralias.signalsynthesis.domain.ai.Verbosity
+import com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig
+import com.polaralias.signalsynthesis.domain.model.AnalysisStage
 
 data class AppSettings(
     val quoteRefreshIntervalMinutes: Int = 5,
@@ -28,7 +30,11 @@ data class AppSettings(
     val preferredAssetClass: AssetClass = AssetClass.STOCKS,
     val discoveryMode: DiscoveryMode = DiscoveryMode.CURATED,
     val isAnalysisPaused: Boolean = false,
-    val themeMode: ThemeMode = ThemeMode.SYSTEM
+    val useStagedPipeline: Boolean = false,
+    val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val deepDiveProvider: LlmProvider = LlmProvider.OPENAI,
+    val modelRouting: UserModelRoutingConfig = UserModelRoutingConfig(),
+    val rssFeeds: List<String> = emptyList()
 )
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }

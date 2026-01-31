@@ -12,11 +12,15 @@ import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.storage.AppSettingsStorage
 import com.polaralias.signalsynthesis.data.storage.AppSettingsStore
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
-import com.polaralias.signalsynthesis.data.ai.LlmClientFactory
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.usecase.PrefetchAiSummariesUseCase
 import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCase
+import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisV2UseCase
 import com.polaralias.signalsynthesis.domain.usecase.SynthesizeSetupUseCase
+import com.polaralias.signalsynthesis.domain.usecase.BuildRssDigestUseCase
+import com.polaralias.signalsynthesis.domain.usecase.ShortlistCandidatesUseCase
+import com.polaralias.signalsynthesis.data.rss.RssDao
+import com.polaralias.signalsynthesis.data.rss.RssFeedClient
 import com.polaralias.signalsynthesis.util.Logger
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.IndexQuote
@@ -30,6 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.ZoneId
 
@@ -38,10 +43,10 @@ class AnalysisViewModel(
     private val keyStore: ApiKeyStorage,
     private val alertStore: AlertSettingsStorage,
     private val workScheduler: WorkScheduler,
-    private val llmClientFactory: LlmClientFactory,
     private val dbRepository: DatabaseRepository,
     private val appSettingsStore: AppSettingsStorage,
     private val aiSummaryRepository: AiSummaryRepository,
+    private val rssDao: RssDao,
     private val application: android.app.Application,
     private val clock: Clock = Clock.systemUTC(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -50,6 +55,52 @@ class AnalysisViewModel(
     val uiState: StateFlow<AnalysisUiState> = _uiState.asStateFlow()
 
     private var analysisJob: kotlinx.coroutines.Job? = null
+
+    private val openAiResponsesService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiResponsesService.create() }
+    private val openAiService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiService.create() }
+    private val geminiService by lazy { com.polaralias.signalsynthesis.data.ai.GeminiService.create() }
+
+    private val stageModelRouter by lazy {
+        com.polaralias.signalsynthesis.domain.ai.StageModelRouter(
+            openAiRunnerFactory = { model, key ->
+                com.polaralias.signalsynthesis.data.ai.OpenAiStageRunner(openAiService, openAiResponsesService, model, key)
+            },
+            geminiRunnerFactory = { model, key ->
+                com.polaralias.signalsynthesis.data.ai.GeminiStageRunner(geminiService, model, key)
+            },
+            routingConfigProvider = { _uiState.value.appSettings.modelRouting },
+            apiKeysProvider = {
+                mapOf(
+                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.llmKey,
+                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.llmKey
+                )
+            }
+        )
+    }
+
+    private val deepDiveUseCase by lazy {
+        val openAiProvider = com.polaralias.signalsynthesis.data.ai.OpenAiDeepDiveProvider(openAiResponsesService)
+        val geminiProvider = com.polaralias.signalsynthesis.data.ai.GeminiDeepDiveProvider(geminiService)
+        com.polaralias.signalsynthesis.domain.usecase.DeepDiveUseCase(
+            stageModelRouter = stageModelRouter,
+            openAiProvider = openAiProvider,
+            geminiProvider = geminiProvider,
+            routingConfigProvider = { _uiState.value.appSettings.modelRouting },
+            apiKeysProvider = {
+                mapOf(
+                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.llmKey,
+                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.llmKey
+                )
+            }
+        )
+    }
+
+    private val verifyRssFeedUseCase by lazy {
+        com.polaralias.signalsynthesis.domain.usecase.VerifyRssFeedUseCase(
+            RssFeedClient(rssDao = rssDao),
+            stageModelRouter
+        )
+    }
 
     init {
         refreshKeys()
@@ -130,40 +181,71 @@ class AnalysisViewModel(
     }
 
     fun runAnalysis() {
-        val apiKeys = _uiState.value.keys.toApiKeys()
+        val uiStateValue = _uiState.value
+        val apiKeys = uiStateValue.keys.toApiKeys()
+        val llmKey = uiStateValue.keys.llmKey
+        
         if (!apiKeys.hasAny()) {
             _uiState.update { it.copy(errorMessage = "Add at least one provider key before running analysis.") }
             return
         }
 
+        val useStaged = uiStateValue.appSettings.useStagedPipeline
+        if (useStaged && llmKey.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "LLM Key is required for the staged pipeline (shortlist stage).") }
+            return
+        }
+
         _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap(), isPaused = false, removedAlerts = emptySet()) }
-        Logger.event("analysis_started", mapOf("intent" to _uiState.value.intent.name))
+        Logger.event("analysis_started", mapOf("intent" to uiStateValue.intent.name, "useStaged" to useStaged))
+        
         analysisJob = viewModelScope.launch(ioDispatcher) {
             try {
-                _uiState.update { it.copy(progressMessage = "Discovering candidates...") }
-                val useCase = buildUseCase(apiKeys)
                 val state = _uiState.value
                 val customTickerList = state.customTickers.map { it.symbol }
-                
-                Logger.event("analysis_input", mapOf(
-                    "custom_tickers_count" to customTickerList.size,
-                    "provider_screener_enabled" to (state.hasAnyApiKeys)
-                ))
+                val bundle = providerFactory.build(apiKeys)
+                val repository = MarketDataRepository(bundle)
 
-                _uiState.update { it.copy(progressMessage = "Filtering tradeable symbols...") }
-                val result = useCase.execute(
-                    intent = state.intent,
-                    risk = state.appSettings.riskTolerance,
-                    assetClass = state.assetClass,
-                    discoveryMode = state.appSettings.discoveryMode,
-                    customTickers = customTickerList,
-                    blocklist = state.blocklist,
-                    screenerThresholds = mapOf(
-                        "conservative" to state.appSettings.screenerConservativeThreshold,
-                        "moderate" to state.appSettings.screenerModerateThreshold,
-                        "aggressive" to state.appSettings.screenerAggressiveThreshold
+                val result = if (useStaged) {
+                    val rssClient = RssFeedClient(rssDao = rssDao)
+                    val rssDigestBuilder = BuildRssDigestUseCase(rssClient, rssDao)
+                    val useCase = RunAnalysisV2UseCase(repository, stageModelRouter, rssDigestBuilder, clock)
+                    useCase.execute(
+                        intent = state.intent,
+                        risk = state.appSettings.riskTolerance,
+                        assetClass = state.assetClass,
+                        discoveryMode = state.appSettings.discoveryMode,
+                        llmKey = llmKey,
+                        customTickers = customTickerList,
+                        blocklist = state.blocklist,
+                        screenerThresholds = mapOf(
+                            "conservative" to state.appSettings.screenerConservativeThreshold,
+                            "moderate" to state.appSettings.screenerModerateThreshold,
+                            "aggressive" to state.appSettings.screenerAggressiveThreshold
+                        ),
+                        rssFeeds = DEFAULT_RSS_FEEDS,
+                        onProgress = { msg ->
+                            _uiState.update { it.copy(progressMessage = msg) }
+                        }
                     )
-                )
+                } else {
+                    _uiState.update { it.copy(progressMessage = "Discovering candidates...") }
+                    val useCase = RunAnalysisUseCase(repository, clock)
+                    useCase.execute(
+                        intent = state.intent,
+                        risk = state.appSettings.riskTolerance,
+                        assetClass = state.assetClass,
+                        discoveryMode = state.appSettings.discoveryMode,
+                        customTickers = customTickerList,
+                        blocklist = state.blocklist,
+                        screenerThresholds = mapOf(
+                            "conservative" to state.appSettings.screenerConservativeThreshold,
+                            "moderate" to state.appSettings.screenerModerateThreshold,
+                            "aggressive" to state.appSettings.screenerAggressiveThreshold
+                        )
+                    )
+                }
+
                 _uiState.update { it.copy(isLoading = false, progressMessage = null) }
                 Logger.event("analysis_completed", mapOf("setups" to result.setups.size))
                 _uiState.update {
@@ -192,7 +274,6 @@ class AnalysisViewModel(
                 }
 
                 // Trigger Prefetching
-                val llmKey = _uiState.value.keys.llmKey
                 if (llmKey.isNotBlank() && result.setups.isNotEmpty()) {
                     _uiState.update { it.copy(isPrefetching = true, prefetchCount = 0, progressMessage = "Prefetching AI insights...") }
                     
@@ -386,6 +467,59 @@ class AnalysisViewModel(
         }
     }
 
+    fun requestDeepDive(symbol: String) {
+        val state = _uiState.value
+        val llmKey = state.keys.llmKey
+        if (llmKey.isBlank() || !state.hasLlmKey) return
+        
+        val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } 
+            ?: state.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }
+            ?: return
+            
+        val existing = state.deepDives[symbol]
+        if (existing?.status == DeepDiveStatus.LOADING || existing?.status == DeepDiveStatus.READY) return
+
+        updateDeepDive(symbol, DeepDiveState(status = DeepDiveStatus.LOADING))
+        
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                // Fetch recent RSS headlines for this ticker to pass them to LLM
+                val rssClient = com.polaralias.signalsynthesis.data.rss.RssFeedClient(rssDao = rssDao)
+                val rssDigestBuilder = com.polaralias.signalsynthesis.domain.usecase.BuildRssDigestUseCase(rssClient, rssDao)
+                val rssDigestResponse = rssDigestBuilder.execute(
+                    tickers = listOf(symbol),
+                    feedUrls = DEFAULT_RSS_FEEDS,
+                    timeWindowHours = 72
+                )
+                val rssDigest = rssDigestResponse.itemsBySymbol[symbol]
+
+                // Create a data snapshot
+                val snapshot = "Technical: ${setup.intradayStats?.rsi14 ?: "N/A"} RSI, ${setup.intradayStats?.vwap ?: "N/A"} VWAP. " +
+                        "Fundamental: ${setup.profile?.name ?: "N/A"}, PE: ${setup.metrics?.peRatio ?: "N/A"}."
+
+                val deepDive = deepDiveUseCase.execute(
+                    symbol = symbol,
+                    intent = setup.intent,
+                    snapshot = snapshot,
+                    rssHeadlinesList = rssDigest
+                )
+                
+                updateDeepDive(symbol, DeepDiveState(status = DeepDiveStatus.READY, data = deepDive))
+            } catch (ex: Exception) {
+                Logger.e("ViewModel", "Deep dive failed for $symbol", ex)
+                updateDeepDive(symbol, DeepDiveState(status = DeepDiveStatus.ERROR, errorMessage = ex.message ?: "Deep dive failed."))
+            }
+        }
+    }
+
+    private fun updateDeepDive(symbol: String, state: DeepDiveState) {
+        _uiState.update { 
+            val newMap = it.deepDives.toMutableMap()
+            newMap[symbol] = state
+            it.copy(deepDives = newMap)
+        }
+    }
+
     fun suggestThresholdsWithAi(prompt: String) {
         val llmKey = _uiState.value.keys.llmKey
         if (llmKey.isBlank()) return
@@ -395,22 +529,19 @@ class AnalysisViewModel(
             try {
                 val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.THRESHOLD_SUGGESTION_SYSTEM.trimIndent()
 
-                val settings = _uiState.value.appSettings
-                val client = llmClientFactory.create(getSuggestionModel())
+                val request = com.polaralias.signalsynthesis.domain.ai.LlmStageRequest(
+                    systemPrompt = systemPrompt,
+                    userPrompt = "User context: $prompt",
+                    stage = com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
+                    expectedSchemaId = "AiThresholdSuggestion"
+                )
                 
                 val startTime = System.currentTimeMillis()
-                val response = client.generate(
-                    prompt = "User context: $prompt",
-                    systemPrompt = systemPrompt,
-                    apiKey = llmKey,
-                    reasoningDepth = settings.reasoningDepth,
-                    outputLength = settings.outputLength,
-                    verbosity = settings.verbosity
-                )
+                val response = stageModelRouter.run(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE, request)
                 val duration = System.currentTimeMillis() - startTime
-                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, response, true, duration)
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, response.rawText, true, duration)
 
-                val suggestion = parseAiThresholdSuggestion(response)
+                val suggestion = parseAiThresholdSuggestion(response.rawText)
                 _uiState.update { it.copy(aiThresholdSuggestion = suggestion, isSuggestingThresholds = false) }
             } catch (ex: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, ex.message ?: "Failed", false, 0)
@@ -428,21 +559,18 @@ class AnalysisViewModel(
             try {
                 val systemPrompt = com.polaralias.signalsynthesis.domain.ai.AiPrompts.SCREENER_SUGGESTION_SYSTEM.trimIndent()
 
-                val settings = _uiState.value.appSettings
-                val client = llmClientFactory.create(getSuggestionModel())
-                val startTime = System.currentTimeMillis()
-                val response = client.generate(
-                    prompt = "User context: $prompt",
+                val request = com.polaralias.signalsynthesis.domain.ai.LlmStageRequest(
                     systemPrompt = systemPrompt,
-                    apiKey = llmKey,
-                    reasoningDepth = settings.reasoningDepth,
-                    outputLength = settings.outputLength,
-                    verbosity = settings.verbosity
+                    userPrompt = "User context: $prompt",
+                    stage = com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
+                    expectedSchemaId = "AiScreenerSuggestion"
                 )
+                val startTime = System.currentTimeMillis()
+                val response = stageModelRouter.run(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE, request)
                 val duration = System.currentTimeMillis() - startTime
-                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, response, true, duration)
+                com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, response.rawText, true, duration)
 
-                val suggestion = parseAiScreenerSuggestion(response)
+                val suggestion = parseAiScreenerSuggestion(response.rawText)
                 _uiState.update { it.copy(aiScreenerSuggestion = suggestion, isSuggestingScreener = false) }
             } catch (ex: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, ex.message ?: "Failed", false, 0)
@@ -500,6 +628,16 @@ class AnalysisViewModel(
         }
     }
 
+    fun updateStageConfig(stage: com.polaralias.signalsynthesis.domain.model.AnalysisStage, config: com.polaralias.signalsynthesis.domain.ai.StageModelConfig) {
+        val currentRouting = _uiState.value.appSettings.modelRouting
+        val newMap = currentRouting.byStage.toMutableMap()
+        newMap[stage] = config
+        val updatedSettings = _uiState.value.appSettings.copy(
+            modelRouting = currentRouting.copy(byStage = newMap)
+        )
+        updateAppSettings(updatedSettings)
+    }
+
     fun searchTickers(query: String) {
         if (query.length < 2) {
             _uiState.update { it.copy(tickerSearchResults = emptyList()) }
@@ -530,6 +668,45 @@ class AnalysisViewModel(
 
     fun clearError() {
         _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    fun addRssFeed(url: String, callback: (Boolean, String) -> Unit) {
+        viewModelScope.launch(ioDispatcher) {
+             try {
+                 val result = verifyRssFeedUseCase.execute(url)
+                 if (result.isValid) {
+                     val current = _uiState.value.appSettings.rssFeeds
+                     if (!current.contains(url)) {
+                         val updated = current + url
+                         val newSettings = _uiState.value.appSettings.copy(rssFeeds = updated)
+                         appSettingsStore.saveSettings(newSettings)
+                     }
+                     withContext(Dispatchers.Main) {
+                        callback(true, "Added: ${result.title}")
+                     }
+                 } else {
+                     withContext(Dispatchers.Main) {
+                        callback(false, "Invalid feed: ${result.description}")
+                     }
+                 }
+             } catch (e: Exception) {
+                 withContext(Dispatchers.Main) {
+                    callback(false, "Error: ${e.message}")
+                 }
+                 Logger.e("AnalysisViewModel", "Error adding RSS feed", e)
+             }
+        }
+    }
+
+    fun removeRssFeed(url: String) {
+        viewModelScope.launch(ioDispatcher) {
+            val current = _uiState.value.appSettings.rssFeeds
+            if (current.contains(url)) {
+                val updated = current - url
+                val newSettings = _uiState.value.appSettings.copy(rssFeeds = updated)
+                appSettingsStore.saveSettings(newSettings)
+            }
+        }
     }
 
     fun updateAlertsEnabled(enabled: Boolean) {
@@ -795,17 +972,7 @@ class AnalysisViewModel(
         val bundle = providerFactory.build(apiKeys)
         val repository = MarketDataRepository(bundle)
         
-        val analysisModel = if (settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.HIGH || 
-                                settings.reasoningDepth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.EXTRA) {
-            settings.reasoningModel
-        } else {
-            settings.analysisModel
-        }
-        
-        val analysisClient = llmClientFactory.create(analysisModel)
-        val verdictClient = llmClientFactory.create(settings.verdictModel)
-        
-        return SynthesizeSetupUseCase(repository, analysisClient, verdictClient)
+        return SynthesizeSetupUseCase(repository, stageModelRouter)
     }
 
     private fun updateAiSummary(symbol: String, summary: AiSummaryState) {
@@ -900,17 +1067,55 @@ class AnalysisViewModel(
         }
     }
 
-    private fun getSuggestionModel(): com.polaralias.signalsynthesis.domain.ai.LlmModel {
-        val provider = _uiState.value.appSettings.llmProvider
-        return if (provider == com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI) {
-            com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_MINI
-        } else {
-            com.polaralias.signalsynthesis.domain.ai.LlmModel.GEMINI_3_FLASH
-        }
-    }
 
     private fun simplifyProviderName(name: String): String {
         return name.replace("MarketDataProvider", "").replace("DataProvider", "")
+    }
+
+    fun runShortlistHarness() {
+        val uiStateValue = _uiState.value
+        val llmKey = uiStateValue.keys.llmKey
+        if (llmKey.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "LLM Key required for shortlist harness.") }
+            return
+        }
+
+        _uiState.update { it.copy(isLoading = true, progressMessage = "Running Shortlist Harness...") }
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val apiKeys = uiStateValue.keys.toApiKeys()
+                val bundle = providerFactory.build(apiKeys)
+                val repository = MarketDataRepository(bundle)
+                
+                // Fixed list for testing
+                val testSymbols = listOf("AAPL", "TSLA", "NVDA", "AMD", "MSFT", "GOOGL", "AMZN", "META", "NFLX", "INTC")
+                val quotes = repository.getQuotes(testSymbols)
+                
+                val shortlistUseCase = ShortlistCandidatesUseCase(stageModelRouter)
+                
+                val plan = shortlistUseCase.execute(
+                    symbols = testSymbols,
+                    quotes = quotes,
+                    intent = uiStateValue.intent,
+                    risk = uiStateValue.appSettings.riskTolerance,
+                    maxShortlist = 5
+                )
+                
+                Logger.i("ShortlistHarness", "Harness completed. Plan: $plan")
+                _uiState.update { it.copy(isLoading = false, progressMessage = "Shortlist harness completed. Check logs.") }
+            } catch (e: Exception) {
+                Logger.e("ShortlistHarness", "Harness failed", e)
+                _uiState.update { it.copy(isLoading = false, errorMessage = "Shortlist harness failed: ${e.message}") }
+            }
+        }
+    }
+
+    companion object {
+        private val DEFAULT_RSS_FEEDS = listOf(
+            "https://finance.yahoo.com/rss/",
+            "http://feeds.marketwatch.com/marketwatch/topstories/",
+            "https://www.benzinga.com/feeds/news"
+        )
     }
 }
 

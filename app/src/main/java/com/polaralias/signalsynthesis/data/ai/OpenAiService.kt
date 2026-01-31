@@ -37,17 +37,15 @@ interface OpenAiService {
 data class OpenAiChatRequest(
     val model: String,
     val messages: List<OpenAiMessage>,
-    @Json(name = "max_output_tokens") val maxOutputTokens: Int? = null,
-    val reasoning: OpenAiReasoning? = null,
-    val text: OpenAiText? = null
+    @Json(name = "max_completion_tokens") val maxCompletionTokens: Int? = null,
+    @Json(name = "max_tokens") val maxTokens: Int? = null,
+    @Json(name = "reasoning_effort") val reasoningEffort: String? = null,
+    val temperature: Float? = null,
+    @Json(name = "response_format") val responseFormat: OpenAiResponseFormat? = null
 )
 
-data class OpenAiReasoning(
-    val effort: String
-)
-
-data class OpenAiText(
-    val verbosity: String
+data class OpenAiResponseFormat(
+    val type: String
 )
 
 data class OpenAiMessage(

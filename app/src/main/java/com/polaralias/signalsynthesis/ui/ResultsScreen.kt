@@ -139,6 +139,29 @@ fun ResultsScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    if (fullResult.globalNotes.isNotEmpty()) {
+                        item {
+                            com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                                Column(modifier = Modifier.padding(20.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(16.dp), tint = BrandSecondary)
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text("STRATEGY NOTES", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary, letterSpacing = 1.sp)
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    fullResult.globalNotes.forEach { note ->
+                                        Text(
+                                            text = "• $note",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                                            lineHeight = 18.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
                     items(filteredSetups) { setup ->
                         SetupCard(
                             setup = setup,

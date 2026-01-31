@@ -8,5 +8,9 @@ data class AnalysisResult(
     val tradeableCount: Int,
     val setupCount: Int,
     val setups: List<TradeSetup>,
-    val generatedAt: Instant
+    val generatedAt: Instant,
+    val globalNotes: List<String> = emptyList(),
+    val rssDigest: RssDigest? = null,
+    val decisionUpdate: DecisionUpdate? = null,
+    val fundamentalsNewsSynthesis: FundamentalsNewsSynthesis? = null
 )

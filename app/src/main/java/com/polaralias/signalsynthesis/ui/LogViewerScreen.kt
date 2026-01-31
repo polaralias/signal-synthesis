@@ -26,7 +26,8 @@ import com.polaralias.signalsynthesis.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogViewerScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onRunShortlistHarness: () -> Unit
 ) {
     val activities by com.polaralias.signalsynthesis.util.ActivityLogger.activities.collectAsState()
 
@@ -53,8 +54,13 @@ fun LogViewerScreen(
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
                         )
 
-                        IconButton(onClick = { com.polaralias.signalsynthesis.util.ActivityLogger.clear() }) {
-                            Icon(Icons.Default.DeleteSweep, contentDescription = "Flush", tint = ErrorRed.copy(alpha = 0.6f))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = onRunShortlistHarness) {
+                                Icon(Icons.Default.Science, contentDescription = "Test Shortlist", tint = BrandSecondary)
+                            }
+                            IconButton(onClick = { com.polaralias.signalsynthesis.util.ActivityLogger.clear() }) {
+                                Icon(Icons.Default.DeleteSweep, contentDescription = "Flush", tint = ErrorRed.copy(alpha = 0.6f))
+                            }
                         }
                     }
                 }

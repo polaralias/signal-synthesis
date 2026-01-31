@@ -29,7 +29,7 @@ class PrefetchAiSummariesUseCase(
             // Generate and cache
             try {
                 val synthesis = RetryHelper.withRetry("Prefetch") {
-                    synthesizeUseCase.execute(setup, llmKey)
+                    synthesizeUseCase.execute(setup = setup, llmKey = llmKey)
                 }
                 aiSummaryRepository.saveSummary(setup.symbol, synthesis)
                 emit(setup.symbol to synthesis)

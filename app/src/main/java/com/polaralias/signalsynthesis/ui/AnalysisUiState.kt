@@ -79,6 +79,7 @@ data class AnalysisUiState(
     val archivedUsage: List<com.polaralias.signalsynthesis.util.DailyUsageArchive> = emptyList(),
     val blacklistedProviders: List<String> = emptyList(),
     val assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
+    val deepDives: Map<String, DeepDiveState> = emptyMap(),
     val navigationEvent: NavigationEvent? = null,
     val isPaused: Boolean = false
 )
@@ -133,5 +134,18 @@ data class AiSummaryState(
     val summary: String? = null,
     val risks: List<String> = emptyList(),
     val verdict: String? = null,
+    val errorMessage: String? = null
+)
+
+enum class DeepDiveStatus {
+    IDLE,
+    LOADING,
+    READY,
+    ERROR
+}
+
+data class DeepDiveState(
+    val status: DeepDiveStatus = DeepDiveStatus.IDLE,
+    val data: com.polaralias.signalsynthesis.domain.model.DeepDive? = null,
     val errorMessage: String? = null
 )
