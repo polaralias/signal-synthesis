@@ -883,7 +883,8 @@ fun SettingsScreen(
                         }
                     }
                 }
-
+            }
+            
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("SCREENER PARAMETERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -966,7 +967,8 @@ fun SettingsScreen(
                         }
                     }
                 }
-
+            }
+            
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CACHE CONTROL")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1260,12 +1262,10 @@ fun SettingsScreen(
                 }
             }
             Spacer(modifier = Modifier.height(64.dp))
-                }
             }
         }
     }
-}
-}
+    }
 
     if (showThresholdAiDialog) {
         AiPromptDialog(
