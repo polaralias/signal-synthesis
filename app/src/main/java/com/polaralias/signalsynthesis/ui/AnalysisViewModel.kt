@@ -611,7 +611,13 @@ class AnalysisViewModel(
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, response.rawText, true, duration)
 
                 val suggestion = parseAiThresholdSuggestion(response.rawText)
-                _uiState.update { it.copy(aiThresholdSuggestion = suggestion, isSuggestingThresholds = false) }
+                _uiState.update {
+                    it.copy(
+                        aiThresholdSuggestion = suggestion,
+                        lastAiThresholdSuggestion = suggestion,
+                        isSuggestingThresholds = false
+                    )
+                }
             } catch (ex: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ThresholdSuggestion", prompt, ex.message ?: "Failed", false, 0)
                 _uiState.update { it.copy(isSuggestingThresholds = false, errorMessage = "AI suggestion failed: ${ex.message}") }
@@ -640,7 +646,13 @@ class AnalysisViewModel(
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, response.rawText, true, duration)
 
                 val suggestion = parseAiScreenerSuggestion(response.rawText)
-                _uiState.update { it.copy(aiScreenerSuggestion = suggestion, isSuggestingScreener = false) }
+                _uiState.update {
+                    it.copy(
+                        aiScreenerSuggestion = suggestion,
+                        lastAiScreenerSuggestion = suggestion,
+                        isSuggestingScreener = false
+                    )
+                }
             } catch (ex: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("ScreenerSuggestion", prompt, ex.message ?: "Failed", false, 0)
                 _uiState.update { it.copy(isSuggestingScreener = false, errorMessage = "AI suggestion failed: ${ex.message}") }
@@ -730,10 +742,14 @@ class AnalysisViewModel(
 
                 _uiState.update {
                     it.copy(
-                        aiThresholdSuggestion = payload.thresholds,
-                        aiScreenerSuggestion = payload.screener,
-                        aiRiskSuggestion = riskSuggestion,
-                        aiRssSuggestion = rssSuggestion,
+                        aiThresholdSuggestion = if (selectedAreas.contains(AiSettingsArea.THRESHOLDS)) payload.thresholds else null,
+                        aiScreenerSuggestion = if (selectedAreas.contains(AiSettingsArea.SCREENER)) payload.screener else null,
+                        aiRiskSuggestion = if (selectedAreas.contains(AiSettingsArea.RISK)) riskSuggestion else null,
+                        aiRssSuggestion = if (selectedAreas.contains(AiSettingsArea.RSS)) rssSuggestion else null,
+                        lastAiThresholdSuggestion = payload.thresholds,
+                        lastAiScreenerSuggestion = payload.screener,
+                        lastAiRiskSuggestion = riskSuggestion,
+                        lastAiRssSuggestion = rssSuggestion,
                         isSuggestingSettings = false
                     )
                 }
@@ -749,13 +765,45 @@ class AnalysisViewModel(
         }
     }
 
+    fun applyAllAiSettingsSuggestions() {
+        val state = _uiState.value
+        val threshold = state.aiThresholdSuggestion
+        val screener = state.aiScreenerSuggestion
+        val risk = state.aiRiskSuggestion
+        val rss = state.aiRssSuggestion
+        if (threshold == null && screener == null && risk == null && rss == null) return
+
+        val updated = state.appSettings.copy(
+            vwapDipPercent = threshold?.vwapDipPercent ?: state.appSettings.vwapDipPercent,
+            rsiOversold = threshold?.rsiOversold ?: state.appSettings.rsiOversold,
+            rsiOverbought = threshold?.rsiOverbought ?: state.appSettings.rsiOverbought,
+            screenerConservativeThreshold = screener?.conservativeLimit ?: state.appSettings.screenerConservativeThreshold,
+            screenerModerateThreshold = screener?.moderateLimit ?: state.appSettings.screenerModerateThreshold,
+            screenerAggressiveThreshold = screener?.aggressiveLimit ?: state.appSettings.screenerAggressiveThreshold,
+            screenerMinVolume = screener?.minVolume ?: state.appSettings.screenerMinVolume,
+            riskTolerance = risk?.riskTolerance ?: state.appSettings.riskTolerance,
+            rssEnabledTopics = rss?.enabledTopicKeys?.toSet() ?: state.appSettings.rssEnabledTopics,
+            rssTickerSources = rss?.tickerSourceIds?.toSet() ?: state.appSettings.rssTickerSources
+        )
+        updateAppSettings(updated)
+        _uiState.update {
+            it.copy(
+                aiThresholdSuggestion = null,
+                aiScreenerSuggestion = null,
+                aiRiskSuggestion = null,
+                aiRssSuggestion = null
+            )
+        }
+    }
+
     fun applyAiScreenerSuggestion() {
-        _uiState.value.aiScreenerSuggestion?.let { suggestion ->
+        val suggestion = _uiState.value.aiScreenerSuggestion ?: _uiState.value.lastAiScreenerSuggestion
+        suggestion?.let {
             val updated = _uiState.value.appSettings.copy(
-                screenerConservativeThreshold = suggestion.conservativeLimit,
-                screenerModerateThreshold = suggestion.moderateLimit,
-                screenerAggressiveThreshold = suggestion.aggressiveLimit,
-                screenerMinVolume = suggestion.minVolume
+                screenerConservativeThreshold = it.conservativeLimit,
+                screenerModerateThreshold = it.moderateLimit,
+                screenerAggressiveThreshold = it.aggressiveLimit,
+                screenerMinVolume = it.minVolume
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiScreenerSuggestion = null) }
@@ -763,13 +811,20 @@ class AnalysisViewModel(
     }
 
     fun dismissAiScreenerSuggestion() {
-        _uiState.update { it.copy(aiScreenerSuggestion = null) }
+        _uiState.update { state ->
+            if (state.aiScreenerSuggestion != null) {
+                state.copy(aiScreenerSuggestion = null)
+            } else {
+                state.copy(lastAiScreenerSuggestion = null)
+            }
+        }
     }
 
     fun applyAiRiskSuggestion() {
-        _uiState.value.aiRiskSuggestion?.let { suggestion ->
+        val suggestion = _uiState.value.aiRiskSuggestion ?: _uiState.value.lastAiRiskSuggestion
+        suggestion?.let {
             val updated = _uiState.value.appSettings.copy(
-                riskTolerance = suggestion.riskTolerance
+                riskTolerance = it.riskTolerance
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiRiskSuggestion = null) }
@@ -777,14 +832,21 @@ class AnalysisViewModel(
     }
 
     fun dismissAiRiskSuggestion() {
-        _uiState.update { it.copy(aiRiskSuggestion = null) }
+        _uiState.update { state ->
+            if (state.aiRiskSuggestion != null) {
+                state.copy(aiRiskSuggestion = null)
+            } else {
+                state.copy(lastAiRiskSuggestion = null)
+            }
+        }
     }
 
     fun applyAiRssSuggestion() {
-        _uiState.value.aiRssSuggestion?.let { suggestion ->
+        val suggestion = _uiState.value.aiRssSuggestion ?: _uiState.value.lastAiRssSuggestion
+        suggestion?.let {
             val updated = _uiState.value.appSettings.copy(
-                rssEnabledTopics = suggestion.enabledTopicKeys.toSet(),
-                rssTickerSources = suggestion.tickerSourceIds.toSet()
+                rssEnabledTopics = it.enabledTopicKeys.toSet(),
+                rssTickerSources = it.tickerSourceIds.toSet()
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiRssSuggestion = null) }
@@ -792,15 +854,22 @@ class AnalysisViewModel(
     }
 
     fun dismissAiRssSuggestion() {
-        _uiState.update { it.copy(aiRssSuggestion = null) }
+        _uiState.update { state ->
+            if (state.aiRssSuggestion != null) {
+                state.copy(aiRssSuggestion = null)
+            } else {
+                state.copy(lastAiRssSuggestion = null)
+            }
+        }
     }
 
     fun applyAiThresholdSuggestion() {
-        _uiState.value.aiThresholdSuggestion?.let { suggestion ->
+        val suggestion = _uiState.value.aiThresholdSuggestion ?: _uiState.value.lastAiThresholdSuggestion
+        suggestion?.let {
             val updated = _uiState.value.appSettings.copy(
-                vwapDipPercent = suggestion.vwapDipPercent,
-                rsiOversold = suggestion.rsiOversold,
-                rsiOverbought = suggestion.rsiOverbought
+                vwapDipPercent = it.vwapDipPercent,
+                rsiOversold = it.rsiOversold,
+                rsiOverbought = it.rsiOverbought
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiThresholdSuggestion = null) }
@@ -863,7 +932,13 @@ class AnalysisViewModel(
     }
 
     fun dismissAiSuggestion() {
-        _uiState.update { it.copy(aiThresholdSuggestion = null) }
+        _uiState.update { state ->
+            if (state.aiThresholdSuggestion != null) {
+                state.copy(aiThresholdSuggestion = null)
+            } else {
+                state.copy(lastAiThresholdSuggestion = null)
+            }
+        }
     }
 
     fun clearError() {

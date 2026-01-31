@@ -165,6 +165,7 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onToggleAlerts = viewModel::updateAlertsEnabled,
                     onUpdateSettings = viewModel::updateAppSettings,
                     onSuggestSettingsAi = viewModel::suggestSettingsWithAi,
+                    onApplyAllAiSettings = viewModel::applyAllAiSettingsSuggestions,
                     onApplyAi = viewModel::applyAiThresholdSuggestion,
                     onDismissAi = viewModel::dismissAiSuggestion,
                     onOpenLogs = { navController.navigate(Screen.Logs.route) },

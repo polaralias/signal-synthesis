@@ -60,6 +60,7 @@ fun SettingsScreen(
     onUpdateSettings: (AppSettings) -> Unit,
     onToggleAlerts: (Boolean) -> Unit,
     onSuggestSettingsAi: (String, Set<AiSettingsArea>) -> Unit,
+    onApplyAllAiSettings: () -> Unit,
     onApplyAi: () -> Unit,
     onDismissAi: () -> Unit,
     onOpenLogs: () -> Unit,
@@ -95,6 +96,10 @@ fun SettingsScreen(
 
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
     val monthlyUsageTotal = uiState.dailyApiUsage + uiState.archivedUsage.sumOf { it.totalCalls }
+    val hasPendingAiSuggestions = uiState.aiThresholdSuggestion != null ||
+        uiState.aiScreenerSuggestion != null ||
+        uiState.aiRiskSuggestion != null ||
+        uiState.aiRssSuggestion != null
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -575,6 +580,25 @@ fun SettingsScreen(
                                     )
                                 }
                             }
+                            if (hasPendingAiSuggestions) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                        .clickable { onApplyAllAiSettings() }
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text(
+                                            "APPLY ALL AI SUGGESTIONS",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Black,
+                                            color = BrandSecondary,
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -934,14 +958,27 @@ fun SettingsScreen(
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(rsiOverbought = it)) }
                     )
                     
-                    if (uiState.aiThresholdSuggestion != null) {
+                    val thresholdSuggestion = uiState.aiThresholdSuggestion
+                    val lastThresholdSuggestion = uiState.lastAiThresholdSuggestion
+                    if (thresholdSuggestion != null) {
                         Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "AI THRESHOLD OPTIMIZATION",
-                            suggestionText = "VWAP: ${String.format("%.1f%%", uiState.aiThresholdSuggestion.vwapDipPercent)} | RSI: ${uiState.aiThresholdSuggestion.rsiOversold.roundToInt()}/${uiState.aiThresholdSuggestion.rsiOverbought.roundToInt()}",
-                            rationale = uiState.aiThresholdSuggestion.rationale,
+                            suggestionText = "VWAP: ${String.format("%.1f%%", thresholdSuggestion.vwapDipPercent)} | RSI: ${thresholdSuggestion.rsiOversold.roundToInt()}/${thresholdSuggestion.rsiOverbought.roundToInt()}",
+                            rationale = thresholdSuggestion.rationale,
                             onApply = onApplyAi,
                             onDismiss = onDismissAi
+                        )
+                    } else if (lastThresholdSuggestion != null) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        AiSuggestionCard(
+                            title = "LAST AI THRESHOLD",
+                            suggestionText = "VWAP: ${String.format("%.1f%%", lastThresholdSuggestion.vwapDipPercent)} | RSI: ${lastThresholdSuggestion.rsiOversold.roundToInt()}/${lastThresholdSuggestion.rsiOverbought.roundToInt()}",
+                            rationale = lastThresholdSuggestion.rationale,
+                            onApply = onApplyAi,
+                            onDismiss = onDismissAi,
+                            applyLabel = "APPLY LAST",
+                            dismissLabel = "CLEAR"
                         )
                     } else {
                         Spacer(modifier = Modifier.height(32.dp))
@@ -998,14 +1035,27 @@ fun SettingsScreen(
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerMinVolume = it.toLong())) }
                     )
                     
-                    if (uiState.aiScreenerSuggestion != null) {
+                    val screenerSuggestion = uiState.aiScreenerSuggestion
+                    val lastScreenerSuggestion = uiState.lastAiScreenerSuggestion
+                    if (screenerSuggestion != null) {
                         Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "AI SCREENER OPTIMIZATION",
-                            suggestionText = "CONS: $${uiState.aiScreenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${uiState.aiScreenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${uiState.aiScreenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format("%.1fM", uiState.aiScreenerSuggestion.minVolume / 1_000_000.0)}",
-                            rationale = uiState.aiScreenerSuggestion.rationale,
+                            suggestionText = "CONS: $${screenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${screenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${screenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format("%.1fM", screenerSuggestion.minVolume / 1_000_000.0)}",
+                            rationale = screenerSuggestion.rationale,
                             onApply = onApplyScreenerAi,
                             onDismiss = onDismissScreenerAi
+                        )
+                    } else if (lastScreenerSuggestion != null) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        AiSuggestionCard(
+                            title = "LAST AI SCREENER",
+                            suggestionText = "CONS: $${lastScreenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${lastScreenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${lastScreenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format("%.1fM", lastScreenerSuggestion.minVolume / 1_000_000.0)}",
+                            rationale = lastScreenerSuggestion.rationale,
+                            onApply = onApplyScreenerAi,
+                            onDismiss = onDismissScreenerAi,
+                            applyLabel = "APPLY LAST",
+                            dismissLabel = "CLEAR"
                         )
                     } else {
                         Spacer(modifier = Modifier.height(32.dp))
@@ -1217,13 +1267,26 @@ fun SettingsScreen(
                     Text("CURATED RSS CATALOG", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    if (uiState.aiRssSuggestion != null) {
+                    val rssSuggestion = uiState.aiRssSuggestion
+                    val lastRssSuggestion = uiState.lastAiRssSuggestion
+                    if (rssSuggestion != null) {
                         AiSuggestionCard(
                             title = "AI RSS SELECTION",
-                            suggestionText = formatRssSuggestionSummary(uiState.aiRssSuggestion, uiState.rssCatalog),
-                            rationale = uiState.aiRssSuggestion.rationale,
+                            suggestionText = formatRssSuggestionSummary(rssSuggestion, uiState.rssCatalog),
+                            rationale = rssSuggestion.rationale,
                             onApply = onApplyRssAi,
                             onDismiss = onDismissRssAi
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                    } else if (lastRssSuggestion != null) {
+                        AiSuggestionCard(
+                            title = "LAST AI RSS SELECTION",
+                            suggestionText = formatRssSuggestionSummary(lastRssSuggestion, uiState.rssCatalog),
+                            rationale = lastRssSuggestion.rationale,
+                            onApply = onApplyRssAi,
+                            onDismiss = onDismissRssAi,
+                            applyLabel = "APPLY LAST",
+                            dismissLabel = "CLEAR"
                         )
                         Spacer(modifier = Modifier.height(20.dp))
                     } else {
@@ -1417,14 +1480,27 @@ fun SettingsScreen(
                         }
                     }
 
-                    if (uiState.aiRiskSuggestion != null) {
+                    val riskSuggestion = uiState.aiRiskSuggestion
+                    val lastRiskSuggestion = uiState.lastAiRiskSuggestion
+                    if (riskSuggestion != null) {
                         Spacer(modifier = Modifier.height(24.dp))
                         AiSuggestionCard(
                             title = "AI RISK PROFILE",
-                            suggestionText = uiState.aiRiskSuggestion.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
-                            rationale = uiState.aiRiskSuggestion.rationale,
+                            suggestionText = riskSuggestion.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
+                            rationale = riskSuggestion.rationale,
                             onApply = onApplyRiskAi,
                             onDismiss = onDismissRiskAi
+                        )
+                    } else if (lastRiskSuggestion != null) {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        AiSuggestionCard(
+                            title = "LAST AI RISK PROFILE",
+                            suggestionText = lastRiskSuggestion.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
+                            rationale = lastRiskSuggestion.rationale,
+                            onApply = onApplyRiskAi,
+                            onDismiss = onDismissRiskAi,
+                            applyLabel = "APPLY LAST",
+                            dismissLabel = "CLEAR"
                         )
                     } else {
                         Spacer(modifier = Modifier.height(16.dp))
@@ -1823,7 +1899,9 @@ private fun AiSuggestionCard(
     suggestionText: String,
     rationale: String,
     onApply: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    applyLabel: String = "APPLY",
+    dismissLabel: String = "DISCARD"
 ) {
     com.polaralias.signalsynthesis.ui.components.GlassCard(
         modifier = Modifier.fillMaxWidth()
@@ -1872,14 +1950,14 @@ private fun AiSuggestionCard(
                         .clickable { onApply() }
                 ) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("APPLY", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary)
+                        Text(applyLabel, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandSecondary)
                     }
                 }
                 TextButton(
                     onClick = onDismiss,
                     modifier = Modifier.height(44.dp)
                 ) {
-                    Text("DISCARD", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
+                    Text(dismissLabel, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f))
                 }
             }
         }
