@@ -26,7 +26,7 @@ class SynthesizeSetupUseCase(
         }
         // Step 1: Data Analysis (interpret context + technicals)
         onProgress?.invoke("Data Interpretation...")
-        val analysisPrompt = buildAnalysisPrompt(setup)
+        val analysisPrompt = buildAnalysisPrompt(setup, verbosity)
         Logger.i("LLM", "Step 1: Data Analysis for ${setup.symbol}")
         
         val startTime1 = System.currentTimeMillis()
@@ -39,7 +39,8 @@ class SynthesizeSetupUseCase(
                     OutputLength.SHORT -> 400
                     OutputLength.STANDARD -> 800
                     OutputLength.FULL -> 1500
-                }
+                },
+                reasoningDepth = reasoningDepth
             )
             val response = stageModelRouter.run(AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS, request)
             val duration = System.currentTimeMillis() - startTime1
@@ -52,7 +53,7 @@ class SynthesizeSetupUseCase(
         }
 
         // Step 2: Trading Verdict (final plan)
-        val verdictPrompt = buildVerdictPrompt(setup, analysisReport)
+        val verdictPrompt = buildVerdictPrompt(setup, analysisReport, verbosity)
         Logger.i("LLM", "Step 2: Trading Verdict for ${setup.symbol}")
         onProgress?.invoke("Formulating Verdict...")
         
@@ -67,7 +68,8 @@ class SynthesizeSetupUseCase(
                     OutputLength.SHORT -> 400
                     OutputLength.STANDARD -> 800
                     OutputLength.FULL -> 1500
-                }
+                },
+                reasoningDepth = reasoningDepth
             )
             val response = stageModelRouter.run(AnalysisStage.DECISION_UPDATE, request)
             val duration = System.currentTimeMillis() - startTime2
@@ -82,7 +84,7 @@ class SynthesizeSetupUseCase(
         return parseResponse(rawVerdictResponse)
     }
 
-    private fun buildAnalysisPrompt(setup: TradeSetup): String {
+    private fun buildAnalysisPrompt(setup: TradeSetup, verbosity: Verbosity): String {
         val contextLines = mutableListOf<String>()
         setup.profile?.let {
             contextLines.add("Company: ${it.name}")
@@ -104,6 +106,34 @@ class SynthesizeSetupUseCase(
             contextLines.add("Sentiment label: ${it.label ?: "N/A"}")
         }
 
+        val technicalLines = buildTechnicalLines(setup)
+        val reasons = if (setup.reasons.isEmpty()) "None" else setup.reasons.joinToString("; ")
+        val verbosityDirective = buildVerbosityDirective(verbosity)
+
+        return AiPrompts.STEP_1_DATA_ANALYSIS
+            .replace("{symbol}", setup.symbol)
+            .replace("{technicalIndicators}", technicalLines.ifEmpty { listOf("N/A") }.joinToString("\n"))
+            .replace("{context}", contextLines.ifEmpty { listOf("N/A") }.joinToString("\n"))
+            .replace("{reasons}", reasons)
+            .trimIndent() + "\n\nVerbosity directive: $verbosityDirective"
+    }
+
+    private fun buildVerdictPrompt(setup: TradeSetup, analysisReport: String, verbosity: Verbosity): String {
+        val technicalLines = buildTechnicalLines(setup)
+        val verbosityDirective = buildVerbosityDirective(verbosity)
+        return AiPrompts.STEP_2_TRADING_VERDICT
+            .replace("{symbol}", setup.symbol)
+            .replace("{intent}", setup.intent.name)
+            .replace("{setupType}", setup.setupType)
+            .replace("{triggerPrice}", setup.triggerPrice.toString())
+            .replace("{stopLoss}", setup.stopLoss.toString())
+            .replace("{targetPrice}", setup.targetPrice.toString())
+            .replace("{technicalIndicators}", technicalLines.ifEmpty { listOf("N/A") }.joinToString("\n"))
+            .replace("{analysisReport}", analysisReport)
+            .trimIndent() + "\n\nVerbosity directive: $verbosityDirective"
+    }
+
+    private fun buildTechnicalLines(setup: TradeSetup): List<String> {
         val technicalLines = mutableListOf<String>()
         setup.intradayStats?.let {
             it.rsi14?.let { rsi -> technicalLines.add("RSI (14): ${String.format("%.2f", rsi)}") }
@@ -114,27 +144,15 @@ class SynthesizeSetupUseCase(
             it.sma50?.let { sma -> technicalLines.add("SMA (50): ${String.format("%.2f", sma)}") }
             it.sma200?.let { sma -> technicalLines.add("SMA (200): ${String.format("%.2f", sma)}") }
         }
-
-        val reasons = if (setup.reasons.isEmpty()) "None" else setup.reasons.joinToString("; ")
-
-        return AiPrompts.STEP_1_DATA_ANALYSIS
-            .replace("{symbol}", setup.symbol)
-            .replace("{technicalIndicators}", technicalLines.joinToString("\n"))
-            .replace("{context}", contextLines.joinToString("\n"))
-            .replace("{reasons}", reasons)
-            .trimIndent()
+        return technicalLines
     }
 
-    private fun buildVerdictPrompt(setup: TradeSetup, analysisReport: String): String {
-        return AiPrompts.STEP_2_TRADING_VERDICT
-            .replace("{symbol}", setup.symbol)
-            .replace("{intent}", setup.intent.name)
-            .replace("{setupType}", setup.setupType)
-            .replace("{triggerPrice}", setup.triggerPrice.toString())
-            .replace("{stopLoss}", setup.stopLoss.toString())
-            .replace("{targetPrice}", setup.targetPrice.toString())
-            .replace("{analysisReport}", analysisReport)
-            .trimIndent()
+    private fun buildVerbosityDirective(verbosity: Verbosity): String {
+        return when (verbosity) {
+            Verbosity.LOW -> "Be concise (2-3 sentences per section)."
+            Verbosity.MEDIUM -> "Use balanced detail (4-6 sentences per section)."
+            Verbosity.HIGH -> "Be detailed (6-10 sentences per section)."
+        }
     }
 
     private fun parseResponse(raw: String): AiSynthesis {
@@ -151,7 +169,9 @@ class SynthesizeSetupUseCase(
                     risks = risks,
                     verdict = verdict.ifBlank { "Unavailable" }
                 )
-            } catch (_: Exception) { }
+            } catch (e: Exception) {
+                Logger.e("SynthesizeSetupUseCase", "Failed to parse AI synthesis JSON", e)
+            }
         }
 
         return AiSynthesis(summary = trimmed, risks = emptyList(), verdict = "Unavailable")

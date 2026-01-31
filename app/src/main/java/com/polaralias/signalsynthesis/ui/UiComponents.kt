@@ -332,7 +332,7 @@ fun formatIntent(intent: TradingIntent): String = when (intent) {
 fun formatTickerSource(source: com.polaralias.signalsynthesis.domain.model.TickerSource): String = when (source) {
     com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED -> "Static"
     com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER -> "Screener"
-    com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> "Custom"
+    com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM -> "User Added"
     com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER -> "Gainer"
     com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER -> "Loser"
     com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE -> "Active"

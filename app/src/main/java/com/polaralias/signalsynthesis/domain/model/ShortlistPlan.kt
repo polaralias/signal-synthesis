@@ -2,6 +2,7 @@ package com.polaralias.signalsynthesis.domain.model
 
 import com.polaralias.signalsynthesis.util.JsonExtraction
 import com.polaralias.signalsynthesis.util.JsonExtraction.toStringList
+import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONObject
 
 data class ShortlistPlan(
@@ -35,6 +36,7 @@ data class ShortlistPlan(
 
                 ShortlistPlan(shortlist, globalNotes, limitsApplied)
             } catch (e: Exception) {
+                Logger.e("ShortlistPlan", "Failed to parse shortlist JSON", e)
                 ShortlistPlan()
             }
         }

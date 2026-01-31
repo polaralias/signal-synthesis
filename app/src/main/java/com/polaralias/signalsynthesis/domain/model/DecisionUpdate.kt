@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.domain.model
 
 import com.polaralias.signalsynthesis.util.JsonExtraction.toStringList
+import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONObject
 
 data class DecisionUpdate(
@@ -44,6 +45,7 @@ data class DecisionUpdate(
 
                 DecisionUpdate(keepList, dropList, limitsApplied)
             } catch (e: Exception) {
+                Logger.e("DecisionUpdate", "Failed to parse decision update JSON", e)
                 DecisionUpdate()
             }
         }

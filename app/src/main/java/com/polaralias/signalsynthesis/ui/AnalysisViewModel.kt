@@ -3,10 +3,15 @@ package com.polaralias.signalsynthesis.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.polaralias.signalsynthesis.data.provider.MarketDataProviderFactory
+import com.polaralias.signalsynthesis.data.provider.ProviderBundle
+import com.polaralias.signalsynthesis.data.provider.ApiKeys
 import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
 import com.polaralias.signalsynthesis.data.storage.AlertSettingsStorage
 import com.polaralias.signalsynthesis.data.repository.AiSummaryRepository
 import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
+import com.polaralias.signalsynthesis.data.cache.CacheTtlConfig
+import com.polaralias.signalsynthesis.data.alerts.AlertTarget
+import com.polaralias.signalsynthesis.data.alerts.AlertDirection
 import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.storage.AppSettingsStorage
@@ -37,6 +42,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.ZoneId
+import java.security.MessageDigest
 
 class AnalysisViewModel(
     private val providerFactory: MarketDataProviderFactory,
@@ -56,26 +62,35 @@ class AnalysisViewModel(
 
     private var analysisJob: kotlinx.coroutines.Job? = null
 
+    private data class RepositoryConfig(
+        val apiKeys: ApiKeys,
+        val cacheConfig: CacheTtlConfig,
+        val useMock: Boolean
+    )
+
+    private var cachedRepository: MarketDataRepository? = null
+    private var cachedRepositoryConfig: RepositoryConfig? = null
+
     private val openAiResponsesService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiResponsesService.create() }
     private val openAiService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiService.create() }
     private val geminiService by lazy { com.polaralias.signalsynthesis.data.ai.GeminiService.create() }
 
     private val stageModelRouter by lazy {
-        com.polaralias.signalsynthesis.domain.ai.StageModelRouter(
-            openAiRunnerFactory = { model, key ->
-                com.polaralias.signalsynthesis.data.ai.OpenAiStageRunner(openAiService, openAiResponsesService, model, key)
-            },
-            geminiRunnerFactory = { model, key ->
-                com.polaralias.signalsynthesis.data.ai.GeminiStageRunner(geminiService, model, key)
-            },
-            routingConfigProvider = { _uiState.value.appSettings.modelRouting },
-            apiKeysProvider = {
-                mapOf(
-                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.llmKey,
-                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.llmKey
-                )
-            }
-        )
+            com.polaralias.signalsynthesis.domain.ai.StageModelRouter(
+                openAiRunnerFactory = { model, key ->
+                    com.polaralias.signalsynthesis.data.ai.OpenAiStageRunner(openAiService, openAiResponsesService, model, key)
+                },
+                geminiRunnerFactory = { model, key ->
+                    com.polaralias.signalsynthesis.data.ai.GeminiStageRunner(geminiService, model, key)
+                },
+                routingConfigProvider = { effectiveRouting(_uiState.value.appSettings) },
+                apiKeysProvider = {
+                    mapOf(
+                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.openAiKey,
+                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.geminiKey
+                    )
+                }
+            )
     }
 
     private val deepDiveUseCase by lazy {
@@ -85,11 +100,11 @@ class AnalysisViewModel(
             stageModelRouter = stageModelRouter,
             openAiProvider = openAiProvider,
             geminiProvider = geminiProvider,
-            routingConfigProvider = { _uiState.value.appSettings.modelRouting },
+            routingConfigProvider = { effectiveRouting(_uiState.value.appSettings) },
             apiKeysProvider = {
                 mapOf(
-                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.llmKey,
-                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.llmKey
+                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.openAiKey,
+                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.geminiKey
                 )
             }
         )
@@ -135,7 +150,8 @@ class AnalysisViewModel(
                 KeyField.FINNHUB -> state.keys.copy(finnhubKey = value)
                 KeyField.FMP -> state.keys.copy(fmpKey = value)
                 KeyField.TWELVE_DATA -> state.keys.copy(twelveDataKey = value)
-                KeyField.LLM -> state.keys.copy(llmKey = value)
+                KeyField.OPENAI -> state.keys.copy(openAiKey = value)
+                KeyField.GEMINI -> state.keys.copy(geminiKey = value)
             }
             state.copy(keys = keys)
         }
@@ -144,8 +160,8 @@ class AnalysisViewModel(
     fun saveKeys() {
         viewModelScope.launch(ioDispatcher) {
             val keys = _uiState.value.keys
-            keyStore.saveKeys(keys.toApiKeys(), keys.llmKey)
-            Logger.event("keys_saved", mapOf("has_llm_key" to keys.llmKey.isNotBlank()))
+            keyStore.saveKeys(keys.toApiKeys(), keys.toLlmKeys())
+            Logger.event("keys_saved", mapOf("has_llm_key" to (keys.openAiKey.isNotBlank() || keys.geminiKey.isNotBlank())))
             refreshKeys()
         }
     }
@@ -183,17 +199,27 @@ class AnalysisViewModel(
     fun runAnalysis() {
         val uiStateValue = _uiState.value
         val apiKeys = uiStateValue.keys.toApiKeys()
-        val llmKey = uiStateValue.keys.llmKey
+        val llmKey = uiStateValue.keys.openAiKey.ifBlank { uiStateValue.keys.geminiKey }
         
-        if (!apiKeys.hasAny()) {
-            _uiState.update { it.copy(errorMessage = "Add at least one provider key before running analysis.") }
+        if (!apiKeys.hasAny() && !uiStateValue.appSettings.useMockDataWhenOffline) {
+            _uiState.update { it.copy(errorMessage = "Add at least one provider key or enable mock data mode in settings.") }
             return
         }
 
         val useStaged = uiStateValue.appSettings.useStagedPipeline
-        if (useStaged && llmKey.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "LLM Key is required for the staged pipeline (shortlist stage).") }
-            return
+        if (useStaged) {
+            val missingProviders = missingLlmProvidersForStages(
+                listOf(
+                    com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST,
+                    com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
+                    com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS
+                )
+            )
+            if (missingProviders.isNotEmpty()) {
+                val providersLabel = missingProviders.joinToString { it.name }
+                _uiState.update { it.copy(errorMessage = "Missing API key(s) for: $providersLabel") }
+                return
+            }
         }
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap(), isPaused = false, removedAlerts = emptySet()) }
@@ -203,8 +229,7 @@ class AnalysisViewModel(
             try {
                 val state = _uiState.value
                 val customTickerList = state.customTickers.map { it.symbol }
-                val bundle = providerFactory.build(apiKeys)
-                val repository = MarketDataRepository(bundle)
+                val repository = getRepository(apiKeys)
 
                 val result = if (useStaged) {
                     val rssClient = RssFeedClient(rssDao = rssDao)
@@ -215,7 +240,6 @@ class AnalysisViewModel(
                         risk = state.appSettings.riskTolerance,
                         assetClass = state.assetClass,
                         discoveryMode = state.appSettings.discoveryMode,
-                        llmKey = llmKey,
                         customTickers = customTickerList,
                         blocklist = state.blocklist,
                         screenerThresholds = mapOf(
@@ -260,6 +284,17 @@ class AnalysisViewModel(
                 val resultsWithoutRemoved = result.setups.filter { !state.removedAlerts.contains(it.symbol) }
                 val symbols = resultsWithoutRemoved.map { it.symbol }.distinct().filter { !state.blocklist.contains(it) }
                 alertStore.saveSymbols(symbols)
+                val targets = resultsWithoutRemoved
+                    .filter { symbols.contains(it.symbol) }
+                    .map { setup ->
+                        val direction = if (setup.targetPrice >= setup.triggerPrice) AlertDirection.ABOVE else AlertDirection.BELOW
+                        AlertTarget(
+                            symbol = setup.symbol,
+                            targetPrice = setup.targetPrice,
+                            direction = direction
+                        )
+                    }
+                alertStore.saveTargets(targets)
                 _uiState.update { it.copy(alertSymbolCount = symbols.size, alertSymbols = symbols) }
 
                 // Notify for high-confidence signals
@@ -274,13 +309,18 @@ class AnalysisViewModel(
                 }
 
                 // Trigger Prefetching
-                if (llmKey.isNotBlank() && result.setups.isNotEmpty()) {
+                if (state.appSettings.aiSummaryPrefetchEnabled && llmKey.isNotBlank() && result.setups.isNotEmpty()) {
                     _uiState.update { it.copy(isPrefetching = true, prefetchCount = 0, progressMessage = "Prefetching AI insights...") }
                     
                     val prefetchFlow = PrefetchAiSummariesUseCase(
                         buildSynthesisUseCase(apiKeys),
                         aiSummaryRepository
-                    ).execute(result.setups, llmKey)
+                    ).execute(
+                        setups = result.setups,
+                        llmKey = llmKey,
+                        maxPrefetch = state.appSettings.aiSummaryPrefetchLimit,
+                        cacheKeyProvider = { setup -> buildAiSummaryCacheKey(setup, state.appSettings) }
+                    )
 
                     prefetchFlow.collect { (symbol, synthesis) ->
                         updateAiSummary(
@@ -341,13 +381,24 @@ class AnalysisViewModel(
 
     fun requestAiSummary(symbol: String) {
         val state = _uiState.value
-        val llmKey = state.keys.llmKey
+        val llmKey = state.keys.openAiKey.ifBlank { state.keys.geminiKey }
         if (llmKey.isBlank() || !state.hasLlmKey) return
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(
+                com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS,
+                com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE
+            )
+        )
+        if (missingProviders.isNotEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.name }}") }
+            return
+        }
         
         // Find setup in current result or history
         val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } 
             ?: state.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }
             ?: return
+        val cacheKey = buildAiSummaryCacheKey(setup, state.appSettings)
             
         val existing = state.aiSummaries[symbol]
         if (existing?.status == AiSummaryStatus.LOADING || existing?.status == AiSummaryStatus.READY) return
@@ -356,7 +407,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 // Check cache first
-                val cached = aiSummaryRepository.getSummary(symbol)
+                val cached = aiSummaryRepository.getSummary(symbol, cacheKey.model, cacheKey.promptHash)
                 if (cached != null) {
                     updateAiSummary(
                         symbol,
@@ -384,7 +435,7 @@ class AnalysisViewModel(
                 )
                 
                 // Save to cache
-                aiSummaryRepository.saveSummary(symbol, synthesis)
+                aiSummaryRepository.saveSummary(symbol, cacheKey.model, cacheKey.promptHash, synthesis)
 
                 updateAiSummary(
                     symbol,
@@ -421,8 +472,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val apiKeys = _uiState.value.keys.toApiKeys()
-                val bundle = providerFactory.build(apiKeys)
-                val repository = MarketDataRepository(bundle)
+                val repository = getRepository(apiKeys)
 
                 val points = when (setup.intent) {
                     TradingIntent.DAY_TRADE -> {
@@ -469,7 +519,7 @@ class AnalysisViewModel(
 
     fun requestDeepDive(symbol: String) {
         val state = _uiState.value
-        val llmKey = state.keys.llmKey
+        val llmKey = state.keys.openAiKey.ifBlank { state.keys.geminiKey }
         if (llmKey.isBlank() || !state.hasLlmKey) return
         
         val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } 
@@ -521,7 +571,7 @@ class AnalysisViewModel(
     }
 
     fun suggestThresholdsWithAi(prompt: String) {
-        val llmKey = _uiState.value.keys.llmKey
+        val llmKey = _uiState.value.keys.openAiKey.ifBlank { _uiState.value.keys.geminiKey }
         if (llmKey.isBlank()) return
 
         _uiState.update { it.copy(isSuggestingThresholds = true) }
@@ -551,7 +601,7 @@ class AnalysisViewModel(
     }
 
     fun suggestScreenerWithAi(prompt: String) {
-        val llmKey = _uiState.value.keys.llmKey
+        val llmKey = _uiState.value.keys.openAiKey.ifBlank { _uiState.value.keys.geminiKey }
         if (llmKey.isBlank()) return
 
         _uiState.update { it.copy(isSuggestingScreener = true) }
@@ -612,6 +662,7 @@ class AnalysisViewModel(
         val oldInterval = _uiState.value.appSettings.alertCheckIntervalMinutes
         viewModelScope.launch(ioDispatcher) {
             appSettingsStore.saveSettings(settings)
+            com.polaralias.signalsynthesis.util.ActivityLogger.setVerboseLogging(settings.verboseLogging)
             
             val currentAlerts = alertStore.loadSettings()
             alertStore.saveSettings(currentAlerts.copy(
@@ -648,11 +699,11 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val apiKeys = _uiState.value.keys.toApiKeys()
-                val bundle = providerFactory.build(apiKeys)
-                val repository = MarketDataRepository(bundle)
+                val repository = getRepository(apiKeys)
                 val results = repository.searchSymbols(query)
                 _uiState.update { it.copy(tickerSearchResults = results, isSearchingTickers = false) }
             } catch (e: Exception) {
+                Logger.e("AnalysisViewModel", "Ticker search failed", e)
                 _uiState.update { it.copy(isSearchingTickers = false) }
             }
         }
@@ -734,6 +785,8 @@ class AnalysisViewModel(
             _uiState.update { it.copy(alertSymbols = newAlerts, alertSymbolCount = newAlerts.size) }
             viewModelScope.launch(ioDispatcher) {
                 alertStore.saveSymbols(newAlerts)
+                val updatedTargets = alertStore.loadTargets().filterNot { it.symbol.equals(upper, ignoreCase = true) }
+                alertStore.saveTargets(updatedTargets)
             }
         }
     }
@@ -763,6 +816,8 @@ class AnalysisViewModel(
         }
         viewModelScope.launch(ioDispatcher) {
             alertStore.saveSymbols(_uiState.value.alertSymbols)
+            val updatedTargets = alertStore.loadTargets().filterNot { it.symbol.equals(symbol, ignoreCase = true) }
+            alertStore.saveTargets(updatedTargets)
         }
     }
 
@@ -772,7 +827,10 @@ class AnalysisViewModel(
             if (current.contains(symbol)) {
                 dbRepository.removeFromWatchlist(symbol)
             } else {
-                dbRepository.addToWatchlist(symbol)
+                val setupIntent = _uiState.value.result?.setups?.firstOrNull { it.symbol == symbol }?.intent
+                    ?: _uiState.value.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }?.intent
+                    ?: _uiState.value.intent
+                dbRepository.addToWatchlist(symbol, setupIntent)
             }
         }
     }
@@ -812,12 +870,12 @@ class AnalysisViewModel(
     private fun refreshKeys() {
         viewModelScope.launch(ioDispatcher) {
             val apiKeys = keyStore.loadApiKeys()
-            val llmKey = keyStore.loadLlmKey()
+            val llmKeys = keyStore.loadLlmKeys()
             _uiState.update {
                 it.copy(
-                    keys = ApiKeyUiState.from(apiKeys, llmKey),
+                    keys = ApiKeyUiState.from(apiKeys, llmKeys),
                     hasAnyApiKeys = apiKeys.hasAny(),
-                    hasLlmKey = !llmKey.isNullOrBlank()
+                    hasLlmKey = !llmKeys.openAiKey.isNullOrBlank() || !llmKeys.geminiKey.isNullOrBlank()
                 )
             }
         }
@@ -839,8 +897,7 @@ class AnalysisViewModel(
     }
 
     private fun buildUseCase(apiKeys: com.polaralias.signalsynthesis.data.provider.ApiKeys): RunAnalysisUseCase {
-        val bundle = providerFactory.build(apiKeys)
-        val repository = MarketDataRepository(bundle)
+        val repository = getRepository(apiKeys)
         return RunAnalysisUseCase(repository, clock)
     }
 
@@ -852,8 +909,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val apiKeys = _uiState.value.keys.toApiKeys()
-                val bundle = providerFactory.build(apiKeys)
-                val repository = MarketDataRepository(bundle)
+                val repository = getRepository(apiKeys)
                 
                 // 1. Fetch main indices
                 // User requested: S&P 500, Gold, USD/GBP
@@ -968,11 +1024,164 @@ class AnalysisViewModel(
     private fun buildSynthesisUseCase(
         apiKeys: com.polaralias.signalsynthesis.data.provider.ApiKeys
     ): SynthesizeSetupUseCase {
-        val settings = _uiState.value.appSettings
-        val bundle = providerFactory.build(apiKeys)
-        val repository = MarketDataRepository(bundle)
-        
+        val repository = getRepository(apiKeys)
         return SynthesizeSetupUseCase(repository, stageModelRouter)
+    }
+
+    private fun getRepository(apiKeys: ApiKeys): MarketDataRepository {
+        val settings = _uiState.value.appSettings
+        val cacheConfig = CacheTtlConfig.fromMinutes(
+            quoteMinutes = settings.cacheTtlQuotesMinutes,
+            intradayMinutes = settings.cacheTtlIntradayMinutes,
+            dailyMinutes = settings.cacheTtlDailyMinutes,
+            profileMinutes = settings.cacheTtlProfileMinutes,
+            metricsMinutes = settings.cacheTtlMetricsMinutes,
+            sentimentMinutes = settings.cacheTtlSentimentMinutes
+        )
+        val config = RepositoryConfig(
+            apiKeys = apiKeys,
+            cacheConfig = cacheConfig,
+            useMock = settings.useMockDataWhenOffline
+        )
+        if (cachedRepository == null || cachedRepositoryConfig != config) {
+            val bundle = if (!apiKeys.hasAny() && !settings.useMockDataWhenOffline) {
+                ProviderBundle.empty()
+            } else {
+                providerFactory.build(apiKeys)
+            }
+            cachedRepository = MarketDataRepository(bundle, cacheConfig)
+            cachedRepositoryConfig = config
+        }
+        return cachedRepository!!
+    }
+
+    private fun buildAiSummaryCacheKey(
+        setup: com.polaralias.signalsynthesis.domain.model.TradeSetup,
+        settings: AppSettings
+    ): com.polaralias.signalsynthesis.domain.model.AiSummaryCacheKey {
+        val routing = effectiveRouting(settings)
+        val analysisModel = routing.getConfigForStage(com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS).model
+        val verdictModel = routing.getConfigForStage(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE).model
+        val model = "$analysisModel|$verdictModel"
+
+        val raw = buildString {
+            append(setup.symbol)
+            append("|")
+            append(setup.setupType)
+            append("|")
+            append(setup.triggerPrice)
+            append("|")
+            append(setup.stopLoss)
+            append("|")
+            append(setup.targetPrice)
+            append("|")
+            append(setup.intent.name)
+            append("|")
+            append(setup.reasons.joinToString(";"))
+            append("|")
+            append(setup.intradayStats?.rsi14 ?: "")
+            append("|")
+            append(setup.intradayStats?.vwap ?: "")
+            append("|")
+            append(setup.intradayStats?.atr14 ?: "")
+            append("|")
+            append(setup.eodStats?.sma50 ?: "")
+            append("|")
+            append(setup.eodStats?.sma200 ?: "")
+            append("|")
+            append(settings.reasoningDepth.name)
+            append("|")
+            append(settings.outputLength.name)
+            append("|")
+            append(settings.verbosity.name)
+            append("|")
+            append(model)
+        }
+
+        return com.polaralias.signalsynthesis.domain.model.AiSummaryCacheKey(
+            model = model,
+            promptHash = sha256(raw)
+        )
+    }
+
+    private fun sha256(value: String): String {
+        val digest = MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8))
+        return digest.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun effectiveRouting(settings: AppSettings): com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig {
+        val baseRouting = settings.modelRouting
+        val map = baseRouting.byStage.toMutableMap()
+
+        val provider = settings.llmProvider
+        val analysisModel = resolveModelForProvider(settings.analysisModel, provider)
+        val verdictModel = resolveModelForProvider(settings.verdictModel, provider)
+        val lengthTokens = tokensForLength(settings.outputLength)
+
+        if (!map.containsKey(com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST)) {
+            val base = baseRouting.getConfigForStage(com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST)
+            map[com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST] = base.copy(
+                provider = provider,
+                model = analysisModel.modelId,
+                reasoningDepth = settings.reasoningDepth
+            )
+        }
+
+        if (!map.containsKey(com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS)) {
+            val base = baseRouting.getConfigForStage(com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS)
+            map[com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS] = base.copy(
+                provider = provider,
+                model = analysisModel.modelId,
+                reasoningDepth = settings.reasoningDepth,
+                maxOutputTokens = lengthTokens
+            )
+        }
+
+        if (!map.containsKey(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE)) {
+            val base = baseRouting.getConfigForStage(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE)
+            map[com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE] = base.copy(
+                provider = provider,
+                model = verdictModel.modelId,
+                reasoningDepth = settings.reasoningDepth,
+                maxOutputTokens = lengthTokens
+            )
+        }
+
+        if (!map.containsKey(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DEEP_DIVE)) {
+            val deepProvider = settings.deepDiveProvider
+            val deepModel = resolveModelForProvider(settings.reasoningModel, deepProvider)
+            val base = baseRouting.getConfigForStage(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DEEP_DIVE)
+            map[com.polaralias.signalsynthesis.domain.model.AnalysisStage.DEEP_DIVE] = base.copy(
+                provider = deepProvider,
+                model = deepModel.modelId,
+                reasoningDepth = settings.reasoningDepth
+            )
+        }
+
+        return com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig(map)
+    }
+
+    private fun resolveModelForProvider(
+        model: com.polaralias.signalsynthesis.domain.ai.LlmModel,
+        provider: com.polaralias.signalsynthesis.domain.ai.LlmProvider
+    ): com.polaralias.signalsynthesis.domain.ai.LlmModel {
+        return if (model.provider == provider) {
+            model
+        } else {
+            com.polaralias.signalsynthesis.domain.ai.LlmModel.values().first { it.provider == provider }
+        }
+    }
+
+    private fun tokensForLength(length: com.polaralias.signalsynthesis.domain.ai.OutputLength): Int {
+        return when (length) {
+            com.polaralias.signalsynthesis.domain.ai.OutputLength.SHORT -> 400
+            com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD -> 800
+            com.polaralias.signalsynthesis.domain.ai.OutputLength.FULL -> 1500
+        }
+    }
+
+    fun clearCaches() {
+        cachedRepository?.clearAllCaches()
     }
 
     private fun updateAiSummary(symbol: String, summary: AiSummaryState) {
@@ -990,6 +1199,7 @@ class AnalysisViewModel(
     private fun observeAppSettings() {
         viewModelScope.launch(ioDispatcher) {
             val settings = appSettingsStore.loadSettings()
+            com.polaralias.signalsynthesis.util.ActivityLogger.setVerboseLogging(settings.verboseLogging)
             val custom: List<String> = (appSettingsStore as? AppSettingsStore)?.loadCustomTickers() ?: emptyList()
             val blocklist = (appSettingsStore as? AppSettingsStore)?.loadBlocklist() ?: emptyList()
             _uiState.update { state ->
@@ -1067,6 +1277,27 @@ class AnalysisViewModel(
         }
     }
 
+    private fun missingLlmProvidersForStages(
+        stages: List<com.polaralias.signalsynthesis.domain.model.AnalysisStage>
+    ): List<com.polaralias.signalsynthesis.domain.ai.LlmProvider> {
+        val routing = effectiveRouting(_uiState.value.appSettings)
+        val keys = _uiState.value.keys
+        return stages
+            .map { routing.getConfigForStage(it).provider }
+            .distinct()
+            .filter { provider -> !hasKeyForProvider(provider, keys) }
+    }
+
+    private fun hasKeyForProvider(
+        provider: com.polaralias.signalsynthesis.domain.ai.LlmProvider,
+        keys: ApiKeyUiState
+    ): Boolean {
+        return when (provider) {
+            com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI -> keys.openAiKey.isNotBlank()
+            com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI -> keys.geminiKey.isNotBlank()
+        }
+    }
+
 
     private fun simplifyProviderName(name: String): String {
         return name.replace("MarketDataProvider", "").replace("DataProvider", "")
@@ -1074,7 +1305,7 @@ class AnalysisViewModel(
 
     fun runShortlistHarness() {
         val uiStateValue = _uiState.value
-        val llmKey = uiStateValue.keys.llmKey
+        val llmKey = uiStateValue.keys.openAiKey.ifBlank { uiStateValue.keys.geminiKey }
         if (llmKey.isBlank()) {
             _uiState.update { it.copy(errorMessage = "LLM Key required for shortlist harness.") }
             return
@@ -1084,8 +1315,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             try {
                 val apiKeys = uiStateValue.keys.toApiKeys()
-                val bundle = providerFactory.build(apiKeys)
-                val repository = MarketDataRepository(bundle)
+                val repository = getRepository(apiKeys)
                 
                 // Fixed list for testing
                 val testSymbols = listOf("AAPL", "TSLA", "NVDA", "AMD", "MSFT", "GOOGL", "AMZN", "META", "NFLX", "INTC")
@@ -1126,5 +1356,6 @@ enum class KeyField {
     FINNHUB,
     FMP,
     TWELVE_DATA,
-    LLM
+    OPENAI,
+    GEMINI
 }

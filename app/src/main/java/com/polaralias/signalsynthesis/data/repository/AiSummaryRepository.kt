@@ -15,8 +15,8 @@ class AiSummaryRepository(
     private val listType = Types.newParameterizedType(List::class.java, String::class.java)
     private val adapter = moshi.adapter<List<String>>(listType)
 
-    suspend fun getSummary(symbol: String): AiSynthesis? = withContext(Dispatchers.IO) {
-        val entity = dao.getBySymbol(symbol) ?: return@withContext null
+    suspend fun getSummary(symbol: String, model: String, promptHash: String): AiSynthesis? = withContext(Dispatchers.IO) {
+        val entity = dao.getByKey(symbol, model, promptHash) ?: return@withContext null
         AiSynthesis(
             summary = entity.summary,
             risks = adapter.fromJson(entity.risksJson) ?: emptyList(),
@@ -24,9 +24,11 @@ class AiSummaryRepository(
         )
     }
 
-    suspend fun saveSummary(symbol: String, synthesis: AiSynthesis) = withContext(Dispatchers.IO) {
+    suspend fun saveSummary(symbol: String, model: String, promptHash: String, synthesis: AiSynthesis) = withContext(Dispatchers.IO) {
         val entity = AiSummaryEntity(
             symbol = symbol,
+            model = model,
+            promptHash = promptHash,
             summary = synthesis.summary,
             risksJson = adapter.toJson(synthesis.risks),
             verdict = synthesis.verdict,

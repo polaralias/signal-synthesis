@@ -37,7 +37,7 @@ class RunAnalysisUseCase(
         intent: TradingIntent,
         risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE,
         assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
-        discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
+        discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC,
         customTickers: List<String> = emptyList(),
         blocklist: List<String> = emptyList(),
         screenerThresholds: Map<String, Double> = emptyMap()

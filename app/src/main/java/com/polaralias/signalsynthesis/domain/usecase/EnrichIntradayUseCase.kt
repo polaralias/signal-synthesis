@@ -41,8 +41,7 @@ class EnrichIntradayUseCase(
                     atr14 = atr14
                 )
             } catch (e: Exception) {
-                // Log error and continue with other symbols
-                // In production, consider logging to analytics
+                com.polaralias.signalsynthesis.util.Logger.e("EnrichIntraday", "Intraday enrichment failed for $symbol", e)
                 continue
             }
         }

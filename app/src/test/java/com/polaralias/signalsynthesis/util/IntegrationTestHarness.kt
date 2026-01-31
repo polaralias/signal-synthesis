@@ -1,7 +1,7 @@
 package com.polaralias.signalsynthesis.util
 
 import com.polaralias.signalsynthesis.data.settings.RiskTolerance
-import com.polaralias.signalsynthesis.domain.ai.LlmClient
+import com.polaralias.signalsynthesis.domain.ai.StageModelRouter
 import com.polaralias.signalsynthesis.domain.model.Quote
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.domain.usecase.ShortlistCandidatesUseCase
@@ -13,8 +13,8 @@ import java.time.Instant
  * This satisfies the requirement for an integration harness.
  */
 object IntegrationTestHarness {
-    fun runShortlistDemo(llmClient: LlmClient, apiKey: String) = runBlocking {
-        val useCase = ShortlistCandidatesUseCase(llmClient)
+    fun runShortlistDemo(stageModelRouter: StageModelRouter) = runBlocking {
+        val useCase = ShortlistCandidatesUseCase(stageModelRouter)
         
         val symbols = listOf("AAPL", "TSLA", "MSFT", "NVDA", "AMD", "META", "AMZN", "GOOGL")
         val quotes = symbols.associateWith { symbol ->
@@ -33,7 +33,6 @@ object IntegrationTestHarness {
             quotes = quotes,
             intent = TradingIntent.DAY_TRADE,
             risk = RiskTolerance.MODERATE,
-            llmKey = apiKey,
             maxShortlist = 5
         )
 

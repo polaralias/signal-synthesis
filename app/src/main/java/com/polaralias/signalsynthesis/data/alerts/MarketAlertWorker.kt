@@ -20,6 +20,8 @@ import com.polaralias.signalsynthesis.data.storage.AlertSettingsStore
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStore
 import com.polaralias.signalsynthesis.domain.indicators.RsiIndicator
 import com.polaralias.signalsynthesis.domain.indicators.VwapIndicator
+import com.polaralias.signalsynthesis.data.alerts.AlertType
+import com.polaralias.signalsynthesis.data.alerts.AlertDirection
 import kotlin.math.roundToInt
 
 class MarketAlertWorker(
@@ -45,6 +47,20 @@ class MarketAlertWorker(
         val quotes = repository.getQuotes(symbols)
         if (quotes.isEmpty()) return Result.success()
 
+        val targets = alertStore.loadTargets().associateBy { it.symbol.uppercase() }
+        val cooldownMs = settings.cooldownMinutes.toLong() * 60_000L
+        val sentThisRun = mutableSetOf<String>()
+        suspend fun shouldNotify(symbol: String, type: AlertType): Boolean {
+            val key = "${symbol}_${type.name}"
+            if (sentThisRun.contains(key)) return false
+            val last = alertStore.getLastAlertTimestamp(symbol, type)
+            val now = System.currentTimeMillis()
+            if (now - last < cooldownMs) return false
+            sentThisRun.add(key)
+            alertStore.setLastAlertTimestamp(symbol, type, now)
+            return true
+        }
+
         val alerts = mutableListOf<AlertEvent>()
         for (symbol in symbols) {
             kotlinx.coroutines.yield()
@@ -56,13 +72,40 @@ class MarketAlertWorker(
             val rsi = RsiIndicator.calculateFromIntraday(bars)
 
             if (vwap != null && quote.price < vwap * (1.0 - settings.vwapDipPercent / 100.0)) {
-                alerts.add(AlertEvent(symbol, "Investment Signal", "Price below VWAP (Value Found)", quote.price, vwap))
+                if (shouldNotify(symbol, AlertType.VWAP_DIP)) {
+                    alerts.add(AlertEvent(symbol, AlertType.VWAP_DIP, "Investment Signal", "Price below VWAP (Value Found)", quote.price, vwap))
+                }
             }
             if (rsi != null && rsi <= settings.rsiOversold) {
-                alerts.add(AlertEvent(symbol, "Buy Opportunity", "RSI oversold (${rsi.roundToInt()})", quote.price, vwap))
+                if (shouldNotify(symbol, AlertType.RSI_OVERSOLD)) {
+                    alerts.add(AlertEvent(symbol, AlertType.RSI_OVERSOLD, "Buy Opportunity", "RSI oversold (${rsi.roundToInt()})", quote.price, vwap))
+                }
             }
             if (rsi != null && rsi >= settings.rsiOverbought) {
-                alerts.add(AlertEvent(symbol, "Sell Warning", "RSI overbought (${rsi.roundToInt()})", quote.price, vwap))
+                if (shouldNotify(symbol, AlertType.RSI_OVERBOUGHT)) {
+                    alerts.add(AlertEvent(symbol, AlertType.RSI_OVERBOUGHT, "Sell Warning", "RSI overbought (${rsi.roundToInt()})", quote.price, vwap))
+                }
+            }
+
+            val target = targets[symbol]
+            if (target != null && target.targetPrice > 0.0) {
+                val hit = when (target.direction) {
+                    AlertDirection.ABOVE -> quote.price >= target.targetPrice
+                    AlertDirection.BELOW -> quote.price <= target.targetPrice
+                }
+                if (hit && shouldNotify(symbol, AlertType.PRICE_TARGET)) {
+                    val directionText = if (target.direction == AlertDirection.ABOVE) "above" else "below"
+                    alerts.add(
+                        AlertEvent(
+                            symbol,
+                            AlertType.PRICE_TARGET,
+                            "Price Target",
+                            "Price moved $directionText target ${formatPrice(target.targetPrice)}",
+                            quote.price,
+                            vwap
+                        )
+                    )
+                }
             }
         }
 
@@ -106,6 +149,7 @@ class MarketAlertWorker(
 
     data class AlertEvent(
         val symbol: String,
+        val type: AlertType,
         val category: String,
         val reason: String,
         val price: Double,

@@ -9,6 +9,7 @@ import com.polaralias.signalsynthesis.domain.model.SentimentData
 import com.polaralias.signalsynthesis.domain.model.TradeSetup
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.domain.usecase.SymbolContext
+import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -150,8 +151,8 @@ class RankSetupsUseCase(
                     earningsPenalty = severity
                     reasons.add("Upcoming earnings in $daysUntil days (High Volatility Risk)")
                 }
-            } catch (_: Exception) {
-                // Skip if date format is unexpected
+            } catch (e: Exception) {
+                Logger.w("RankSetupsUseCase", "Unable to parse earnings date for $symbol", e)
             }
         }
         

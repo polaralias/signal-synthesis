@@ -15,6 +15,15 @@ data class AppSettings(
     val rsiOversold: Double = 30.0,
     val rsiOverbought: Double = 70.0,
     val useMockDataWhenOffline: Boolean = true,
+    val cacheTtlQuotesMinutes: Int = 1,
+    val cacheTtlIntradayMinutes: Int = 10,
+    val cacheTtlDailyMinutes: Int = 1440,
+    val cacheTtlProfileMinutes: Int = 1440,
+    val cacheTtlMetricsMinutes: Int = 1440,
+    val cacheTtlSentimentMinutes: Int = 30,
+    val aiSummaryPrefetchEnabled: Boolean = true,
+    val aiSummaryPrefetchLimit: Int = 3,
+    val verboseLogging: Boolean = true,
     val llmProvider: LlmProvider = LlmProvider.OPENAI,
     val analysisModel: LlmModel = LlmModel.GPT_5_1,
     val verdictModel: LlmModel = LlmModel.GPT_5_1,
@@ -28,7 +37,7 @@ data class AppSettings(
     val screenerAggressiveThreshold: Double = 100.0,
     val screenerMinVolume: Long = 1_000_000L,
     val preferredAssetClass: AssetClass = AssetClass.STOCKS,
-    val discoveryMode: DiscoveryMode = DiscoveryMode.CURATED,
+    val discoveryMode: DiscoveryMode = DiscoveryMode.STATIC,
     val isAnalysisPaused: Boolean = false,
     val useStagedPipeline: Boolean = false,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
@@ -43,4 +52,4 @@ enum class RiskTolerance { CONSERVATIVE, MODERATE, AGGRESSIVE }
 
 enum class AssetClass { STOCKS, FOREX, METALS, ALL }
 
-enum class DiscoveryMode { CURATED, LIVE_SCANNER }
+enum class DiscoveryMode { STATIC, SCREENER, CUSTOM }

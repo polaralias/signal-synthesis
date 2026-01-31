@@ -6,8 +6,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface AiSummaryDao {
-    @Query("SELECT * FROM ai_summaries WHERE symbol = :symbol")
-    suspend fun getBySymbol(symbol: String): AiSummaryEntity?
+    @Query("SELECT * FROM ai_summaries WHERE symbol = :symbol AND model = :model AND promptHash = :promptHash")
+    suspend fun getByKey(symbol: String, model: String, promptHash: String): AiSummaryEntity?
 
     @Query("SELECT * FROM ai_summaries")
     fun getAll(): Flow<List<AiSummaryEntity>>

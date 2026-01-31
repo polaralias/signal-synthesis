@@ -10,6 +10,7 @@ import com.polaralias.signalsynthesis.domain.provider.IntradayProvider
 import com.polaralias.signalsynthesis.domain.provider.MetricsProvider
 import com.polaralias.signalsynthesis.domain.provider.ProfileProvider
 import com.polaralias.signalsynthesis.domain.provider.QuoteProvider
+import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -35,6 +36,7 @@ class TwelveDataMarketDataProvider(
                 description = response.description
             )
         } catch (e: Exception) {
+            Logger.e("TwelveData", "Profile fetch failed for $symbol", e)
             null
         }
     }
@@ -53,6 +55,7 @@ class TwelveDataMarketDataProvider(
                 dividendYield = dividends?.dividendYield
             )
         } catch (e: Exception) {
+            Logger.e("TwelveData", "Metrics fetch failed for $symbol", e)
             null
         }
     }
@@ -101,6 +104,7 @@ class TwelveDataMarketDataProvider(
             val time = try {
                 LocalDateTime.parse(dateStr, formatter).atZone(ZoneOffset.UTC).toInstant()
             } catch (e: DateTimeParseException) {
+                Logger.w("TwelveData", "Intraday parse failed: $dateStr", e)
                 return@mapNotNull null
             }
             IntradayBar(
@@ -125,6 +129,7 @@ class TwelveDataMarketDataProvider(
                     LocalDate.parse(dateStr, formatter)
                 }
             } catch (e: DateTimeParseException) {
+                Logger.w("TwelveData", "Daily parse failed: $dateStr", e)
                 return@mapNotNull null
             }
             DailyBar(

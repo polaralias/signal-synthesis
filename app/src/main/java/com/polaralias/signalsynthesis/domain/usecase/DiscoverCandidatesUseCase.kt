@@ -26,7 +26,7 @@ class DiscoverCandidatesUseCase(
         intent: com.polaralias.signalsynthesis.domain.model.TradingIntent,
         risk: com.polaralias.signalsynthesis.data.settings.RiskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE,
         assetClass: com.polaralias.signalsynthesis.data.settings.AssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS,
-        discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
+        discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC,
         customTickers: List<String> = emptyList(),
         screenerThresholds: Map<String, Double> = emptyMap()
     ): Map<String, com.polaralias.signalsynthesis.domain.model.TickerSource> {
@@ -35,26 +35,19 @@ class DiscoverCandidatesUseCase(
         // Add custom tickers first (highest priority)
         customTickers.forEach { candidates[it] = com.polaralias.signalsynthesis.domain.model.TickerSource.CUSTOM }
 
-        if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
-            forexCandidates().forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
-        }
-        
-        if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.METALS || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
-            metalsCandidates().forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
+        if (discoveryMode != com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CUSTOM) {
+            if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.FOREX || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
+                forexCandidates().forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
+            }
+            
+            if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.METALS || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
+                metalsCandidates().forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
+            }
         }
 
         if (assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS || assetClass == com.polaralias.signalsynthesis.data.settings.AssetClass.ALL) {
             
-            if (discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER) {
-                // Fetch dynamic market movers
-                val gainers = repository.getTopGainers(limit = 10)
-                val losers = repository.getTopLosers(limit = 10)
-                val actives = repository.getMostActive(limit = 10)
-                
-                gainers.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_GAINER) }
-                losers.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_LOSER) }
-                actives.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.LIVE_ACTIVE) }
-            } else {
+            if (discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC) {
                 // Use curated lists
                 val baseList = when (intent) {
                     com.polaralias.signalsynthesis.domain.model.TradingIntent.DAY_TRADE -> dayTradeCandidates()
@@ -75,26 +68,29 @@ class DiscoverCandidatesUseCase(
                 riskFiltered.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.PREDEFINED) }
             }
 
-            // Fetch from Screener (Always, for additional signals)
-            val (minVol, minPrice) = when (risk) {
-                com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> 2_000_000L to (screenerThresholds["conservative"] ?: 20.0)
-                com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> 1_000_000L to (screenerThresholds["moderate"] ?: 10.0)
-                com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> 500_000L to (screenerThresholds["aggressive"] ?: 2.0)
+            if (discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.SCREENER) {
+                // Fetch from Screener (replaces static list in this mode)
+                val (minVol, minPrice) = when (risk) {
+                    com.polaralias.signalsynthesis.data.settings.RiskTolerance.CONSERVATIVE -> 2_000_000L to (screenerThresholds["conservative"] ?: 20.0)
+                    com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE -> 1_000_000L to (screenerThresholds["moderate"] ?: 10.0)
+                    com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE -> 500_000L to (screenerThresholds["aggressive"] ?: 2.0)
+                }
+                
+                val screened = try {
+                    repository.screenStocks(
+                        minPrice = minPrice, 
+                        maxPrice = null,
+                        minVolume = minVol, 
+                        sector = null,
+                        limit = 20
+                    )
+                } catch (e: Exception) {
+                    com.polaralias.signalsynthesis.util.Logger.e("DiscoverCandidates", "Screener fetch failed", e)
+                    emptyList()
+                }
+                
+                screened.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER) }
             }
-            
-            val screened = try {
-                repository.screenStocks(
-                    minPrice = minPrice, 
-                    maxPrice = null,
-                    minVolume = minVol, 
-                    sector = null,
-                    limit = 20
-                )
-            } catch (e: Exception) {
-                emptyList()
-            }
-            
-            screened.forEach { candidates.putIfAbsent(it, com.polaralias.signalsynthesis.domain.model.TickerSource.SCREENER) }
         }
 
         return candidates

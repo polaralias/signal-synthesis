@@ -14,7 +14,8 @@ data class ApiKeyUiState(
     val finnhubKey: String = "",
     val fmpKey: String = "",
     val twelveDataKey: String = "",
-    val llmKey: String = ""
+    val openAiKey: String = "",
+    val geminiKey: String = ""
 ) {
     fun toApiKeys(): ApiKeys = ApiKeys(
         alpacaKey = alpacaKey.ifBlank { null },
@@ -26,16 +27,22 @@ data class ApiKeyUiState(
     )
 
     companion object {
-        fun from(apiKeys: ApiKeys, llmKey: String?): ApiKeyUiState = ApiKeyUiState(
+        fun from(apiKeys: ApiKeys, llmKeys: com.polaralias.signalsynthesis.data.storage.LlmKeys): ApiKeyUiState = ApiKeyUiState(
             alpacaKey = apiKeys.alpacaKey.orEmpty(),
             alpacaSecret = apiKeys.alpacaSecret.orEmpty(),
             massiveKey = apiKeys.massive.orEmpty(),
             finnhubKey = apiKeys.finnhub.orEmpty(),
             fmpKey = apiKeys.financialModelingPrep.orEmpty(),
             twelveDataKey = apiKeys.twelveData.orEmpty(),
-            llmKey = llmKey.orEmpty()
+            openAiKey = llmKeys.openAiKey.orEmpty(),
+            geminiKey = llmKeys.geminiKey.orEmpty()
         )
     }
+
+    fun toLlmKeys(): com.polaralias.signalsynthesis.data.storage.LlmKeys = com.polaralias.signalsynthesis.data.storage.LlmKeys(
+        openAiKey = openAiKey.ifBlank { null },
+        geminiKey = geminiKey.ifBlank { null }
+    )
 }
 
 data class TickerEntry(

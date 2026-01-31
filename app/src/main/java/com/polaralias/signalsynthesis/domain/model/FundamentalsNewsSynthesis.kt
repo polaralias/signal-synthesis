@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.domain.model
 
 import com.polaralias.signalsynthesis.util.JsonExtraction.toStringList
+import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONObject
 
 data class FundamentalsNewsSynthesis(
@@ -33,6 +34,7 @@ data class FundamentalsNewsSynthesis(
 
                 FundamentalsNewsSynthesis(rankedReviewList, portfolioGuidance)
             } catch (e: Exception) {
+                Logger.e("FundamentalsNewsSynthesis", "Failed to parse fundamentals/news JSON", e)
                 FundamentalsNewsSynthesis()
             }
         }

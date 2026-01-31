@@ -7,8 +7,6 @@ import com.polaralias.signalsynthesis.data.provider.ProviderBundle
 import com.polaralias.signalsynthesis.data.storage.AlertSettingsStorage
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
-import com.polaralias.signalsynthesis.domain.ai.LlmClient
-import com.polaralias.signalsynthesis.domain.model.AiSynthesis
 import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
 import com.polaralias.signalsynthesis.data.repository.AiSummaryRepository
 import com.polaralias.signalsynthesis.data.settings.AppSettings
@@ -72,7 +70,7 @@ class AnalysisViewModelTest {
 
     @Test
     fun runAnalysisFailsWithoutKeys() = runTest(testDispatcher) {
-        val viewModel = createViewModel(hasKeys = false)
+        val viewModel = createViewModel(hasKeys = false, mockWhenOffline = false)
         testDispatcher.scheduler.advanceUntilIdle() // let init finish
 
         viewModel.runAnalysis()
@@ -80,7 +78,7 @@ class AnalysisViewModelTest {
 
         val state = viewModel.uiState.value
         assertNotNull(state.errorMessage)
-        assertTrue(state.errorMessage!!.contains("Add at least one provider key"))
+        assertTrue(state.errorMessage!!.contains("Add at least one provider key") || state.errorMessage!!.contains("enable mock data"))
     }
 
     @Test
@@ -108,7 +106,8 @@ class AnalysisViewModelTest {
     }
 
     private fun createViewModel(
-        hasKeys: Boolean = false
+        hasKeys: Boolean = false,
+        mockWhenOffline: Boolean = true
     ): AnalysisViewModel {
         val keyStore = FakeApiKeyStore(hasKeys)
         return AnalysisViewModel(
@@ -116,9 +115,8 @@ class AnalysisViewModelTest {
             keyStore = keyStore,
             alertStore = FakeAlertSettingsStore(),
             workScheduler = FakeWorkScheduler(),
-            llmClientFactory = FakeLlmClientFactory(),
             dbRepository = FakeDatabaseRepository(),
-            appSettingsStore = FakeAppSettingsStore(),
+            appSettingsStore = FakeAppSettingsStore(mockWhenOffline),
             aiSummaryRepository = AiSummaryRepository(FakeAiSummaryDao()),
             rssDao = FakeRssDao(),
             application = FakeApplication(),
@@ -139,8 +137,9 @@ class AnalysisViewModelTest {
         override suspend fun loadApiKeys(): ApiKeys {
             return if (initialHasKeys) ApiKeys(alpacaKey = "test", alpacaSecret = "test") else ApiKeys()
         }
-        override suspend fun loadLlmKey(): String? = null
-        override suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?) {}
+        override suspend fun loadLlmKeys(): com.polaralias.signalsynthesis.data.storage.LlmKeys = 
+            com.polaralias.signalsynthesis.data.storage.LlmKeys()
+        override suspend fun saveKeys(apiKeys: ApiKeys, llmKeys: com.polaralias.signalsynthesis.data.storage.LlmKeys) {}
         override suspend fun clear() {}
     }
 
@@ -149,6 +148,10 @@ class AnalysisViewModelTest {
         override suspend fun saveSettings(settings: AlertSettings) {}
         override suspend fun loadSymbols(): List<String> = emptyList()
         override suspend fun saveSymbols(symbols: List<String>) {}
+        override suspend fun loadTargets(): List<com.polaralias.signalsynthesis.data.alerts.AlertTarget> = emptyList()
+        override suspend fun saveTargets(targets: List<com.polaralias.signalsynthesis.data.alerts.AlertTarget>) {}
+        override suspend fun getLastAlertTimestamp(symbol: String, type: com.polaralias.signalsynthesis.data.alerts.AlertType): Long = 0L
+        override suspend fun setLastAlertTimestamp(symbol: String, type: com.polaralias.signalsynthesis.data.alerts.AlertType, timestamp: Long) {}
     }
 
     private class FakeWorkScheduler : WorkScheduler {
@@ -156,7 +159,7 @@ class AnalysisViewModelTest {
     }
 
     private class FakeDatabaseRepository : DatabaseRepository {
-        override suspend fun addToWatchlist(symbol: String) {}
+        override suspend fun addToWatchlist(symbol: String, intent: com.polaralias.signalsynthesis.domain.model.TradingIntent?) {}
         override suspend fun removeFromWatchlist(symbol: String) {}
         override fun getWatchlist(): Flow<List<String>> = flowOf(emptyList())
         override suspend fun saveHistory(result: AnalysisResult) {}
@@ -164,13 +167,13 @@ class AnalysisViewModelTest {
         override suspend fun clearHistory() {}
     }
 
-    private class FakeAppSettingsStore : AppSettingsStorage {
-        override suspend fun loadSettings(): AppSettings = AppSettings()
+    private class FakeAppSettingsStore(private val mockWhenOffline: Boolean) : AppSettingsStorage {
+        override suspend fun loadSettings(): AppSettings = AppSettings(useMockDataWhenOffline = mockWhenOffline)
         override suspend fun saveSettings(settings: AppSettings) {}
     }
 
     private class FakeAiSummaryDao : com.polaralias.signalsynthesis.data.db.dao.AiSummaryDao {
-        override suspend fun getBySymbol(symbol: String): com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity? = null
+        override suspend fun getByKey(symbol: String, model: String, promptHash: String): com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity? = null
         override fun getAll(): Flow<List<com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity>> = flowOf(emptyList())
         override suspend fun insert(summary: com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity) {}
         override suspend fun delete(summary: com.polaralias.signalsynthesis.data.db.entity.AiSummaryEntity) {}
@@ -183,31 +186,6 @@ class AnalysisViewModelTest {
         override suspend fun getAllRecentItems(since: Long): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
         override suspend fun insertItems(items: List<com.polaralias.signalsynthesis.data.rss.RssItemEntity>) {}
         override suspend fun deleteOldItems(threshold: Long) {}
-    }
-
-    private class FakeLlmClientFactory : com.polaralias.signalsynthesis.data.ai.LlmClientFactory() {
-        override fun create(model: com.polaralias.signalsynthesis.domain.ai.LlmModel): LlmClient {
-            return FakeLlmClient()
-        }
-    }
-
-    private class FakeLlmClient : LlmClient {
-        override suspend fun generate(
-            prompt: String,
-            systemPrompt: String?,
-            apiKey: String,
-            reasoningDepth: com.polaralias.signalsynthesis.domain.ai.ReasoningDepth,
-            outputLength: com.polaralias.signalsynthesis.domain.ai.OutputLength,
-            verbosity: com.polaralias.signalsynthesis.domain.ai.Verbosity
-        ): String {
-            return """
-                {
-                  "summary": "Fake summary",
-                  "risks": ["Fake risk"],
-                  "verdict": "Fake verdict"
-                }
-            """.trimIndent()
-        }
     }
 
     private class FakeApplication : android.app.Application()

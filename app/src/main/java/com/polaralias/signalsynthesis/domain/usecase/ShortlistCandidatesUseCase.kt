@@ -20,7 +20,6 @@ class ShortlistCandidatesUseCase(
      * @param quotes Map of symbols to their current quotes (price, volume, etc).
      * @param intent User's trading intent (DAY_TRADE, SWING, LONG_TERM).
      * @param risk User's risk tolerance.
-     * @param llmKey API key for the LLM.
      * @param maxShortlist Maximum number of symbols to include in the shortlist.
      * @return ShortlistPlan containing the selected symbols and reasons.
      */

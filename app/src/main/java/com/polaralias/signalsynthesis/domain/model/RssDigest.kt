@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.domain.model
 
 import org.json.JSONObject
+import com.polaralias.signalsynthesis.util.Logger
 
 data class RssDigest(
     val itemsBySymbol: Map<String, List<RssHeadline>> = emptyMap()
@@ -26,6 +27,7 @@ data class RssDigest(
                 }
                 RssDigest(itemsBySymbol)
             } catch (e: Exception) {
+                Logger.e("RssDigest", "Failed to parse RSS digest JSON", e)
                 RssDigest()
             }
         }

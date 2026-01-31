@@ -22,6 +22,15 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             rsiOversold = prefs.getFloat(KEY_RSI_OVERSOLD, 30.0f).toDouble(),
             rsiOverbought = prefs.getFloat(KEY_RSI_OVERBOUGHT, 70.0f).toDouble(),
             useMockDataWhenOffline = prefs.getBoolean(KEY_MOCK_DATA, true),
+            cacheTtlQuotesMinutes = prefs.getInt(KEY_CACHE_QUOTES, 1),
+            cacheTtlIntradayMinutes = prefs.getInt(KEY_CACHE_INTRADAY, 10),
+            cacheTtlDailyMinutes = prefs.getInt(KEY_CACHE_DAILY, 1440),
+            cacheTtlProfileMinutes = prefs.getInt(KEY_CACHE_PROFILE, 1440),
+            cacheTtlMetricsMinutes = prefs.getInt(KEY_CACHE_METRICS, 1440),
+            cacheTtlSentimentMinutes = prefs.getInt(KEY_CACHE_SENTIMENT, 30),
+            aiSummaryPrefetchEnabled = prefs.getBoolean(KEY_AI_PREFETCH_ENABLED, true),
+            aiSummaryPrefetchLimit = prefs.getInt(KEY_AI_PREFETCH_LIMIT, 3),
+            verboseLogging = prefs.getBoolean(KEY_VERBOSE_LOGGING, true),
             screenerConservativeThreshold = prefs.getFloat(KEY_SCREEN_CONS, 5.0f).toDouble(),
             screenerModerateThreshold = prefs.getFloat(KEY_SCREEN_MOD, 20.0f).toDouble(),
             screenerAggressiveThreshold = prefs.getFloat(KEY_SCREEN_AGGR, 100.0f).toDouble(),
@@ -35,10 +44,11 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.valueOf(prefs.getString(KEY_VERBOSITY, "MEDIUM") ?: "MEDIUM"),
             riskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.valueOf(prefs.getString(KEY_RISK_TOLERANCE, "MODERATE") ?: "MODERATE"),
             preferredAssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.valueOf(prefs.getString(KEY_ASSET_CLASS, "STOCKS") ?: "STOCKS"),
-            discoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.valueOf(prefs.getString(KEY_DISCOVERY_MODE, "CURATED") ?: "CURATED"),
+            discoveryMode = parseDiscoveryMode(prefs.getString(KEY_DISCOVERY_MODE, "STATIC")),
             isAnalysisPaused = prefs.getBoolean(KEY_ANALYSIS_PAUSED, false),
             useStagedPipeline = prefs.getBoolean(KEY_USE_STAGED, false),
             themeMode = com.polaralias.signalsynthesis.data.settings.ThemeMode.valueOf(prefs.getString(KEY_THEME_MODE, "SYSTEM") ?: "SYSTEM"),
+            deepDiveProvider = com.polaralias.signalsynthesis.domain.ai.LlmProvider.valueOf(prefs.getString(KEY_DEEP_DIVE_PROVIDER, "OPENAI") ?: "OPENAI"),
             modelRouting = com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig.fromJson(prefs.getString(KEY_MODEL_ROUTING, null)),
             rssFeeds = com.squareup.moshi.Moshi.Builder().build().adapter<List<String>>(List::class.java).fromJson(prefs.getString(KEY_RSS_FEEDS, "[]") ?: "[]") ?: emptyList()
         )
@@ -52,6 +62,15 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             putFloat(KEY_RSI_OVERSOLD, settings.rsiOversold.toFloat())
             putFloat(KEY_RSI_OVERBOUGHT, settings.rsiOverbought.toFloat())
             putBoolean(KEY_MOCK_DATA, settings.useMockDataWhenOffline)
+            putInt(KEY_CACHE_QUOTES, settings.cacheTtlQuotesMinutes)
+            putInt(KEY_CACHE_INTRADAY, settings.cacheTtlIntradayMinutes)
+            putInt(KEY_CACHE_DAILY, settings.cacheTtlDailyMinutes)
+            putInt(KEY_CACHE_PROFILE, settings.cacheTtlProfileMinutes)
+            putInt(KEY_CACHE_METRICS, settings.cacheTtlMetricsMinutes)
+            putInt(KEY_CACHE_SENTIMENT, settings.cacheTtlSentimentMinutes)
+            putBoolean(KEY_AI_PREFETCH_ENABLED, settings.aiSummaryPrefetchEnabled)
+            putInt(KEY_AI_PREFETCH_LIMIT, settings.aiSummaryPrefetchLimit)
+            putBoolean(KEY_VERBOSE_LOGGING, settings.verboseLogging)
             putFloat(KEY_SCREEN_CONS, settings.screenerConservativeThreshold.toFloat())
             putFloat(KEY_SCREEN_MOD, settings.screenerModerateThreshold.toFloat())
             putFloat(KEY_SCREEN_AGGR, settings.screenerAggressiveThreshold.toFloat())
@@ -69,6 +88,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             putBoolean(KEY_ANALYSIS_PAUSED, settings.isAnalysisPaused)
             putBoolean(KEY_USE_STAGED, settings.useStagedPipeline)
             putString(KEY_THEME_MODE, settings.themeMode.name)
+            putString(KEY_DEEP_DIVE_PROVIDER, settings.deepDiveProvider.name)
             putString(KEY_MODEL_ROUTING, settings.modelRouting.toJson())
             putString(KEY_RSS_FEEDS, com.squareup.moshi.Moshi.Builder().build().adapter<List<String>>(List::class.java).toJson(settings.rssFeeds))
         }
@@ -102,6 +122,15 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_RSI_OVERSOLD = "rsi_oversold"
         private const val KEY_RSI_OVERBOUGHT = "rsi_overbought"
         private const val KEY_MOCK_DATA = "use_mock_data"
+        private const val KEY_CACHE_QUOTES = "cache_ttl_quotes"
+        private const val KEY_CACHE_INTRADAY = "cache_ttl_intraday"
+        private const val KEY_CACHE_DAILY = "cache_ttl_daily"
+        private const val KEY_CACHE_PROFILE = "cache_ttl_profile"
+        private const val KEY_CACHE_METRICS = "cache_ttl_metrics"
+        private const val KEY_CACHE_SENTIMENT = "cache_ttl_sentiment"
+        private const val KEY_AI_PREFETCH_ENABLED = "ai_prefetch_enabled"
+        private const val KEY_AI_PREFETCH_LIMIT = "ai_prefetch_limit"
+        private const val KEY_VERBOSE_LOGGING = "verbose_logging"
         private const val KEY_SCREEN_CONS = "screen_cons"
         private const val KEY_SCREEN_MOD = "screen_mod"
         private const val KEY_SCREEN_AGGR = "screen_aggr"
@@ -121,7 +150,17 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_ANALYSIS_PAUSED = "analysis_paused"
         private const val KEY_USE_STAGED = "use_staged_pipeline"
         private const val KEY_THEME_MODE = "interface_theme_mode"
+        private const val KEY_DEEP_DIVE_PROVIDER = "deep_dive_provider"
         private const val KEY_MODEL_ROUTING = "model_routing_by_stage"
         private const val KEY_RSS_FEEDS = "user_rss_feeds"
+    }
+}
+
+private fun parseDiscoveryMode(value: String?): com.polaralias.signalsynthesis.data.settings.DiscoveryMode {
+    return when (value?.uppercase()) {
+        "CURATED", "STATIC" -> com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC
+        "LIVE_SCANNER", "SCREENER" -> com.polaralias.signalsynthesis.data.settings.DiscoveryMode.SCREENER
+        "CUSTOM", "CUSTOM_ONLY" -> com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CUSTOM
+        else -> com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC
     }
 }

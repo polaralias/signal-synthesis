@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.domain.model
 
 import com.polaralias.signalsynthesis.util.JsonExtraction.toStringList
+import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONObject
 
 data class DeepDive(
@@ -46,6 +47,7 @@ data class DeepDive(
                     sources = sourcesList
                 )
             } catch (e: Exception) {
+                Logger.e("DeepDive", "Failed to parse deep dive JSON", e)
                 DeepDive()
             }
         }

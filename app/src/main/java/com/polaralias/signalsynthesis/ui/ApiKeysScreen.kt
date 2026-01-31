@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import androidx.compose.material.icons.Icons
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,7 +29,8 @@ fun ApiKeysScreen(
     uiState: AnalysisUiState,
     onBack: () -> Unit,
     onFieldChanged: (KeyField, String) -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    onClear: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -133,7 +133,7 @@ fun ApiKeysScreen(
                     ApiKeyField(
                         value = uiState.keys.massiveKey,
                         onValueChange = { onFieldChanged(KeyField.MASSIVE, it) },
-                        label = "Massive Access",
+                        label = "Polygon API Key",
                         isBlacklisted = uiState.blacklistedProviders.contains("Massive")
                     )
 
@@ -168,14 +168,17 @@ fun ApiKeysScreen(
                         modifier = Modifier.padding(start = 4.dp)
                     )
 
-                    val llmLabel = when (uiState.appSettings.llmProvider) {
-                        LlmProvider.OPENAI -> "OpenAI Authentication"
-                        LlmProvider.GEMINI -> "Google Cloud Signature"
-                    }
                     ApiKeyField(
-                        value = uiState.keys.llmKey,
-                        onValueChange = { onFieldChanged(KeyField.LLM, it) },
-                        label = llmLabel,
+                        value = uiState.keys.openAiKey,
+                        onValueChange = { onFieldChanged(KeyField.OPENAI, it) },
+                        label = "OpenAI API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.geminiKey,
+                        onValueChange = { onFieldChanged(KeyField.GEMINI, it) },
+                        label = "Gemini API Key",
                         isBlacklisted = false
                     )
                     
@@ -199,6 +202,33 @@ fun ApiKeysScreen(
                             Text(
                                 "COMMIT CONFIGURATION",
                                 color = BrandPrimary,
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 2.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    com.polaralias.signalsynthesis.ui.components.GlassBox(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clickable { 
+                                onClear()
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "Credentials cleared. All keys removed.",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            }
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                "CLEAR ALL KEYS",
+                                color = ErrorRed.copy(alpha = 0.7f),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Black,
                                 letterSpacing = 2.sp

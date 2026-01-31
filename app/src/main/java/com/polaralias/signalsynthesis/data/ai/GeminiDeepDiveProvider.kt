@@ -75,7 +75,7 @@ class GeminiDeepDiveProvider(
                 // Merge sources, preferring grounding metadata as authoritative
                 val combinedSources = (groundingSources + deepDive.sources).distinctBy { it.url }
                 
-                ActivityLogger.logLlm("DeepDive (Gemini)", prompt, outputText, true, duration)
+                ActivityLogger.logLlm("DeepDive (Gemini)", prompt, outputText, true, duration, provider = "Gemini")
                 
                 deepDive.copy(sources = combinedSources)
             }

@@ -281,7 +281,8 @@ fun SetupDetailScreen(
                             val earningsLocalDate = java.time.LocalDate.parse(date.take(10))
                             val today = java.time.LocalDate.now()
                             java.time.temporal.ChronoUnit.DAYS.between(today, earningsLocalDate)
-                        } catch (_: Exception) {
+                        } catch (e: Exception) {
+                            com.polaralias.signalsynthesis.util.Logger.w("SetupDetailScreen", "Failed to parse earnings date: $date", e)
                             null
                         }
 

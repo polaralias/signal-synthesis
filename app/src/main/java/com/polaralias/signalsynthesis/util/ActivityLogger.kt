@@ -16,6 +16,7 @@ enum class ApiUsageCategory {
     ANALYSIS,       // Reviewing trends (quotes, intraday, daily data)
     FUNDAMENTALS,   // Profile, metrics, sentiment
     ALERTS,         // Background alert checks
+    DEEP_DIVE,      // LLM/web search deep dive
     SEARCH,         // Ticker search
     OTHER;          // Fallback
 
@@ -34,6 +35,20 @@ enum class ApiUsageCategory {
                 operation.contains("Sentiment", ignoreCase = true) -> FUNDAMENTALS
                 operation.contains("Alert", ignoreCase = true) -> ALERTS
                 operation.contains("Search", ignoreCase = true) -> SEARCH
+                operation.contains("DeepDive", ignoreCase = true) -> DEEP_DIVE
+                else -> OTHER
+            }
+        }
+
+        fun fromLlmTag(tag: String): ApiUsageCategory {
+            return when {
+                tag.contains("DeepDive", ignoreCase = true) -> DEEP_DIVE
+                tag.contains("Shortlist", ignoreCase = true) -> DISCOVERY
+                tag.contains("Screener", ignoreCase = true) -> DISCOVERY
+                tag.contains("Fundamentals", ignoreCase = true) -> FUNDAMENTALS
+                tag.contains("Decision", ignoreCase = true) -> ANALYSIS
+                tag.contains("Verdict", ignoreCase = true) -> ANALYSIS
+                tag.contains("Analysis", ignoreCase = true) -> ANALYSIS
                 else -> OTHER
             }
         }
@@ -59,28 +74,49 @@ data class DailyUsageArchive(
 
 object ActivityLogger {
     private const val MAX_ENTRIES = 100
+    private const val REDACTED_TEXT = "REDACTED"
     private val _activities = MutableStateFlow<List<ActivityEntry>>(emptyList())
     val activities: StateFlow<List<ActivityEntry>> = _activities.asStateFlow()
+    private var verboseLoggingEnabled: Boolean = true
+
+    fun setVerboseLogging(enabled: Boolean) {
+        verboseLoggingEnabled = enabled
+    }
 
     fun logApi(tag: String, input: String, output: String, isSuccess: Boolean, durationMs: Long) {
         val category = ApiUsageCategory.fromOperation(input)
+        val normalizedTag = normalizeProviderTag(tag)
         addEntry(ActivityEntry(
             type = ActivityType.API_REQUEST, 
-            tag = tag, 
-            input = input, 
-            output = output, 
+            tag = normalizedTag, 
+            input = sanitizeMaybe(input), 
+            output = sanitizeMaybe(output), 
             isSuccess = isSuccess, 
             durationMs = durationMs,
             category = category
         ))
         // Now log ALL providers including mock to help users understand usage patterns
         if (isSuccess) {
-            UsageTracker.incrementApiCount(tag, category)
+            UsageTracker.incrementApiCount(normalizedTag, category)
         }
     }
 
-    fun logLlm(tag: String, input: String, output: String, isSuccess: Boolean, durationMs: Long) {
-        addEntry(ActivityEntry(type = ActivityType.LLM_REQUEST, tag = tag, input = input, output = output, isSuccess = isSuccess, durationMs = durationMs))
+    fun logLlm(tag: String, input: String, output: String, isSuccess: Boolean, durationMs: Long, provider: String? = null) {
+        val category = ApiUsageCategory.fromLlmTag(tag)
+        addEntry(
+            ActivityEntry(
+                type = ActivityType.LLM_REQUEST,
+                tag = tag,
+                input = sanitizeMaybe(input),
+                output = sanitizeMaybe(output),
+                isSuccess = isSuccess,
+                durationMs = durationMs,
+                category = category
+            )
+        )
+        if (isSuccess) {
+            UsageTracker.incrementApiCount(provider ?: "LLM", category)
+        }
     }
 
     private fun addEntry(entry: ActivityEntry) {
@@ -91,6 +127,34 @@ object ActivityLogger {
 
     fun clear() {
         _activities.update { emptyList() }
+    }
+
+    private fun sanitizeMaybe(text: String): String {
+        if (!verboseLoggingEnabled) return "Verbose logging disabled."
+        return sanitize(text)
+    }
+
+    private fun sanitize(text: String): String {
+        var cleaned = text
+        cleaned = cleaned.replace(Regex("Bearer\\s+[A-Za-z0-9._-]+"), "Bearer $REDACTED_TEXT")
+        cleaned = cleaned.replace(Regex("sk-[A-Za-z0-9]{20,}"), "sk-$REDACTED_TEXT")
+        cleaned = cleaned.replace(Regex("AIza[0-9A-Za-z-_]{20,}"), "AIza$REDACTED_TEXT")
+        cleaned = cleaned.replace(Regex("(?i)(api[_-]?key|token|secret|password)\\s*[:=]\\s*[A-Za-z0-9._-]{8,}"), "$1=$REDACTED_TEXT")
+        cleaned = cleaned.replace(Regex("(?i)\"(userId|user_id)\"\\s*:\\s*\"[^\"]+\""), "\"$1\":\"$REDACTED_TEXT\"")
+        cleaned = cleaned.replace(Regex("You are a senior trading analyst[^\\n]*"), "SYSTEM_PROMPT_$REDACTED_TEXT")
+        return cleaned
+    }
+
+    private fun normalizeProviderTag(tag: String): String {
+        val cleaned = tag
+            .replace("MarketDataProvider", "")
+            .replace("DataProvider", "")
+            .trim()
+        return if (cleaned.contains("Mock", ignoreCase = true)) {
+            "Mock"
+        } else {
+            cleaned.ifBlank { tag }
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.data.rss
 
 import android.util.Xml
+import com.polaralias.signalsynthesis.util.Logger
 import org.xmlpull.v1.XmlPullParser
 import java.io.InputStream
 import java.text.SimpleDateFormat
@@ -23,6 +24,7 @@ class RssParser {
                 parser.nextTag()
                 return readFeed(parser, feedUrl)
             } catch (e: Exception) {
+                Logger.e("RssParser", "Failed to parse feed: $feedUrl", e)
                 return emptyList()
             }
         }
@@ -151,6 +153,9 @@ class RssParser {
                 // Continue
             }
         }
+        if (dateStr.isNotBlank()) {
+            Logger.w("RssParser", "Date parse failed: $dateStr")
+        }
         return 0L
     }
 
@@ -164,6 +169,7 @@ class RssParser {
                 .digest(input.toByteArray())
                 .joinToString("") { "%02x".format(it) }
         } catch (e: Exception) {
+            Logger.w("RssParser", "Hashing failed, falling back to hashCode", e)
             input.hashCode().toString()
         }
     }

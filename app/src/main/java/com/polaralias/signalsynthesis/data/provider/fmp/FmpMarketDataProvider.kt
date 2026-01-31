@@ -12,6 +12,7 @@ import com.polaralias.signalsynthesis.domain.provider.MetricsProvider
 import com.polaralias.signalsynthesis.domain.provider.ProfileProvider
 import com.polaralias.signalsynthesis.domain.provider.QuoteProvider
 import com.polaralias.signalsynthesis.domain.provider.SentimentProvider
+import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -82,6 +83,7 @@ class FmpMarketDataProvider(
             val quotes = service.getQuote(symbolsCsv, apiKey)
             quotes.mapNotNull { it.toQuote() }.associateBy { it.symbol }
         } catch (e: Exception) {
+            Logger.e("FMP", "Quote fetch failed for $symbolsCsv", e)
             emptyMap()
         }
     }

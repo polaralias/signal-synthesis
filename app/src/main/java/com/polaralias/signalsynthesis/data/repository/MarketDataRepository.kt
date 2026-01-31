@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.data.repository
 
 import com.polaralias.signalsynthesis.data.cache.TimedCache
+import com.polaralias.signalsynthesis.data.cache.CacheTtlConfig
 import com.polaralias.signalsynthesis.data.provider.ProviderBundle
 import com.polaralias.signalsynthesis.domain.model.CompanyProfile
 import com.polaralias.signalsynthesis.domain.model.DailyBar
@@ -15,7 +16,8 @@ import com.polaralias.signalsynthesis.util.Logger
 import kotlinx.coroutines.delay
 
 class MarketDataRepository(
-    private val providers: ProviderBundle
+    private val providers: ProviderBundle,
+    cacheConfig: CacheTtlConfig = CacheTtlConfig()
 ) {
 
     suspend fun searchSymbols(query: String): List<SearchResult> {
@@ -27,12 +29,12 @@ class MarketDataRepository(
             isValid = { it.isNotEmpty() }
         ) ?: emptyList()
     }
-    private val quoteCache = TimedCache<String, Quote>(QUOTE_TTL_MILLIS)
-    private val intradayCache = TimedCache<String, List<IntradayBar>>(INTRADAY_TTL_MILLIS)
-    private val dailyCache = TimedCache<String, List<DailyBar>>(DAILY_TTL_MILLIS)
-    private val profileCache = TimedCache<String, CompanyProfile>(PROFILE_TTL_MILLIS)
-    private val metricsCache = TimedCache<String, FinancialMetrics>(METRICS_TTL_MILLIS)
-    private val sentimentCache = TimedCache<String, SentimentData>(SENTIMENT_TTL_MILLIS)
+    private val quoteCache = TimedCache<String, Quote>(cacheConfig.quoteTtlMs)
+    private val intradayCache = TimedCache<String, List<IntradayBar>>(cacheConfig.intradayTtlMs)
+    private val dailyCache = TimedCache<String, List<DailyBar>>(cacheConfig.dailyTtlMs)
+    private val profileCache = TimedCache<String, CompanyProfile>(cacheConfig.profileTtlMs)
+    private val metricsCache = TimedCache<String, FinancialMetrics>(cacheConfig.metricsTtlMs)
+    private val sentimentCache = TimedCache<String, SentimentData>(cacheConfig.sentimentTtlMs)
 
     suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
@@ -408,12 +410,15 @@ class MarketDataRepository(
 
 
     companion object {
-        private const val QUOTE_TTL_MILLIS = 60_000L // 1 minute
-        private const val INTRADAY_TTL_MILLIS = 10 * 60_000L // 10 minutes
-        private const val DAILY_TTL_MILLIS = 24 * 60 * 60_000L
-        private const val PROFILE_TTL_MILLIS = 24 * 60 * 60_000L
-        private const val METRICS_TTL_MILLIS = 24 * 60 * 60_000L
-        private const val SENTIMENT_TTL_MILLIS = 30 * 60_000L // 30 minutes
         private const val ENFORCED_COOLDOWN_MS = 10 * 60 * 1000L // 10 minutes
+    }
+
+    fun clearAllCaches() {
+        quoteCache.clear()
+        intradayCache.clear()
+        dailyCache.clear()
+        profileCache.clear()
+        metricsCache.clear()
+        sentimentCache.clear()
     }
 }

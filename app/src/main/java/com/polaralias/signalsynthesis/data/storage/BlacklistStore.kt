@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.polaralias.signalsynthesis.util.Logger
 
 class BlacklistStore(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("blacklist_prefs", Context.MODE_PRIVATE)
@@ -22,6 +23,7 @@ class BlacklistStore(context: Context) {
         return try {
             adapter.fromJson(json) ?: emptyMap()
         } catch (e: Exception) {
+            Logger.e("BlacklistStore", "Failed to parse blacklist", e)
             emptyMap()
         }
     }

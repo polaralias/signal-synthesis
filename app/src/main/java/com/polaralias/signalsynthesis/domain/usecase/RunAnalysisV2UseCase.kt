@@ -47,8 +47,7 @@ class RunAnalysisV2UseCase(
         intent: TradingIntent,
         risk: RiskTolerance = RiskTolerance.MODERATE,
         assetClass: AssetClass = AssetClass.STOCKS,
-        discoveryMode: DiscoveryMode = DiscoveryMode.CURATED,
-        llmKey: String,
+        discoveryMode: DiscoveryMode = DiscoveryMode.STATIC,
         customTickers: List<String> = emptyList(),
         blocklist: List<String> = emptyList(),
         screenerThresholds: Map<String, Double> = emptyMap(),
@@ -57,10 +56,6 @@ class RunAnalysisV2UseCase(
         rssFeeds: List<String> = emptyList(),
         onProgress: ((String) -> Unit)? = null
     ): AnalysisResult {
-        if (llmKey.isBlank()) {
-            throw IllegalArgumentException("LLM key required for staged analysis.")
-        }
-
         // Step 1: Discover candidates
         onProgress?.invoke("Discovering candidates...")
         val rawCandidateMap = discoverCandidates.execute(intent, risk, assetClass, discoveryMode, customTickers, screenerThresholds)

@@ -55,7 +55,7 @@ open class RssFeedClient(
                 )
             }
         } catch (e: Exception) {
-            // Silently fail for now, or could log to ActivityLogger
+            com.polaralias.signalsynthesis.util.Logger.e("RssFeedClient", "RSS fetch failed for $url: ${e.message}", e)
         }
     }
 
@@ -70,6 +70,7 @@ open class RssFeedClient(
                 return@withContext response.body?.string()
             }
         } catch (e: Exception) {
+            com.polaralias.signalsynthesis.util.Logger.e("RssFeedClient", "RSS raw fetch failed for $url: ${e.message}", e)
             return@withContext null
         }
     }

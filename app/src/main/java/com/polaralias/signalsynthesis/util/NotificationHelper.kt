@@ -116,7 +116,7 @@ object NotificationHelper {
             notificationManager.createNotificationChannel(systemChannel)
 
             // Market Channel
-            val marketName = "Market Signals"
+            val marketName = "Market Alerts"
             val marketDesc = "Notifications for trade signals and price alerts."
             val marketChannel = NotificationChannel(MARKET_CHANNEL_ID, marketName, NotificationManager.IMPORTANCE_HIGH).apply {
                 description = marketDesc

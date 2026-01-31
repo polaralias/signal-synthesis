@@ -9,6 +9,8 @@ object AiPrompts {
         1. Technical Strength/Weakness (RS, VWAP, Trends).
         2. Fundamental Context (Valuation, Sector, Catalysts).
         3. Sentiment Profile.
+
+        Explicitly reference indicator names and values in your analysis (e.g., "RSI (14) = 42.3", "VWAP = 119.5").
         
         Output a detailed internal analysis document. Focus purely on data interpretation.
         
@@ -28,9 +30,15 @@ object AiPrompts {
         Intent: {intent}
         Setup Type: {setupType}
         Levels: Trigger {triggerPrice}, Stop {stopLoss}, Target {targetPrice}.
+        Technical Indicators (must cite in summary):
+        {technicalIndicators}
         
         Data Analysis Report:
         {analysisReport}
+
+        Requirements:
+        - In the "summary" field, explicitly mention at least two indicator names AND their numeric values from the Technical Indicators list.
+        - If a value is missing, state it as "N/A" rather than omitting the indicator.
         
         Output schema (JSON ONLY):
         {

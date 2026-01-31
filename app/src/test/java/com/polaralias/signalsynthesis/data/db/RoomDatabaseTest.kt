@@ -42,7 +42,7 @@ class RoomDatabaseTest {
 
     @Test
     fun watchlistDao_insertAndGet() = runBlocking {
-        val item = WatchlistEntity("AAPL", System.currentTimeMillis())
+        val item = WatchlistEntity("AAPL", TradingIntent.DAY_TRADE.name, System.currentTimeMillis())
         watchlistDao.insert(item)
         val list = watchlistDao.getAll().first()
         assertEquals(1, list.size)
@@ -51,7 +51,7 @@ class RoomDatabaseTest {
 
     @Test
     fun watchlistDao_delete() = runBlocking {
-        val item = WatchlistEntity("TSLA", System.currentTimeMillis())
+        val item = WatchlistEntity("TSLA", TradingIntent.SWING.name, System.currentTimeMillis())
         watchlistDao.insert(item)
         watchlistDao.delete("TSLA")
         val list = watchlistDao.getAll().first()

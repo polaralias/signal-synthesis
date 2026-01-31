@@ -3,12 +3,14 @@ package com.polaralias.signalsynthesis.data.provider
 import com.polaralias.signalsynthesis.util.Logger
 import kotlinx.coroutines.delay
 import java.io.IOException
+import retrofit2.HttpException
 
 data class RetryConfig(
     val maxRetries: Int = 3,
     val initialDelayMs: Long = 1000,
     val maxDelayMs: Long = 10000,
-    val multiplier: Double = 2.0
+    val multiplier: Double = 2.0,
+    val rateLimitDelayMs: Long = 60_000
 )
 
 object RetryHelper {
@@ -21,24 +23,34 @@ object RetryHelper {
     ): T {
         var currentDelay = config.initialDelayMs
         var lastException: Throwable? = null
+        var attempts = 0
         
-        repeat(config.maxRetries) { attempt ->
+        while (attempts < config.maxRetries) {
             try {
                 return block()
             } catch (e: Exception) {
                 lastException = e
+
+                if (e is HttpException && e.code() == 429) {
+                    val retryAfterHeader = e.response()?.headers()?.get("Retry-After")?.toLongOrNull()
+                    val delayMs = retryAfterHeader?.times(1000) ?: config.rateLimitDelayMs
+                    Logger.w(tag, "Rate limited (429). Waiting ${delayMs}ms before retrying.", e)
+                    delay(delayMs)
+                    continue // Do not consume attempt quota for rate limit
+                }
                 
                 // Only retry on IOExceptions or network-related issues
                 val isRetryable = e is IOException
                 
-                if (!isRetryable || attempt == config.maxRetries - 1) {
+                if (!isRetryable || attempts == config.maxRetries - 1) {
                     throw e
                 }
                 
-                Logger.w(tag, "Attempt ${attempt + 1} failed, retrying in ${currentDelay}ms", e)
+                Logger.w(tag, "Attempt ${attempts + 1} failed, retrying in ${currentDelay}ms", e)
                 
                 delay(currentDelay)
                 currentDelay = (currentDelay * config.multiplier).toLong().coerceAtMost(config.maxDelayMs)
+                attempts += 1
             }
         }
         

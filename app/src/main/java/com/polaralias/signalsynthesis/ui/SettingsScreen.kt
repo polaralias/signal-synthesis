@@ -31,6 +31,7 @@ import kotlin.math.roundToInt
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
 
 @Composable
 private fun AuthStatusItem(label: String, status: String, isActive: Boolean) {
@@ -60,6 +61,7 @@ fun SettingsScreen(
     onApplyAi: () -> Unit,
     onDismissAi: () -> Unit,
     onOpenLogs: () -> Unit,
+    onClearCaches: () -> Unit = {},
     onAddCustomTicker: (String) -> Unit,
     onRemoveCustomTicker: (String) -> Unit,
     onSearchTickers: (String) -> Unit,
@@ -85,6 +87,7 @@ fun SettingsScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     var showPermissionDeniedDialog by remember { mutableStateOf(false) }
+    val monthlyUsageTotal = uiState.dailyApiUsage + uiState.archivedUsage.sumOf { it.totalCalls }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -226,6 +229,40 @@ fun SettingsScreen(
                     }
                     
                     Spacer(modifier = Modifier.height(32.dp))
+                    SectionHeader("OFFLINE FALLBACK")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "USE MOCK DATA WHEN OFFLINE",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black,
+                                        color = BrandPrimary,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Text(
+                                        "Enable demo mode if no provider keys are configured.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                    )
+                                }
+                                Switch(
+                                    checked = uiState.appSettings.useMockDataWhenOffline,
+                                    onCheckedChange = { enabled ->
+                                        onUpdateSettings(uiState.appSettings.copy(useMockDataWhenOffline = enabled))
+                                    },
+                                    modifier = Modifier.testTag("mock_toggle"),
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = BrandPrimary,
+                                        checkedTrackColor = BrandPrimary.copy(alpha = 0.2f)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
                     SectionHeader("DAILY TELEMETRY USAGE")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
@@ -235,6 +272,16 @@ fun SettingsScreen(
                                     Text("Rolling 24h window", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                                 }
                                 Text(uiState.dailyApiUsage.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = BrandPrimary)
+                            }
+                            Spacer(modifier = Modifier.height(16.dp))
+                            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                Column {
+                                    Text("MONTHLY AGGREGATE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                    Text("Last 30 days (compare vs provider limits)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                }
+                                Text(monthlyUsageTotal.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = BrandSecondary)
                             }
                         }
                     }
@@ -555,13 +602,30 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     val isGeminiVal = uiState.appSettings.llmProvider == LlmProvider.GEMINI
-                    Text(
-                        text = if (isGeminiVal) "VERBOSITY (OPENAI EXCLUSIVE)" else "VERBOSITY",
-                        style = MaterialTheme.typography.labelSmall, 
-                        fontWeight = FontWeight.Black,
-                        color = if (isGeminiVal) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                        letterSpacing = 1.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = if (isGeminiVal) "VERBOSITY (OPENAI EXCLUSIVE)" else "VERBOSITY",
+                            style = MaterialTheme.typography.labelSmall, 
+                            fontWeight = FontWeight.Black,
+                            color = if (isGeminiVal) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                            letterSpacing = 1.sp
+                        )
+                        if (isGeminiVal) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            TooltipBox(
+                                positionProvider = TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                                tooltip = { PlainTooltip { Text("Gemini does not support verbosity controls.") } },
+                                state = rememberTooltipState()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = "Verbosity not supported for Gemini",
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(8.dp))
                     var verbosityExpanded by remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
@@ -594,6 +658,52 @@ fun SettingsScreen(
                                 }
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Text("AI SUMMARY PREFETCH", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), letterSpacing = 1.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                if (uiState.appSettings.aiSummaryPrefetchEnabled) "Prefetch Enabled" else "Prefetch Disabled",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Black,
+                                color = if (uiState.appSettings.aiSummaryPrefetchEnabled) BrandSecondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                            Text(
+                                "Automatically pre-compute summaries for top setups.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                            )
+                        }
+                        Switch(
+                            checked = uiState.appSettings.aiSummaryPrefetchEnabled,
+                            onCheckedChange = { enabled ->
+                                onUpdateSettings(uiState.appSettings.copy(aiSummaryPrefetchEnabled = enabled))
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = BrandSecondary,
+                                checkedTrackColor = BrandSecondary.copy(alpha = 0.2f)
+                            )
+                        )
+                    }
+
+                    if (uiState.appSettings.aiSummaryPrefetchEnabled) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        SettingsSlider(
+                            label = "PREFETCH LIMIT",
+                            value = uiState.appSettings.aiSummaryPrefetchLimit.toDouble(),
+                            range = 1.0f..10.0f,
+                            steps = 8,
+                            format = { "${it.toInt()} SETUPS" },
+                            onValueChange = { onUpdateSettings(uiState.appSettings.copy(aiSummaryPrefetchLimit = it.toInt().coerceAtLeast(1))) }
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -693,6 +803,14 @@ fun SettingsScreen(
                         format = { "${it.toInt()} MIN" },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(alertCheckIntervalMinutes = it.toInt())) }
                     )
+                    if (uiState.appSettings.alertCheckIntervalMinutes <= 5) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            "Warning: shorter polling intervals can increase API usage and quota consumption.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = ErrorRed.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
             
@@ -850,6 +968,66 @@ fun SettingsScreen(
                 }
 
             Spacer(modifier = Modifier.height(32.dp))
+            SectionHeader("CACHE CONTROL")
+            com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    SettingsSlider(
+                        label = "QUOTE CACHE TTL",
+                        value = uiState.appSettings.cacheTtlQuotesMinutes.toDouble(),
+                        range = 1.0f..10.0f,
+                        steps = 9,
+                        format = { "${it.toInt()} MIN" },
+                        onValueChange = { onUpdateSettings(uiState.appSettings.copy(cacheTtlQuotesMinutes = it.toInt().coerceAtLeast(1))) }
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SettingsSlider(
+                        label = "INTRADAY CACHE TTL",
+                        value = uiState.appSettings.cacheTtlIntradayMinutes.toDouble(),
+                        range = 1.0f..60.0f,
+                        steps = 59,
+                        format = { "${it.toInt()} MIN" },
+                        onValueChange = { onUpdateSettings(uiState.appSettings.copy(cacheTtlIntradayMinutes = it.toInt().coerceAtLeast(1))) }
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SettingsSlider(
+                        label = "DAILY CACHE TTL",
+                        value = uiState.appSettings.cacheTtlDailyMinutes.toDouble(),
+                        range = 60.0f..1440.0f,
+                        steps = 23,
+                        format = { "${(it / 60).roundToInt()} H" },
+                        onValueChange = { onUpdateSettings(uiState.appSettings.copy(cacheTtlDailyMinutes = it.toInt().coerceAtLeast(60))) }
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SettingsSlider(
+                        label = "PROFILE CACHE TTL",
+                        value = uiState.appSettings.cacheTtlProfileMinutes.toDouble(),
+                        range = 60.0f..1440.0f,
+                        steps = 23,
+                        format = { "${(it / 60).roundToInt()} H" },
+                        onValueChange = { onUpdateSettings(uiState.appSettings.copy(cacheTtlProfileMinutes = it.toInt().coerceAtLeast(60))) }
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SettingsSlider(
+                        label = "METRICS CACHE TTL",
+                        value = uiState.appSettings.cacheTtlMetricsMinutes.toDouble(),
+                        range = 60.0f..1440.0f,
+                        steps = 23,
+                        format = { "${(it / 60).roundToInt()} H" },
+                        onValueChange = { onUpdateSettings(uiState.appSettings.copy(cacheTtlMetricsMinutes = it.toInt().coerceAtLeast(60))) }
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SettingsSlider(
+                        label = "SENTIMENT CACHE TTL",
+                        value = uiState.appSettings.cacheTtlSentimentMinutes.toDouble(),
+                        range = 5.0f..120.0f,
+                        steps = 23,
+                        format = { "${it.toInt()} MIN" },
+                        onValueChange = { onUpdateSettings(uiState.appSettings.copy(cacheTtlSentimentMinutes = it.toInt().coerceAtLeast(5))) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("SYSTEM OPERATIONS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -860,6 +1038,40 @@ fun SettingsScreen(
                         }
                         TextButton(onClick = onOpenLogs) {
                             Text("ACCESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column {
+                            Text("VERBOSE LOGGING", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Text("Toggle detailed request/response capture.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                        }
+                        Switch(
+                            checked = uiState.appSettings.verboseLogging,
+                            onCheckedChange = { enabled ->
+                                onUpdateSettings(uiState.appSettings.copy(verboseLogging = enabled))
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = BrandSecondary,
+                                checkedTrackColor = BrandSecondary.copy(alpha = 0.2f)
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    com.polaralias.signalsynthesis.ui.components.GlassBox(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clickable { onClearCaches() }
+                    ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                "CLEAR IN-MEMORY CACHES",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Black,
+                                color = BrandSecondary,
+                                letterSpacing = 1.sp
+                            )
                         }
                     }
                 }
@@ -1258,6 +1470,7 @@ private fun formatCategoryName(category: com.polaralias.signalsynthesis.util.Api
         com.polaralias.signalsynthesis.util.ApiUsageCategory.ANALYSIS -> "Synthesis"
         com.polaralias.signalsynthesis.util.ApiUsageCategory.FUNDAMENTALS -> "Fundamentals"
         com.polaralias.signalsynthesis.util.ApiUsageCategory.ALERTS -> "Monitoring"
+        com.polaralias.signalsynthesis.util.ApiUsageCategory.DEEP_DIVE -> "Deep Dive"
         com.polaralias.signalsynthesis.util.ApiUsageCategory.SEARCH -> "Network Search"
         com.polaralias.signalsynthesis.util.ApiUsageCategory.OTHER -> "Protocols"
     }

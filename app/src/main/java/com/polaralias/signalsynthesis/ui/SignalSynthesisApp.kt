@@ -114,7 +114,8 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     uiState = uiState,
                     onBack = { navController.popBackStack() },
                     onFieldChanged = viewModel::updateKey,
-                    onSave = viewModel::saveKeys
+                    onSave = viewModel::saveKeys,
+                    onClear = viewModel::clearKeys
                 )
             }
             composable(Screen.Results.route) {
@@ -167,6 +168,7 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                     onApplyAi = viewModel::applyAiThresholdSuggestion,
                     onDismissAi = viewModel::dismissAiSuggestion,
                     onOpenLogs = { navController.navigate(Screen.Logs.route) },
+                    onClearCaches = viewModel::clearCaches,
                     onAddCustomTicker = viewModel::addCustomTicker,
                     onRemoveCustomTicker = viewModel::removeCustomTicker,
                     onSearchTickers = viewModel::searchTickers,

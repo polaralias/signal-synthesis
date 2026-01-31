@@ -27,8 +27,14 @@ class RoomDatabaseRepository(
     private val listType = Types.newParameterizedType(List::class.java, TradeSetup::class.java)
     private val adapter = moshi.adapter<List<TradeSetup>>(listType)
 
-    override suspend fun addToWatchlist(symbol: String) {
-        watchlistDao.insert(WatchlistEntity(symbol, System.currentTimeMillis()))
+    override suspend fun addToWatchlist(symbol: String, intent: TradingIntent?) {
+        watchlistDao.insert(
+            WatchlistEntity(
+                symbol = symbol,
+                intent = (intent ?: TradingIntent.DAY_TRADE).name,
+                addedAt = System.currentTimeMillis()
+            )
+        )
     }
 
     override suspend fun removeFromWatchlist(symbol: String) {

@@ -69,7 +69,7 @@ class OpenAiDeepDiveProvider(
                 // Combine sources from LLM JSON and API tool call metadata
                 val combinedSources = (deepDive.sources + apiSources).distinctBy { it.url }
                 
-                ActivityLogger.logLlm("DeepDive", prompt, outputText, true, duration)
+                ActivityLogger.logLlm("DeepDive", prompt, outputText, true, duration, provider = "OpenAI")
                 
                 deepDive.copy(sources = combinedSources)
             }

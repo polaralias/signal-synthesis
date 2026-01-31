@@ -28,6 +28,7 @@ class FilterTradeableUseCase(
                 quote.price >= minPrice && quote.volume > 0
             }
         } catch (e: Exception) {
+            com.polaralias.signalsynthesis.util.Logger.e("FilterTradeable", "Failed to filter tradeable symbols", e)
             // If quotes fail, return empty list rather than unfiltered symbols
             return emptyList()
         }

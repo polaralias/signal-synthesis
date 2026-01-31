@@ -37,18 +37,21 @@ class EnrichContextUseCase(
                 val profile = try {
                     repository.getProfile(symbol)
                 } catch (e: Exception) {
+                    com.polaralias.signalsynthesis.util.Logger.e("EnrichContext", "Profile fetch failed for $symbol", e)
                     null
                 }
                 
                 val metrics = try {
                     repository.getMetrics(symbol)
                 } catch (e: Exception) {
+                    com.polaralias.signalsynthesis.util.Logger.e("EnrichContext", "Metrics fetch failed for $symbol", e)
                     null
                 }
                 
                 val sentiment = try {
                     repository.getSentiment(symbol)
                 } catch (e: Exception) {
+                    com.polaralias.signalsynthesis.util.Logger.e("EnrichContext", "Sentiment fetch failed for $symbol", e)
                     null
                 }
                 
@@ -58,7 +61,7 @@ class EnrichContextUseCase(
                     sentiment = sentiment
                 )
             } catch (e: Exception) {
-                // Log error and continue with other symbols
+                com.polaralias.signalsynthesis.util.Logger.e("EnrichContext", "Context enrichment failed for $symbol", e)
                 continue
             }
         }

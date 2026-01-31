@@ -12,6 +12,7 @@ import com.polaralias.signalsynthesis.domain.provider.MetricsProvider
 import com.polaralias.signalsynthesis.domain.provider.ProfileProvider
 import com.polaralias.signalsynthesis.domain.provider.QuoteProvider
 import com.polaralias.signalsynthesis.domain.provider.SentimentProvider
+import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -114,6 +115,7 @@ class AlpacaMarketDataProvider(
             try {
                 Instant.parse(it)
             } catch (e: Exception) {
+                Logger.w("Alpaca", "Quote timestamp parse failed: $it", e)
                 Instant.now(clock)
             }
         } ?: Instant.now(clock)
@@ -138,6 +140,7 @@ class AlpacaMarketDataProvider(
             val time = try {
                 Instant.parse(timestamp)
             } catch (e: Exception) {
+                Logger.w("Alpaca", "Intraday timestamp parse failed: $timestamp", e)
                 return@mapNotNull null
             }
             
@@ -164,6 +167,7 @@ class AlpacaMarketDataProvider(
             val instant = try {
                 Instant.parse(timestamp)
             } catch (e: Exception) {
+                Logger.w("Alpaca", "Daily timestamp parse failed: $timestamp", e)
                 return@mapNotNull null
             }
             

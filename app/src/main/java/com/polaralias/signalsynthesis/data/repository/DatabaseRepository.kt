@@ -4,7 +4,7 @@ import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import kotlinx.coroutines.flow.Flow
 
 interface DatabaseRepository {
-    suspend fun addToWatchlist(symbol: String)
+    suspend fun addToWatchlist(symbol: String, intent: com.polaralias.signalsynthesis.domain.model.TradingIntent? = null)
     suspend fun removeFromWatchlist(symbol: String)
     fun getWatchlist(): Flow<List<String>>
     suspend fun saveHistory(result: AnalysisResult)

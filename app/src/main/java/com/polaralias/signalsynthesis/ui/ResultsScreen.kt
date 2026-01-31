@@ -117,7 +117,7 @@ fun ResultsScreen(
                                 CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.5.dp, color = BrandPrimary)
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
-                                    "ANALYSIS IN PROGRESS", 
+                                    "PROCESSING AI SUMMARY", 
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                     color = BrandPrimary,
                                     fontWeight = FontWeight.Black,
@@ -286,7 +286,7 @@ private fun SetupCard(
                 val summary = when {
                     !hasLlmKey -> "Connect LLM for detailed analysis"
                     aiSummary?.status == AiSummaryStatus.READY -> aiSummary.summary.orEmpty()
-                    aiSummary?.status == AiSummaryStatus.LOADING -> "Generating analysis..."
+                    aiSummary?.status == AiSummaryStatus.LOADING -> "Processing AI Summary..."
                     aiSummary?.status == AiSummaryStatus.ERROR -> "Analysis service unavailable"
                     else -> "Detailed analysis pending"
                 }

@@ -9,10 +9,15 @@ import kotlinx.coroutines.withContext
 
 interface ApiKeyStorage {
     suspend fun loadApiKeys(): ApiKeys
-    suspend fun loadLlmKey(): String?
-    suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?)
+    suspend fun loadLlmKeys(): LlmKeys
+    suspend fun saveKeys(apiKeys: ApiKeys, llmKeys: LlmKeys)
     suspend fun clear()
 }
+
+data class LlmKeys(
+    val openAiKey: String? = null,
+    val geminiKey: String? = null
+)
 
 class ApiKeyStore(context: Context) : ApiKeyStorage {
     private val masterKey = MasterKey.Builder(context)
@@ -38,11 +43,14 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
         )
     }
 
-    override suspend fun loadLlmKey(): String? = withContext(Dispatchers.IO) {
-        preferences.getString(KEY_LLM, null)
+    override suspend fun loadLlmKeys(): LlmKeys = withContext(Dispatchers.IO) {
+        LlmKeys(
+            openAiKey = preferences.getString(KEY_OPENAI, null),
+            geminiKey = preferences.getString(KEY_GEMINI, null)
+        )
     }
 
-    override suspend fun saveKeys(apiKeys: ApiKeys, llmKey: String?) {
+    override suspend fun saveKeys(apiKeys: ApiKeys, llmKeys: LlmKeys) {
         withContext(Dispatchers.IO) {
             preferences.edit().apply {
                 putOrRemove(KEY_ALPACA, apiKeys.alpacaKey)
@@ -51,7 +59,8 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
                 putOrRemove(KEY_FINNHUB, apiKeys.finnhub)
                 putOrRemove(KEY_FMP, apiKeys.financialModelingPrep)
                 putOrRemove(KEY_TWELVE_DATA, apiKeys.twelveData)
-                putOrRemove(KEY_LLM, llmKey)
+                putOrRemove(KEY_OPENAI, llmKeys.openAiKey)
+                putOrRemove(KEY_GEMINI, llmKeys.geminiKey)
                 apply()
             }
         }
@@ -77,6 +86,7 @@ class ApiKeyStore(context: Context) : ApiKeyStorage {
         private const val KEY_FINNHUB = "finnhub_key"
         private const val KEY_FMP = "fmp_key"
         private const val KEY_TWELVE_DATA = "twelve_data_key"
-        private const val KEY_LLM = "llm_key"
+        private const val KEY_OPENAI = "openai_key"
+        private const val KEY_GEMINI = "gemini_key"
     }
 }

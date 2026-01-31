@@ -150,18 +150,25 @@ fun AnalysisScreen(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         AssetChip(
-                            label = "CURATED",
+                            label = "STATIC",
                             icon = Icons.Filled.AutoGraph,
-                            selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED,
+                            selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC,
                             modifier = Modifier.weight(1f),
-                            onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CURATED) }
+                            onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC) }
                         )
                         AssetChip(
-                            label = "LIVE SCAN",
+                            label = "SCREENER",
                             icon = Icons.Filled.Radar,
-                            selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER,
+                            selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.SCREENER,
                             modifier = Modifier.weight(1f),
-                            onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.LIVE_SCANNER) }
+                            onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.SCREENER) }
+                        )
+                        AssetChip(
+                            label = "CUSTOM",
+                            icon = Icons.Filled.Edit,
+                            selected = uiState.appSettings.discoveryMode == com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CUSTOM,
+                            modifier = Modifier.weight(1f),
+                            onClick = { onDiscoveryModeSelected(com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CUSTOM) }
                         )
                     }
 
