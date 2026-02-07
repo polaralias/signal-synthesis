@@ -29,15 +29,16 @@ import com.polaralias.signalsynthesis.ui.theme.*
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
 
 fun formatPrice(value: Double): String {
     return if (value < 1.0 && value > 0) {
-        "$" + String.format("%.5f", value)
+        "$" + String.format(Locale.US, "%.5f", value)
     } else if (value < 10.0) {
-        "$" + String.format("%.4f", value)
+        "$" + String.format(Locale.US, "%.4f", value)
     } else {
-        "$" + String.format("%.2f", value)
+        "$" + String.format(Locale.US, "%.2f", value)
     }
 }
 
@@ -340,9 +341,9 @@ fun formatTickerSource(source: com.polaralias.signalsynthesis.domain.model.Ticke
 
 fun formatLargeNumber(value: Long): String {
     return when {
-        value >= 1_000_000_000 -> String.format("%.1fB", value / 1_000_000_000.0)
-        value >= 1_000_000 -> String.format("%.1fM", value / 1_000_000.0)
-        value >= 1_000 -> String.format("%.1fK", value / 1_000.0)
+        value >= 1_000_000_000 -> String.format(Locale.US, "%.1fB", value / 1_000_000_000.0)
+        value >= 1_000_000 -> String.format(Locale.US, "%.1fM", value / 1_000_000.0)
+        value >= 1_000 -> String.format(Locale.US, "%.1fK", value / 1_000.0)
         else -> value.toString()
     }
 }

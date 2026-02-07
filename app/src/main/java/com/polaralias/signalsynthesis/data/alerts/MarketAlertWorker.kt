@@ -23,6 +23,7 @@ import com.polaralias.signalsynthesis.domain.indicators.VwapIndicator
 import com.polaralias.signalsynthesis.data.alerts.AlertType
 import com.polaralias.signalsynthesis.data.alerts.AlertDirection
 import kotlin.math.roundToInt
+import java.util.Locale
 
 class MarketAlertWorker(
     appContext: Context,
@@ -172,4 +173,4 @@ class MarketAlertWorker(
     }
 }
 
-private fun formatPrice(value: Double): String = "$" + String.format("%.2f", value)
+private fun formatPrice(value: Double): String = "$" + String.format(Locale.US, "%.2f", value)

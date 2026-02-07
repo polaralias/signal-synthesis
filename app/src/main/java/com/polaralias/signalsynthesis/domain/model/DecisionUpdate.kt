@@ -3,6 +3,7 @@ package com.polaralias.signalsynthesis.domain.model
 import com.polaralias.signalsynthesis.util.JsonExtraction.toStringList
 import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONObject
+import java.util.Locale
 
 data class DecisionUpdate(
     val keep: List<KeepItem> = emptyList(),
@@ -66,7 +67,7 @@ data class KeepItem(
             val reasonRaw = obj.optString("expanded_rss_reason", "").trim()
             val reason = reasonRaw.takeIf { it.isNotBlank() && it.lowercase() != "null" }
             return KeepItem(
-                symbol = obj.optString("symbol", ""),
+                symbol = obj.optString("symbol", "").trim().uppercase(Locale.US),
                 confidence = obj.optDouble("confidence", 0.0),
                 setupBias = obj.optString("setup_bias", ""),
                 mustReview = obj.optJSONArray("must_review").toStringList(),
@@ -85,7 +86,7 @@ data class DropItem(
     companion object {
         fun fromJson(obj: JSONObject): DropItem {
             return DropItem(
-                symbol = obj.optString("symbol", ""),
+                symbol = obj.optString("symbol", "").trim().uppercase(Locale.US),
                 reasons = obj.optJSONArray("reasons").toStringList()
             )
         }

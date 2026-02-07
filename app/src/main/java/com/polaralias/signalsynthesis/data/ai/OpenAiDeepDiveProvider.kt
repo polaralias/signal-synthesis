@@ -24,7 +24,7 @@ class OpenAiDeepDiveProvider(
         timeoutMs: Long
     ): DeepDive {
         val rssHeadlinesText = rssHeadlines?.joinToString("\n") { "- ${it.title}" } ?: "No recent headlines found."
-        
+
         val prompt = AiPrompts.DEEP_DIVE_PROMPT
             .replace("{symbol}", symbol)
             .replace("{intent}", intent.name)
@@ -33,7 +33,8 @@ class OpenAiDeepDiveProvider(
 
         val request = OpenAiResponseRequest(
             model = model,
-            input = prompt,
+            instructions = AiPrompts.SYSTEM_ANALYST,
+            input = listOf(OpenAiInputMessage(role = "user", content = prompt)),
             tools = listOf(OpenAiTool(type = "web_search")),
             include = listOf("web_search_call.action.sources")
         )
@@ -46,31 +47,29 @@ class OpenAiDeepDiveProvider(
                     request = request
                 )
                 val duration = System.currentTimeMillis() - startTime
-                
-                val outputText = response.output?.text
-                val apiSources = response.output?.toolCalls?.flatMap { call ->
-                    call.webSearchCall?.action?.sources?.map { source ->
-                        DeepDiveSource(
-                            title = source.title ?: "Link",
-                            publisher = source.publisher ?: "",
-                            publishedAt = source.publishedAt ?: "",
-                            url = source.url ?: ""
-                        )
-                    } ?: emptyList()
-                } ?: emptyList()
 
-                if (outputText == null) {
-                    Logger.w("OpenAiDeepDiveProvider", "OpenAI returned null output text for $symbol")
+                val outputText = response.extractText()
+                val apiSources = response.extractSources().map { source ->
+                    DeepDiveSource(
+                        title = source.title ?: "Link",
+                        publisher = source.publisher ?: "",
+                        publishedAt = source.publishedAt ?: "",
+                        url = source.url ?: ""
+                    )
+                }
+
+                if (outputText.isBlank()) {
+                    Logger.w("OpenAiDeepDiveProvider", "OpenAI returned empty output text for $symbol")
                     return@withTimeout deterministicNoActionableNews()
                 }
 
                 val deepDive = DeepDive.fromJson(extractJson(outputText))
-                
-                // Combine sources from LLM JSON and API tool call metadata
+
+                // Combine sources from LLM JSON and API tool call metadata.
                 val combinedSources = (deepDive.sources + apiSources).distinctBy { it.url }
-                
+
                 ActivityLogger.logLlm("DeepDive", prompt, outputText, true, duration, provider = "OpenAI")
-                
+
                 deepDive.copy(sources = combinedSources)
             }
         } catch (e: Exception) {

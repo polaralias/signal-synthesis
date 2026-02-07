@@ -15,7 +15,7 @@ class GeminiDeepDiveProviderTest {
     fun testGroundingMetadataMapping() = runBlocking {
         // Create a mock service that returns a response with grounding metadata
         val mockService = object : GeminiService {
-            override suspend fun generateContent(model: String, apiKey: String, request: GeminiRequest): GeminiResponse {
+            override suspend fun generateContent(apiVersion: String, model: String, apiKey: String, request: GeminiRequest): GeminiResponse {
                 return GeminiResponse(
                     candidates = listOf(
                         GeminiCandidate(
@@ -57,7 +57,7 @@ class GeminiDeepDiveProviderTest {
     @Test
     fun testJsonExtractionInProvider() = runBlocking {
         val mockService = object : GeminiService {
-            override suspend fun generateContent(model: String, apiKey: String, request: GeminiRequest): GeminiResponse {
+            override suspend fun generateContent(apiVersion: String, model: String, apiKey: String, request: GeminiRequest): GeminiResponse {
                 return GeminiResponse(
                     candidates = listOf(
                         GeminiCandidate(

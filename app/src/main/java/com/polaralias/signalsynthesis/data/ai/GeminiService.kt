@@ -3,6 +3,7 @@ package com.polaralias.signalsynthesis.data.ai
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.polaralias.signalsynthesis.domain.ai.LlmModel
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -12,8 +13,9 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface GeminiService {
-    @POST("v1beta/models/{model}:generateContent")
+    @POST("{apiVersion}/models/{model}:generateContent")
     suspend fun generateContent(
+        @Path("apiVersion") apiVersion: String,
         @Path("model") model: String,
         @Query("key") apiKey: String,
         @Body request: GeminiRequest
@@ -63,9 +65,9 @@ data class GeminiGenerationConfig(
     val topP: Double = 0.8,
     val topK: Int = 40,
     val maxOutputTokens: Int = 1000,
-    val responseMimeType: String = "application/json",
+    val responseMimeType: String? = null,
     @Json(name = "thinking_level") val thinkingLevel: String? = null,
-    val thinkingBudget: Int? = null
+    @Json(name = "thinking_budget") val thinkingBudget: Int? = null
 )
 
 data class GeminiResponse(
@@ -108,3 +110,8 @@ data class GeminiSegment(
     val endIndex: Int? = null,
     val text: String? = null
 )
+
+fun geminiApiVersionForModel(model: String): String {
+    val normalized = LlmModel.normalizeModelIdAlias(model).lowercase()
+    return if (normalized.startsWith("gemini-3")) "v1alpha" else "v1beta"
+}

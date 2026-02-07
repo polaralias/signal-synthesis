@@ -10,6 +10,7 @@ import com.polaralias.signalsynthesis.domain.model.TradeSetup
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.util.JsonExtraction
 import com.polaralias.signalsynthesis.util.Logger
+import java.util.Locale
 
 class UpdateDecisionsUseCase(
     private val stageModelRouter: StageModelRouter
@@ -35,7 +36,7 @@ class UpdateDecisionsUseCase(
             } ?: "N/A"
             val sentiment = setup.sentiment?.let { "${it.label ?: "N/A"} (${it.score ?: "N/A"})" } ?: "N/A"
 
-            "${setup.symbol} | ${setup.setupType} | confidence=${String.format("%.2f", setup.confidence)} | $levels | profile=$profile | metrics=$metrics | sentiment=$sentiment | reasons=$reasons"
+            "${setup.symbol} | ${setup.setupType} | confidence=${String.format(Locale.US, "%.2f", setup.confidence)} | $levels | profile=$profile | metrics=$metrics | sentiment=$sentiment | reasons=$reasons"
         }
 
         val prompt = AiPrompts.DECISION_UPDATE_PROMPT
@@ -72,5 +73,5 @@ class UpdateDecisionsUseCase(
         }
     }
 
-    private fun formatPrice(value: Double): String = String.format("%.2f", value)
+    private fun formatPrice(value: Double): String = String.format(Locale.US, "%.2f", value)
 }

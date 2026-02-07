@@ -15,6 +15,7 @@ import com.polaralias.signalsynthesis.domain.rss.RssTickerInput
 import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
+import java.util.Locale
 
 /**
  * Staged orchestration use case (V2) that implements the LLM shortlist gate.
@@ -110,11 +111,15 @@ class RunAnalysisV2UseCase(
             risk = risk,
             maxShortlist = maxShortlist
         )
-        
+
+        val tradeableByUpper = tradeable.associateBy { it.uppercase(Locale.US) }
         val shortlistedSymbols = shortlistPlan.shortlist
+            .asSequence()
             .filter { !it.avoid }
-            .map { it.symbol }
-            .filter { tradeable.contains(it) } // Double check it was in our universe
+            .map { it.symbol.trim().uppercase(Locale.US) }
+            .mapNotNull { tradeableByUpper[it] } // Double check it was in our universe.
+            .distinct()
+            .toList()
 
         if (shortlistedSymbols.isEmpty()) {
             Logger.i("RunAnalysisV2", "Shortlist is empty, no symbols to enrich.")
@@ -134,35 +139,62 @@ class RunAnalysisV2UseCase(
         // Step 5: Targeted enrichment (ONLY for shortlisted symbols that requested it)
         onProgress?.invoke("Targeted enrichment (${shortlistedSymbols.size} symbols)...")
         
+        val shortlistBySymbol = shortlistPlan.shortlist.associateBy { it.symbol.trim().uppercase(Locale.US) }
+        val symbolsWithoutExplicitRequests = shortlistedSymbols.filter { symbol ->
+            shortlistBySymbol[symbol.uppercase(Locale.US)]?.requestedEnrichment.orEmpty().isEmpty()
+        }
+
         val symbolsRequestingIntraday = shortlistPlan.shortlist
-            .filter { it.requestedEnrichment.contains("INTRADAY") && shortlistedSymbols.contains(it.symbol) }
-            .map { it.symbol }
-            
+            .asSequence()
+            .filter { it.requestedEnrichment.contains("INTRADAY") }
+            .map { it.symbol.trim().uppercase(Locale.US) }
+            .mapNotNull { tradeableByUpper[it] }
+            .filter { shortlistedSymbols.contains(it) }
+            .distinct()
+            .toList()
+
         val symbolsRequestingEod = shortlistPlan.shortlist
-            .filter { it.requestedEnrichment.contains("EOD") && shortlistedSymbols.contains(it.symbol) }
-            .map { it.symbol }
-            
+            .asSequence()
+            .filter { it.requestedEnrichment.contains("EOD") }
+            .map { it.symbol.trim().uppercase(Locale.US) }
+            .mapNotNull { tradeableByUpper[it] }
+            .filter { shortlistedSymbols.contains(it) }
+            .distinct()
+            .toList()
+
         val symbolsRequestingContext = shortlistPlan.shortlist
-            .filter { (it.requestedEnrichment.contains("FUNDAMENTALS") || it.requestedEnrichment.contains("SENTIMENT")) && shortlistedSymbols.contains(it.symbol) }
-            .map { it.symbol }
+            .asSequence()
+            .filter { it.requestedEnrichment.contains("FUNDAMENTALS") || it.requestedEnrichment.contains("SENTIMENT") }
+            .map { it.symbol.trim().uppercase(Locale.US) }
+            .mapNotNull { tradeableByUpper[it] }
+            .filter { shortlistedSymbols.contains(it) }
+            .distinct()
+            .toList()
 
-        // If a symbol didn't request anything specific but is shortlisted, we run default enrichment based on intent
-        val intradayStats = if (symbolsRequestingIntraday.isNotEmpty()) {
-            enrichIntraday.execute(symbolsRequestingIntraday, days = 2)
+        val intradayTargets = (symbolsRequestingIntraday + symbolsWithoutExplicitRequests).distinct()
+        val contextTargets = (symbolsRequestingContext + symbolsWithoutExplicitRequests).distinct()
+        val eodTargets = if (intent == TradingIntent.DAY_TRADE) {
+            symbolsRequestingEod
         } else {
-            enrichIntraday.execute(shortlistedSymbols, days = 2)
+            (symbolsRequestingEod + symbolsWithoutExplicitRequests).distinct()
         }
 
-        val contextData = if (symbolsRequestingContext.isNotEmpty()) {
-            enrichContext.execute(symbolsRequestingContext)
+        val intradayStats = if (intradayTargets.isNotEmpty()) {
+            enrichIntraday.execute(intradayTargets, days = 2)
         } else {
-            enrichContext.execute(shortlistedSymbols)
+            emptyMap()
         }
 
-        val eodStats = when {
-            symbolsRequestingEod.isNotEmpty() -> enrichEod.execute(symbolsRequestingEod, days = 200)
-            intent != TradingIntent.DAY_TRADE -> enrichEod.execute(shortlistedSymbols, days = 200)
-            else -> emptyMap()
+        val contextData = if (contextTargets.isNotEmpty()) {
+            enrichContext.execute(contextTargets)
+        } else {
+            emptyMap()
+        }
+
+        val eodStats = if (eodTargets.isNotEmpty()) {
+            enrichEod.execute(eodTargets, days = 200)
+        } else {
+            emptyMap()
         }
         
         // Step 6: Rank and generate setups
@@ -188,17 +220,23 @@ class RunAnalysisV2UseCase(
             maxKeep = maxDecisionKeep
         )
 
-        val keepSymbols = decisionUpdate.keep.map { it.symbol }.filter { it.isNotBlank() }.toSet()
-        val dropSymbols = decisionUpdate.drop.map { it.symbol }.filter { it.isNotBlank() }.toSet()
+        val keepSymbols = decisionUpdate.keep
+            .map { it.symbol.trim().uppercase(Locale.US) }
+            .filter { it.isNotBlank() }
+            .toSet()
+        val dropSymbols = decisionUpdate.drop
+            .map { it.symbol.trim().uppercase(Locale.US) }
+            .filter { it.isNotBlank() }
+            .toSet()
         val filteredSetups = when {
-            keepSymbols.isNotEmpty() -> setupsWithSource.filter { keepSymbols.contains(it.symbol) }
-            dropSymbols.isNotEmpty() -> setupsWithSource.filterNot { dropSymbols.contains(it.symbol) }
+            keepSymbols.isNotEmpty() -> setupsWithSource.filter { keepSymbols.contains(it.symbol.uppercase(Locale.US)) }
+            dropSymbols.isNotEmpty() -> setupsWithSource.filterNot { dropSymbols.contains(it.symbol.uppercase(Locale.US)) }
             else -> setupsWithSource
         }
 
-        val decisionMap = decisionUpdate.keep.associateBy { it.symbol }
+        val decisionMap = decisionUpdate.keep.associateBy { it.symbol.trim().uppercase(Locale.US) }
         val setups = filteredSetups.map { setup ->
-            val decision = decisionMap[setup.symbol]
+            val decision = decisionMap[setup.symbol.uppercase(Locale.US)]
             if (decision != null) {
                 val expandedNeeded = decision.expandedRssNeeded
                 setup.copy(

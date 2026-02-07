@@ -43,6 +43,8 @@ class BuildRssDigestUseCaseTest {
         override suspend fun getFeedState(url: String): RssFeedStateEntity? = null
         override suspend fun insertFeedState(state: RssFeedStateEntity) {}
         override suspend fun getAllRecentItems(since: Long): List<RssItemEntity> = items.filter { it.publishedAt >= since }
+        override suspend fun getItemsForFeed(url: String, limit: Int): List<RssItemEntity> =
+            items.filter { it.feedUrl == url }.sortedByDescending { it.publishedAt }.take(limit)
         override suspend fun insertItems(items: List<RssItemEntity>) {}
         override suspend fun deleteOldItems(threshold: Long) {
             items = items.filter { it.publishedAt >= threshold }

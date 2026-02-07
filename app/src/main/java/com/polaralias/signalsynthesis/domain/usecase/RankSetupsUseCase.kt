@@ -15,6 +15,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 
@@ -92,7 +93,7 @@ class RankSetupsUseCase(
         val vwap = intradayStats?.vwap
         if (vwap != null && price > vwap) {
             score += 1.0
-            reasons.add("Price above VWAP (${String.format("%.2f", vwap)})")
+            reasons.add("Price above VWAP (${String.format(Locale.US, "%.2f", vwap)})")
         }
         
         // Check RSI
@@ -101,14 +102,14 @@ class RankSetupsUseCase(
             when {
                 rsi < 30 -> {
                     score += 1.0
-                    reasons.add("RSI oversold (${String.format("%.1f", rsi)})")
+                    reasons.add("RSI oversold (${String.format(Locale.US, "%.1f", rsi)})")
                 }
                 rsi > 70 -> {
                     score -= 0.5
-                    reasons.add("RSI overbought (${String.format("%.1f", rsi)})")
+                    reasons.add("RSI overbought (${String.format(Locale.US, "%.1f", rsi)})")
                 }
                 else -> {
-                    reasons.add("RSI neutral (${String.format("%.1f", rsi)})")
+                    reasons.add("RSI neutral (${String.format(Locale.US, "%.1f", rsi)})")
                 }
             }
         }
@@ -117,7 +118,7 @@ class RankSetupsUseCase(
         val sma200 = eodStats?.sma200
         if (sma200 != null && price > sma200) {
             score += 1.0
-            reasons.add("Price above SMA-200 (${String.format("%.2f", sma200)})")
+            reasons.add("Price above SMA-200 (${String.format(Locale.US, "%.2f", sma200)})")
         }
         
         // Check sentiment
@@ -128,7 +129,7 @@ class RankSetupsUseCase(
                 sentimentScore < -0.2 -> "Bearish"
                 else -> "Neutral"
             }
-            reasons.add("Positive sentiment ($label, ${String.format("%.2f", sentimentScore)})")
+            reasons.add("Positive sentiment ($label, ${String.format(Locale.US, "%.2f", sentimentScore)})")
         }
 
         // Check for upcoming earnings

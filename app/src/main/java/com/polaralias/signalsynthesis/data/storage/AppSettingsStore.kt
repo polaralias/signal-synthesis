@@ -64,20 +64,53 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             screenerModerateThreshold = prefs.getFloat(KEY_SCREEN_MOD, 20.0f).toDouble(),
             screenerAggressiveThreshold = prefs.getFloat(KEY_SCREEN_AGGR, 100.0f).toDouble(),
             screenerMinVolume = prefs.getLong(KEY_SCREEN_VOL, 1_000_000L),
-            llmProvider = com.polaralias.signalsynthesis.domain.ai.LlmProvider.valueOf(prefs.getString(KEY_LLM_PROVIDER, "OPENAI") ?: "OPENAI"),
-            analysisModel = com.polaralias.signalsynthesis.domain.ai.LlmModel.valueOf(prefs.getString(KEY_ANALYSIS_MODEL, "GPT_5_1") ?: "GPT_5_1"),
-            verdictModel = com.polaralias.signalsynthesis.domain.ai.LlmModel.valueOf(prefs.getString(KEY_VERDICT_MODEL, "GPT_5_1") ?: "GPT_5_1"),
-            reasoningModel = com.polaralias.signalsynthesis.domain.ai.LlmModel.valueOf(prefs.getString(KEY_REASONING_MODEL, "GPT_5_2") ?: "GPT_5_2"),
-            reasoningDepth = com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.valueOf(prefs.getString(KEY_REASONING_DEPTH, "MEDIUM") ?: "MEDIUM"),
-            outputLength = com.polaralias.signalsynthesis.domain.ai.OutputLength.valueOf(prefs.getString(KEY_OUTPUT_LENGTH, "STANDARD") ?: "STANDARD"),
-            verbosity = com.polaralias.signalsynthesis.domain.ai.Verbosity.valueOf(prefs.getString(KEY_VERBOSITY, "MEDIUM") ?: "MEDIUM"),
-            riskTolerance = com.polaralias.signalsynthesis.data.settings.RiskTolerance.valueOf(prefs.getString(KEY_RISK_TOLERANCE, "MODERATE") ?: "MODERATE"),
-            preferredAssetClass = com.polaralias.signalsynthesis.data.settings.AssetClass.valueOf(prefs.getString(KEY_ASSET_CLASS, "STOCKS") ?: "STOCKS"),
+            llmProvider = parseEnum(
+                prefs.getString(KEY_LLM_PROVIDER, null),
+                com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI
+            ),
+            analysisModel = parseEnum(
+                prefs.getString(KEY_ANALYSIS_MODEL, null),
+                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_1
+            ),
+            verdictModel = parseEnum(
+                prefs.getString(KEY_VERDICT_MODEL, null),
+                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_1
+            ),
+            reasoningModel = parseEnum(
+                prefs.getString(KEY_REASONING_MODEL, null),
+                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_2
+            ),
+            reasoningDepth = parseEnum(
+                prefs.getString(KEY_REASONING_DEPTH, null),
+                com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.MEDIUM
+            ),
+            outputLength = parseEnum(
+                prefs.getString(KEY_OUTPUT_LENGTH, null),
+                com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD
+            ),
+            verbosity = parseEnum(
+                prefs.getString(KEY_VERBOSITY, null),
+                com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM
+            ),
+            riskTolerance = parseEnum(
+                prefs.getString(KEY_RISK_TOLERANCE, null),
+                com.polaralias.signalsynthesis.data.settings.RiskTolerance.MODERATE
+            ),
+            preferredAssetClass = parseEnum(
+                prefs.getString(KEY_ASSET_CLASS, null),
+                com.polaralias.signalsynthesis.data.settings.AssetClass.STOCKS
+            ),
             discoveryMode = parseDiscoveryMode(prefs.getString(KEY_DISCOVERY_MODE, "STATIC")),
             isAnalysisPaused = prefs.getBoolean(KEY_ANALYSIS_PAUSED, false),
             useStagedPipeline = prefs.getBoolean(KEY_USE_STAGED, false),
-            themeMode = com.polaralias.signalsynthesis.data.settings.ThemeMode.valueOf(prefs.getString(KEY_THEME_MODE, "SYSTEM") ?: "SYSTEM"),
-            deepDiveProvider = com.polaralias.signalsynthesis.domain.ai.LlmProvider.valueOf(prefs.getString(KEY_DEEP_DIVE_PROVIDER, "OPENAI") ?: "OPENAI"),
+            themeMode = parseEnum(
+                prefs.getString(KEY_THEME_MODE, null),
+                com.polaralias.signalsynthesis.data.settings.ThemeMode.SYSTEM
+            ),
+            deepDiveProvider = parseEnum(
+                prefs.getString(KEY_DEEP_DIVE_PROVIDER, null),
+                com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI
+            ),
             modelRouting = com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig.fromJson(prefs.getString(KEY_MODEL_ROUTING, null)),
             rssEnabledTopics = enabledTopics,
             rssTickerSources = tickerSources,
@@ -217,4 +250,9 @@ private fun parseDiscoveryMode(value: String?): com.polaralias.signalsynthesis.d
         "CUSTOM", "CUSTOM_ONLY" -> com.polaralias.signalsynthesis.data.settings.DiscoveryMode.CUSTOM
         else -> com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC
     }
+}
+
+private inline fun <reified T : Enum<T>> parseEnum(value: String?, fallback: T): T {
+    if (value.isNullOrBlank()) return fallback
+    return enumValues<T>().firstOrNull { it.name == value } ?: fallback
 }

@@ -37,7 +37,7 @@ class ProviderFactory(
             com.polaralias.signalsynthesis.data.provider.twelvedata.TwelveDataMarketDataProvider(it)
         }
         
-        val mockProvider = if (!hasKeys) MockMarketDataProvider() else null
+        val mockProvider = if (includeMock && !hasKeys) MockMarketDataProvider() else null
 
         // Build provider lists with fallback ordering
         // For quotes and intraday: prefer Alpaca/Massive (more real-time)

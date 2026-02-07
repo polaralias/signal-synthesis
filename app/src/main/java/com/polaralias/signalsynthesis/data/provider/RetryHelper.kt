@@ -32,11 +32,15 @@ object RetryHelper {
                 lastException = e
 
                 if (e is HttpException && e.code() == 429) {
+                    if (attempts == config.maxRetries - 1) {
+                        throw e
+                    }
+                    attempts += 1
                     val retryAfterHeader = e.response()?.headers()?.get("Retry-After")?.toLongOrNull()
                     val delayMs = retryAfterHeader?.times(1000) ?: config.rateLimitDelayMs
-                    Logger.w(tag, "Rate limited (429). Waiting ${delayMs}ms before retrying.", e)
+                    Logger.w(tag, "Rate limited (429). Attempt $attempts/${config.maxRetries}; waiting ${delayMs}ms before retrying.", e)
                     delay(delayMs)
-                    continue // Do not consume attempt quota for rate limit
+                    continue
                 }
                 
                 // Only retry on IOExceptions or network-related issues

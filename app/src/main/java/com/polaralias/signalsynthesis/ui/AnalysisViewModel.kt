@@ -48,6 +48,7 @@ import kotlinx.coroutines.launch
 import java.time.Clock
 import java.time.ZoneId
 import java.security.MessageDigest
+import java.util.Locale
 
 class AnalysisViewModel(
     private val providerFactory: MarketDataProviderFactory,
@@ -77,24 +78,39 @@ class AnalysisViewModel(
     private var cachedRepositoryConfig: RepositoryConfig? = null
 
     private val openAiResponsesService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiResponsesService.create() }
-    private val openAiService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiService.create() }
+    private val openAiCompatibleService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiCompatibleService.create() }
+    private val anthropicService by lazy { com.polaralias.signalsynthesis.data.ai.AnthropicService.create() }
     private val geminiService by lazy { com.polaralias.signalsynthesis.data.ai.GeminiService.create() }
 
     private val stageModelRouter by lazy {
             com.polaralias.signalsynthesis.domain.ai.StageModelRouter(
-                openAiRunnerFactory = { model, key ->
-                    com.polaralias.signalsynthesis.data.ai.OpenAiStageRunner(openAiService, openAiResponsesService, model, key)
-                },
-                geminiRunnerFactory = { model, key ->
-                    com.polaralias.signalsynthesis.data.ai.GeminiStageRunner(geminiService, model, key)
+                runnerFactory = { provider, model, key ->
+                    when (provider) {
+                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI -> com.polaralias.signalsynthesis.data.ai.OpenAiStageRunner(
+                            openAiResponsesService,
+                            model,
+                            key
+                        )
+                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI -> com.polaralias.signalsynthesis.data.ai.GeminiStageRunner(
+                            geminiService,
+                            model,
+                            key
+                        )
+                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.ANTHROPIC -> com.polaralias.signalsynthesis.data.ai.AnthropicStageRunner(
+                            anthropicService,
+                            model,
+                            key
+                        )
+                        else -> com.polaralias.signalsynthesis.data.ai.OpenAiCompatibleStageRunner(
+                            openAiCompatibleService,
+                            provider,
+                            model,
+                            key
+                        )
+                    }
                 },
                 routingConfigProvider = { effectiveRouting(_uiState.value.appSettings) },
-                apiKeysProvider = {
-                    mapOf(
-                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.openAiKey,
-                        com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.geminiKey
-                    )
-                }
+                apiKeysProvider = { _uiState.value.keys.toLlmKeyMap() }
             )
     }
 
@@ -106,12 +122,7 @@ class AnalysisViewModel(
             openAiProvider = openAiProvider,
             geminiProvider = geminiProvider,
             routingConfigProvider = { effectiveRouting(_uiState.value.appSettings) },
-            apiKeysProvider = {
-                mapOf(
-                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI to _uiState.value.keys.openAiKey,
-                    com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI to _uiState.value.keys.geminiKey
-                )
-            }
+            apiKeysProvider = { _uiState.value.keys.toLlmKeyMap() }
         )
     }
 
@@ -152,10 +163,21 @@ class AnalysisViewModel(
                 KeyField.FINNHUB -> state.keys.copy(finnhubKey = value)
                 KeyField.FMP -> state.keys.copy(fmpKey = value)
                 KeyField.TWELVE_DATA -> state.keys.copy(twelveDataKey = value)
+                KeyField.ANTHROPIC -> state.keys.copy(anthropicKey = value)
                 KeyField.OPENAI -> state.keys.copy(openAiKey = value)
                 KeyField.GEMINI -> state.keys.copy(geminiKey = value)
+                KeyField.MINIMAX -> state.keys.copy(minimaxKey = value)
+                KeyField.OPENROUTER -> state.keys.copy(openRouterKey = value)
+                KeyField.TOGETHER -> state.keys.copy(togetherKey = value)
+                KeyField.GROQ -> state.keys.copy(groqKey = value)
+                KeyField.DEEPSEEK -> state.keys.copy(deepseekKey = value)
+                KeyField.SILICONFLOW -> state.keys.copy(siliconFlowKey = value)
+                KeyField.CUSTOM_LLM -> state.keys.copy(customLlmKey = value)
             }
-            state.copy(keys = keys)
+            state.copy(
+                keys = keys,
+                hasLlmKey = hasConfiguredLlmAccess(keys, state.appSettings)
+            )
         }
     }
 
@@ -163,7 +185,7 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val keys = _uiState.value.keys
             keyStore.saveKeys(keys.toApiKeys(), keys.toLlmKeys())
-            Logger.event("keys_saved", mapOf("has_llm_key" to (keys.openAiKey.isNotBlank() || keys.geminiKey.isNotBlank())))
+            Logger.event("keys_saved", mapOf("has_llm_key" to keys.toLlmKeys().hasAny()))
             refreshKeys()
         }
     }
@@ -201,7 +223,7 @@ class AnalysisViewModel(
     fun runAnalysis() {
         val uiStateValue = _uiState.value
         val apiKeys = uiStateValue.keys.toApiKeys()
-        val llmKey = uiStateValue.keys.openAiKey.ifBlank { uiStateValue.keys.geminiKey }
+        val llmKey = firstAvailableLlmKey(uiStateValue.keys)
         
         if (!apiKeys.hasAny() && !uiStateValue.appSettings.useMockDataWhenOffline) {
             _uiState.update { it.copy(errorMessage = "Add at least one provider key or enable mock data mode in settings.") }
@@ -218,7 +240,7 @@ class AnalysisViewModel(
                 )
             )
             if (missingProviders.isNotEmpty()) {
-                val providersLabel = missingProviders.joinToString { it.name }
+                val providersLabel = missingProviders.joinToString { it.displayName }
                 _uiState.update { it.copy(errorMessage = "Missing API key(s) for: $providersLabel") }
                 return
             }
@@ -312,7 +334,9 @@ class AnalysisViewModel(
                 }
 
                 // Trigger Prefetching
-                if (state.appSettings.aiSummaryPrefetchEnabled && llmKey.isNotBlank() && result.setups.isNotEmpty()) {
+                if (state.appSettings.aiSummaryPrefetchEnabled &&
+                    hasConfiguredLlmAccess(state.keys, state.appSettings) &&
+                    result.setups.isNotEmpty()) {
                     _uiState.update { it.copy(isPrefetching = true, prefetchCount = 0, progressMessage = "Prefetching AI insights...") }
                     
                     val prefetchFlow = PrefetchAiSummariesUseCase(
@@ -384,8 +408,7 @@ class AnalysisViewModel(
 
     fun requestAiSummary(symbol: String) {
         val state = _uiState.value
-        val llmKey = state.keys.openAiKey.ifBlank { state.keys.geminiKey }
-        if (llmKey.isBlank() || !state.hasLlmKey) return
+        val llmKey = firstAvailableLlmKey(state.keys)
         val missingProviders = missingLlmProvidersForStages(
             listOf(
                 com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS,
@@ -393,7 +416,7 @@ class AnalysisViewModel(
             )
         )
         if (missingProviders.isNotEmpty()) {
-            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.name }}") }
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.displayName }}") }
             return
         }
         
@@ -522,8 +545,13 @@ class AnalysisViewModel(
 
     fun requestDeepDive(symbol: String) {
         val state = _uiState.value
-        val llmKey = state.keys.openAiKey.ifBlank { state.keys.geminiKey }
-        if (llmKey.isBlank() || !state.hasLlmKey) return
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DEEP_DIVE)
+        )
+        if (missingProviders.isNotEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.displayName }}") }
+            return
+        }
         
         val setup = state.result?.setups?.firstOrNull { it.symbol == symbol } 
             ?: state.history.flatMap { it.setups }.firstOrNull { it.symbol == symbol }
@@ -590,8 +618,13 @@ class AnalysisViewModel(
     }
 
     fun suggestThresholdsWithAi(prompt: String) {
-        val llmKey = _uiState.value.keys.openAiKey.ifBlank { _uiState.value.keys.geminiKey }
-        if (llmKey.isBlank()) return
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE)
+        )
+        if (missingProviders.isNotEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.displayName }}") }
+            return
+        }
 
         _uiState.update { it.copy(isSuggestingThresholds = true) }
         viewModelScope.launch(ioDispatcher) {
@@ -626,8 +659,13 @@ class AnalysisViewModel(
     }
 
     fun suggestScreenerWithAi(prompt: String) {
-        val llmKey = _uiState.value.keys.openAiKey.ifBlank { _uiState.value.keys.geminiKey }
-        if (llmKey.isBlank()) return
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE)
+        )
+        if (missingProviders.isNotEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.displayName }}") }
+            return
+        }
 
         _uiState.update { it.copy(isSuggestingScreener = true) }
         viewModelScope.launch(ioDispatcher) {
@@ -661,8 +699,13 @@ class AnalysisViewModel(
     }
 
     fun suggestSettingsWithAi(prompt: String, selectedAreas: Set<AiSettingsArea>) {
-        val llmKey = _uiState.value.keys.openAiKey.ifBlank { _uiState.value.keys.geminiKey }
-        if (llmKey.isBlank()) return
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE)
+        )
+        if (missingProviders.isNotEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.displayName }}") }
+            return
+        }
 
         _uiState.update {
             it.copy(
@@ -695,7 +738,7 @@ class AnalysisViewModel(
                     appendLine("Areas to apply: $areasLabel")
                     appendLine("Current settings:")
                     appendLine("- riskTolerance: ${current.riskTolerance}")
-                    appendLine("- thresholds: VWAP ${String.format("%.2f", current.vwapDipPercent)}%, RSI ${current.rsiOversold}/${current.rsiOverbought}")
+                    appendLine("- thresholds: VWAP ${String.format(Locale.US, "%.2f", current.vwapDipPercent)}%, RSI ${current.rsiOversold}/${current.rsiOverbought}")
                     appendLine("- screener: CONS ${current.screenerConservativeThreshold}, MOD ${current.screenerModerateThreshold}, AGGR ${current.screenerAggressiveThreshold}, VOL ${current.screenerMinVolume}")
                     appendLine("- rssEnabledTopics: ${current.rssEnabledTopics.size} selected")
                     appendLine("- rssTickerSources: ${current.rssTickerSources.joinToString(", ")}")
@@ -889,7 +932,12 @@ class AnalysisViewModel(
                 rsiOverbought = settings.rsiOverbought
             ))
             
-            _uiState.update { it.copy(appSettings = settings) }
+            _uiState.update { state ->
+                state.copy(
+                    appSettings = settings,
+                    hasLlmKey = hasConfiguredLlmAccess(state.keys, settings)
+                )
+            }
             
             if (_uiState.value.alertsEnabled && oldInterval != settings.alertCheckIntervalMinutes) {
                 workScheduler.scheduleAlerts(true, settings.alertCheckIntervalMinutes)
@@ -1126,11 +1174,12 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val apiKeys = keyStore.loadApiKeys()
             val llmKeys = keyStore.loadLlmKeys()
+            val uiKeys = ApiKeyUiState.from(apiKeys, llmKeys)
             _uiState.update {
                 it.copy(
-                    keys = ApiKeyUiState.from(apiKeys, llmKeys),
+                    keys = uiKeys,
                     hasAnyApiKeys = apiKeys.hasAny(),
-                    hasLlmKey = !llmKeys.openAiKey.isNullOrBlank() || !llmKeys.geminiKey.isNullOrBlank()
+                    hasLlmKey = hasConfiguredLlmAccess(uiKeys, it.appSettings)
                 )
             }
         }
@@ -1472,7 +1521,8 @@ class AnalysisViewModel(
                     customTickers = custom.map { ticker -> TickerEntry(ticker) },
                     blocklist = blocklist,
                     isPaused = settings.isAnalysisPaused,
-                    rssCatalog = rssCatalog
+                    rssCatalog = rssCatalog,
+                    hasLlmKey = hasConfiguredLlmAccess(state.keys, settings)
                 ) 
             }
         }
@@ -1598,10 +1648,22 @@ class AnalysisViewModel(
         provider: com.polaralias.signalsynthesis.domain.ai.LlmProvider,
         keys: ApiKeyUiState
     ): Boolean {
-        return when (provider) {
-            com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI -> keys.openAiKey.isNotBlank()
-            com.polaralias.signalsynthesis.domain.ai.LlmProvider.GEMINI -> keys.geminiKey.isNotBlank()
-        }
+        if (!provider.requiresApiKey) return true
+        return keys.toLlmKeyMap()[provider].orEmpty().isNotBlank()
+    }
+
+    private fun hasConfiguredLlmAccess(keys: ApiKeyUiState, settings: AppSettings): Boolean {
+        val routing = effectiveRouting(settings)
+        val providers = listOf(
+            com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS,
+            com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE
+        ).map { stage -> routing.getConfigForStage(stage).provider }
+            .distinct()
+        return providers.all { provider -> hasKeyForProvider(provider, keys) }
+    }
+
+    private fun firstAvailableLlmKey(keys: ApiKeyUiState): String {
+        return keys.toLlmKeyMap().values.firstOrNull { it.isNotBlank() }.orEmpty()
     }
 
 
@@ -1611,9 +1673,11 @@ class AnalysisViewModel(
 
     fun runShortlistHarness() {
         val uiStateValue = _uiState.value
-        val llmKey = uiStateValue.keys.openAiKey.ifBlank { uiStateValue.keys.geminiKey }
-        if (llmKey.isBlank()) {
-            _uiState.update { it.copy(errorMessage = "LLM Key required for shortlist harness.") }
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST)
+        )
+        if (missingProviders.isNotEmpty()) {
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: ${missingProviders.joinToString { provider -> provider.displayName }}") }
             return
         }
 
@@ -1655,6 +1719,14 @@ enum class KeyField {
     FINNHUB,
     FMP,
     TWELVE_DATA,
+    ANTHROPIC,
     OPENAI,
-    GEMINI
+    GEMINI,
+    MINIMAX,
+    OPENROUTER,
+    TOGETHER,
+    GROQ,
+    DEEPSEEK,
+    SILICONFLOW,
+    CUSTOM_LLM
 }

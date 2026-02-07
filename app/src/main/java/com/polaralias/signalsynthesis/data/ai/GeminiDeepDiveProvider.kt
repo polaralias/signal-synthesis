@@ -45,7 +45,8 @@ class GeminiDeepDiveProvider(
             withTimeout(timeoutMs) {
                 val startTime = System.currentTimeMillis()
                 val response = geminiService.generateContent(
-                    model = model,
+                    apiVersion = geminiApiVersionForModel(model),
+                    model = com.polaralias.signalsynthesis.domain.ai.LlmModel.normalizeModelIdAlias(model),
                     apiKey = apiKey,
                     request = request
                 )

@@ -8,6 +8,7 @@ import com.polaralias.signalsynthesis.domain.model.AnalysisStage
 import com.polaralias.signalsynthesis.util.Logger
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 
 class SynthesizeSetupUseCase(
     private val repository: MarketDataRepository,
@@ -21,9 +22,6 @@ class SynthesizeSetupUseCase(
         verbosity: Verbosity = Verbosity.MEDIUM,
         onProgress: ((String) -> Unit)? = null
     ): AiSynthesis {
-        if (llmKey.isBlank()) {
-            throw IllegalArgumentException("LLM key required for AI synthesis.")
-        }
         // Step 1: Data Analysis (interpret context + technicals)
         onProgress?.invoke("Data Interpretation...")
         val analysisPrompt = buildAnalysisPrompt(setup, verbosity)
@@ -136,13 +134,13 @@ class SynthesizeSetupUseCase(
     private fun buildTechnicalLines(setup: TradeSetup): List<String> {
         val technicalLines = mutableListOf<String>()
         setup.intradayStats?.let {
-            it.rsi14?.let { rsi -> technicalLines.add("RSI (14): ${String.format("%.2f", rsi)}") }
-            it.vwap?.let { vwap -> technicalLines.add("VWAP: ${String.format("%.2f", vwap)}") }
-            it.atr14?.let { atr -> technicalLines.add("ATR (14): ${String.format("%.2f", atr)}") }
+            it.rsi14?.let { rsi -> technicalLines.add("RSI (14): ${String.format(Locale.US, "%.2f", rsi)}") }
+            it.vwap?.let { vwap -> technicalLines.add("VWAP: ${String.format(Locale.US, "%.2f", vwap)}") }
+            it.atr14?.let { atr -> technicalLines.add("ATR (14): ${String.format(Locale.US, "%.2f", atr)}") }
         }
         setup.eodStats?.let {
-            it.sma50?.let { sma -> technicalLines.add("SMA (50): ${String.format("%.2f", sma)}") }
-            it.sma200?.let { sma -> technicalLines.add("SMA (200): ${String.format("%.2f", sma)}") }
+            it.sma50?.let { sma -> technicalLines.add("SMA (50): ${String.format(Locale.US, "%.2f", sma)}") }
+            it.sma200?.let { sma -> technicalLines.add("SMA (200): ${String.format(Locale.US, "%.2f", sma)}") }
         }
         return technicalLines
     }

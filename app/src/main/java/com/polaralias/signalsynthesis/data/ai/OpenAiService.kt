@@ -13,7 +13,7 @@ import retrofit2.http.POST
 interface OpenAiService {
     @POST("v1/chat/completions")
     suspend fun createChatCompletion(
-        @Header("Authorization") authorization: String,
+        @Header("Authorization") authorization: String?,
         @Body request: OpenAiChatRequest
     ): OpenAiChatResponse
 

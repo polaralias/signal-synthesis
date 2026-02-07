@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.*
 import com.polaralias.signalsynthesis.domain.model.*
 import com.polaralias.signalsynthesis.ui.theme.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -262,7 +263,7 @@ private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "${String.format("%.2f", index.changePercent)}%",
+                    text = "${String.format(Locale.US, "%.2f", index.changePercent)}%",
                     color = trendColor.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
                     fontWeight = FontWeight.Black

@@ -1,6 +1,7 @@
 package com.polaralias.signalsynthesis.util
 
 import android.content.Context
+import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -167,7 +168,8 @@ object UsageTracker {
     private const val KEY_LAST_DAY = "last_tracked_day"
     private const val MAX_ARCHIVE_DAYS = 30
 
-    private var context: Context? = null
+    private var prefs: SharedPreferences? = null
+    private var archivePrefs: SharedPreferences? = null
     private val _dailyApiCount = MutableStateFlow(0)
     val dailyApiCount: StateFlow<Int> = _dailyApiCount.asStateFlow()
 
@@ -178,8 +180,10 @@ object UsageTracker {
     val archivedUsage: StateFlow<List<DailyUsageArchive>> = _archivedUsage.asStateFlow()
 
     fun init(ctx: Context) {
-        context = ctx.applicationContext
-        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
+        val appContext = ctx.applicationContext
+        prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        archivePrefs = appContext.getSharedPreferences(ARCHIVE_PREFS_NAME, Context.MODE_PRIVATE)
+        val prefs = prefs ?: return
         
         val currentDay = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
         val lastDay = prefs.getString(KEY_LAST_DAY, "")
@@ -227,8 +231,8 @@ object UsageTracker {
     }
 
     private fun archiveCurrentDay(dayString: String) {
-        val archivePrefs = context?.getSharedPreferences(ARCHIVE_PREFS_NAME, Context.MODE_PRIVATE) ?: return
-        val date = try {
+        val archivePrefs = archivePrefs ?: return
+        try {
             LocalDate.parse(dayString, DateTimeFormatter.ISO_LOCAL_DATE)
         } catch (e: Exception) {
             return
@@ -267,7 +271,7 @@ object UsageTracker {
     }
 
     private fun loadArchive() {
-        val archivePrefs = context?.getSharedPreferences(ARCHIVE_PREFS_NAME, Context.MODE_PRIVATE) ?: return
+        val archivePrefs = archivePrefs ?: return
         val archives = mutableListOf<DailyUsageArchive>()
 
         val allKeys = archivePrefs.all.keys.toList()
@@ -306,7 +310,7 @@ object UsageTracker {
     }
 
     fun incrementApiCount(provider: String, category: ApiUsageCategory) {
-        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
+        val prefs = prefs ?: return
         
         val totalCount = _dailyApiCount.value + 1
         _dailyApiCount.value = totalCount
@@ -331,7 +335,7 @@ object UsageTracker {
         archiveCurrentDay(currentDay)
         
         // Reset current day
-        val prefs = context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) ?: return
+        val prefs = prefs ?: return
         prefs.edit().clear().putString(KEY_LAST_DAY, currentDay).apply()
         _dailyApiCount.value = 0
         _dailyProviderUsage.value = emptyMap()

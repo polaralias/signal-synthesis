@@ -36,7 +36,6 @@ import com.polaralias.signalsynthesis.data.settings.ThemeMode
 class MainActivity : ComponentActivity() {
     private val db by lazy {
         Room.databaseBuilder(applicationContext, AppDatabase::class.java, "signal-synthesis-db")
-            .fallbackToDestructiveMigration()
             .build()
     }
     private val viewModel: AnalysisViewModel by viewModels {

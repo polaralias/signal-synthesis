@@ -11,6 +11,7 @@ import com.polaralias.signalsynthesis.domain.model.TradeSetup
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.util.JsonExtraction
 import com.polaralias.signalsynthesis.util.Logger
+import java.util.Locale
 
 class SynthesizeFundamentalsAndNewsUseCase(
     private val stageModelRouter: StageModelRouter
@@ -39,7 +40,7 @@ class SynthesizeFundamentalsAndNewsUseCase(
             } ?: "Metrics: N/A"
             val sentiment = setup.sentiment?.let { "Sentiment: ${it.label ?: "N/A"} (${it.score ?: "N/A"})" } ?: "Sentiment: N/A"
 
-            "Symbol: ${setup.symbol}\nConfidence: ${String.format("%.2f", setup.confidence)}\nSetup Type: ${setup.setupType}\n$profile\n$metrics\n$sentiment\nReasons: $reasons"
+            "Symbol: ${setup.symbol}\nConfidence: ${String.format(Locale.US, "%.2f", setup.confidence)}\nSetup Type: ${setup.setupType}\n$profile\n$metrics\n$sentiment\nReasons: $reasons"
         }
 
         val rssDigestText = rssDigest?.itemsBySymbol?.entries?.joinToString("\n\n") { (symbol, headlines) ->

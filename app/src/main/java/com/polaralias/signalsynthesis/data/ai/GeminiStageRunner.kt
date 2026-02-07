@@ -1,7 +1,6 @@
 package com.polaralias.signalsynthesis.data.ai
 
 import com.polaralias.signalsynthesis.domain.ai.*
-import com.polaralias.signalsynthesis.util.Logger
 
 class GeminiStageRunner(
     private val service: GeminiService,
@@ -10,28 +9,25 @@ class GeminiStageRunner(
 ) : StageLlmRunner {
 
     override suspend fun run(request: LlmStageRequest): LlmStageResponse {
+        val normalizedModel = LlmModel.normalizeModelIdAlias(model)
         val tools = if (request.toolsMode == ToolsMode.GOOGLE_SEARCH) {
             listOf(GeminiTool(googleSearch = GoogleSearchTool()))
-        } else null
+        } else {
+            null
+        }
 
         val systemInstruction = GeminiContent(parts = listOf(GeminiPart(text = request.systemPrompt)))
-        
         val userContent = GeminiContent(
             role = "user",
             parts = listOf(GeminiPart(text = request.userPrompt))
         )
 
-        // Only include thinking_level for Gemini 3 models (and check provider specifics if needed)
-        // For simplicity, we assume the router sends us the right model string (e.g. gemini-3-flash) which supports it.
-        val thinkingLevel = mapThinkingLevel(request.reasoningDepth)
+        val thinkingLevel = mapThinkingLevel(request.reasoningDepth, normalizedModel)
 
         val genConfig = GeminiGenerationConfig(
             temperature = request.temperature?.toDouble() ?: 0.2,
             maxOutputTokens = request.maxOutputTokens,
-            thinkingLevel = thinkingLevel,
-            // We could also map thinking_budget based on depth if we wanted to enforce token limits logic,
-            // but the docs only requested thinking_level mapping.
-            thinkingBudget = null 
+            thinkingLevel = thinkingLevel
         )
 
         val geminiRequest = GeminiRequest(
@@ -41,11 +37,16 @@ class GeminiStageRunner(
             generationConfig = genConfig
         )
 
-        val response = service.generateContent(model, apiKey, geminiRequest)
+        val response = service.generateContent(
+            apiVersion = geminiApiVersionForModel(normalizedModel),
+            model = normalizedModel,
+            apiKey = apiKey,
+            request = geminiRequest
+        )
         val candidate = response.candidates.firstOrNull()
-        
+
         val text = candidate?.content?.parts?.joinToString("") { it.text ?: "" } ?: ""
-        
+
         val sources = candidate?.groundingMetadata?.groundingChunks?.mapNotNull { chunk ->
             chunk.web?.let { web ->
                 LlmSource(
@@ -60,24 +61,20 @@ class GeminiStageRunner(
             rawText = text,
             parsedJson = if (request.expectedSchemaId != null) extractJson(text) else null,
             sources = sources,
-            providerDebug = "model=$model, depth=${request.reasoningDepth}, level=$thinkingLevel"
+            providerDebug = "model=$normalizedModel, depth=${request.reasoningDepth}, level=$thinkingLevel"
         )
     }
 
-    private fun mapThinkingLevel(depth: ReasoningDepth): String? {
-        // If not a Gemini 3 model, this might be ignored by API or cause error.
-        // Assuming we only use this for 3+ models as per user specs.
-        if (!model.contains("gemini-3")) return null
+    private fun mapThinkingLevel(depth: ReasoningDepth, modelId: String): String? {
+        val normalized = modelId.lowercase()
+        if (!normalized.startsWith("gemini-3")) return null
 
-        val isFlash = model.contains("flash")
-
+        val isFlash = normalized.contains("flash")
         return when (depth) {
-            ReasoningDepth.MINIMAL -> if (isFlash) "minimal" else "low" // Pro doesn't support minimal
+            ReasoningDepth.NONE, ReasoningDepth.MINIMAL -> if (isFlash) "minimal" else "low"
             ReasoningDepth.LOW -> "low"
-            ReasoningDepth.MEDIUM -> if (isFlash) "medium" else "high" // Pro doesn't support medium, upgrade to high
-            ReasoningDepth.HIGH -> "high"
-            ReasoningDepth.EXTRA -> "high"
-            else -> "medium" // default
+            ReasoningDepth.MEDIUM -> if (isFlash) "medium" else "high"
+            ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
         }
     }
 

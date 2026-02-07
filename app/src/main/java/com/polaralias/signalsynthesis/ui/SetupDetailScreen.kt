@@ -23,6 +23,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import com.polaralias.signalsynthesis.ui.theme.*
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -418,7 +419,7 @@ fun SetupDetailScreen(
                                         }
                                         EducationalMetricRow(MetricInfo(
                                             label = "RSI (14)",
-                                            value = String.format("%.2f", rsi),
+                                            value = String.format(Locale.US, "%.2f", rsi),
                                             status = status,
                                             description = "Speed and change of price oscillations on a 0-100 scale.",
                                             relationship = "Extremes often signal impending reversals or momentum exhaustion."
@@ -475,7 +476,7 @@ fun SetupDetailScreen(
                                     metrics.peRatio?.let { pe ->
                                         EducationalMetricRow(MetricInfo(
                                             label = "P/E Ratio",
-                                            value = String.format("%.2f", pe),
+                                            value = String.format(Locale.US, "%.2f", pe),
                                             description = "Price-to-Earnings valuation multiplier.",
                                             relationship = "Indicates market expectations for future growth or contraction."
                                         ))
@@ -483,7 +484,7 @@ fun SetupDetailScreen(
                                     metrics.dividendYield?.let { yield ->
                                         EducationalMetricRow(MetricInfo(
                                             label = "Dividend Yield",
-                                            value = String.format("%.2f%%", yield * 100),
+                                            value = String.format(Locale.US, "%.2f%%", yield * 100),
                                             description = "Percentage of share price paid out annually.",
                                             relationship = "Provides a structural safety net for capital preservation."
                                         ))
@@ -498,7 +499,7 @@ fun SetupDetailScreen(
                                         }
                                         EducationalMetricRow(MetricInfo(
                                             label = "Crowd Sentiment",
-                                            value = String.format("%.2f", score),
+                                            value = String.format(Locale.US, "%.2f", score),
                                             status = status,
                                             description = "Aggregated bias from global news and social stream.",
                                             relationship = "Crowd behavior acts as momentum fuel or a contrarian signal."

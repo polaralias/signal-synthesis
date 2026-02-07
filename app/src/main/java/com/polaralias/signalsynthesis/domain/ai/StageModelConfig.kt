@@ -47,7 +47,7 @@ data class UserModelRoutingConfig(
                         val stageObj = root.getJSONObject(stage.name)
                         map[stage] = StageModelConfig(
                             provider = LlmProvider.valueOf(stageObj.getString("provider")),
-                            model = stageObj.getString("model"),
+                            model = LlmModel.normalizeModelIdAlias(stageObj.getString("model")),
                             tools = ToolsMode.valueOf(stageObj.optString("tools", "NONE")),
                             temperature = stageObj.optDouble("temperature", 0.2).toFloat(),
                             maxOutputTokens = stageObj.optInt("maxOutputTokens", 2000),

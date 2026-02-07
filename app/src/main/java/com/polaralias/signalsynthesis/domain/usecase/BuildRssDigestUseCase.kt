@@ -62,10 +62,12 @@ class BuildRssDigestUseCase(
 
     private fun isMatch(text: String, ticker: String): Boolean {
         if (text.isBlank()) return false
+        val safeTicker = Regex.escape(ticker.trim())
+        if (safeTicker.isBlank()) return false
         // Match $TICKER or \bTICKER\b (word boundaries)
         // We use IGNORE_CASE to handle various mentions
-        val cashtag = "\\$$ticker\\b".toRegex(RegexOption.IGNORE_CASE)
-        val bareTicker = "\\b$ticker\\b".toRegex(RegexOption.IGNORE_CASE)
+        val cashtag = "\\$$safeTicker\\b".toRegex(RegexOption.IGNORE_CASE)
+        val bareTicker = "\\b$safeTicker\\b".toRegex(RegexOption.IGNORE_CASE)
         return cashtag.containsMatchIn(text) || bareTicker.containsMatchIn(text)
     }
 

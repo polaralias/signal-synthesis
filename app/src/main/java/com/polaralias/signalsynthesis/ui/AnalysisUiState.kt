@@ -15,8 +15,16 @@ data class ApiKeyUiState(
     val finnhubKey: String = "",
     val fmpKey: String = "",
     val twelveDataKey: String = "",
+    val anthropicKey: String = "",
     val openAiKey: String = "",
-    val geminiKey: String = ""
+    val geminiKey: String = "",
+    val minimaxKey: String = "",
+    val openRouterKey: String = "",
+    val togetherKey: String = "",
+    val groqKey: String = "",
+    val deepseekKey: String = "",
+    val siliconFlowKey: String = "",
+    val customLlmKey: String = ""
 ) {
     fun toApiKeys(): ApiKeys = ApiKeys(
         alpacaKey = alpacaKey.ifBlank { null },
@@ -35,15 +43,35 @@ data class ApiKeyUiState(
             finnhubKey = apiKeys.finnhub.orEmpty(),
             fmpKey = apiKeys.financialModelingPrep.orEmpty(),
             twelveDataKey = apiKeys.twelveData.orEmpty(),
+            anthropicKey = llmKeys.anthropicKey.orEmpty(),
             openAiKey = llmKeys.openAiKey.orEmpty(),
-            geminiKey = llmKeys.geminiKey.orEmpty()
+            geminiKey = llmKeys.geminiKey.orEmpty(),
+            minimaxKey = llmKeys.minimaxKey.orEmpty(),
+            openRouterKey = llmKeys.openRouterKey.orEmpty(),
+            togetherKey = llmKeys.togetherKey.orEmpty(),
+            groqKey = llmKeys.groqKey.orEmpty(),
+            deepseekKey = llmKeys.deepseekKey.orEmpty(),
+            siliconFlowKey = llmKeys.siliconFlowKey.orEmpty(),
+            customLlmKey = llmKeys.customKey.orEmpty()
         )
     }
 
     fun toLlmKeys(): com.polaralias.signalsynthesis.data.storage.LlmKeys = com.polaralias.signalsynthesis.data.storage.LlmKeys(
+        anthropicKey = anthropicKey.ifBlank { null },
         openAiKey = openAiKey.ifBlank { null },
-        geminiKey = geminiKey.ifBlank { null }
+        geminiKey = geminiKey.ifBlank { null },
+        minimaxKey = minimaxKey.ifBlank { null },
+        openRouterKey = openRouterKey.ifBlank { null },
+        togetherKey = togetherKey.ifBlank { null },
+        groqKey = groqKey.ifBlank { null },
+        deepseekKey = deepseekKey.ifBlank { null },
+        siliconFlowKey = siliconFlowKey.ifBlank { null },
+        customKey = customLlmKey.ifBlank { null }
     )
+
+    fun toLlmKeyMap(): Map<com.polaralias.signalsynthesis.domain.ai.LlmProvider, String> {
+        return toLlmKeys().toProviderMap()
+    }
 }
 
 data class TickerEntry(

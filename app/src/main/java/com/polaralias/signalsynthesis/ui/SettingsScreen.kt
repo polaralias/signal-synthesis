@@ -28,12 +28,14 @@ import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import com.polaralias.signalsynthesis.data.rss.RssFeedTier
 import com.polaralias.signalsynthesis.domain.ai.*
+import com.polaralias.signalsynthesis.domain.model.AnalysisStage
 import com.polaralias.signalsynthesis.ui.theme.*
 import kotlin.math.roundToInt
 import androidx.compose.ui.platform.testTag
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 private fun AuthStatusItem(label: String, status: String, isActive: Boolean) {
@@ -76,7 +78,7 @@ fun SettingsScreen(
     onApplyRssAi: () -> Unit,
     onDismissRssAi: () -> Unit,
     onRemoveFromBlocklist: (String) -> Unit,
-    onUpdateStageConfig: (com.polaralias.signalsynthesis.domain.model.AnalysisStage, StageModelConfig) -> Unit = { _, _ -> },
+    onUpdateStageConfig: (AnalysisStage, StageModelConfig) -> Unit = { _, _ -> },
     onArchiveUsage: () -> Unit = {},
     onToggleRssTopic: (String) -> Unit = {},
     onToggleRssTickerSource: (String) -> Unit = {},
@@ -361,7 +363,7 @@ fun SettingsScreen(
                                 onExpandedChange = { providerExpanded = !providerExpanded }
                             ) {
                                 OutlinedTextField(
-                                    value = if (uiState.appSettings.llmProvider == LlmProvider.OPENAI) "OpenAI" else "Google Gemini",
+                                    value = uiState.appSettings.llmProvider.displayName,
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
@@ -379,14 +381,18 @@ fun SettingsScreen(
                                 ) {
                                     for (provider in LlmProvider.values()) {
                                         DropdownMenuItem(
-                                            text = { Text(if(provider == LlmProvider.OPENAI) "OpenAI" else "Google Gemini") },
+                                            text = { Text(provider.displayName) },
                                             onClick = {
-                                                val defaultModel = LlmModel.values().first { it.provider == provider }
+                                                val providerModels = LlmModel.modelsForProvider(provider)
+                                                val defaultModel = providerModels.firstOrNull {
+                                                    it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
+                                                } ?: providerModels.firstOrNull() ?: uiState.appSettings.analysisModel
                                                 onUpdateSettings(uiState.appSettings.copy(
                                                     llmProvider = provider,
                                                     analysisModel = defaultModel,
                                                     verdictModel = defaultModel,
-                                                    reasoningModel = LlmModel.values().firstOrNull { it.provider == provider && it.name.contains("REASONING") } ?: defaultModel
+                                                    reasoningModel = defaultModel,
+                                                    deepDiveProvider = provider
                                                 ))
                                                 providerExpanded = false
                                             }
@@ -415,15 +421,22 @@ fun SettingsScreen(
                                     expanded = analysisModelExpanded,
                                     onDismissRequest = { analysisModelExpanded = false }
                                 ) {
-                                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
-                                    for (model in filteredModels) {
+                                    val groupedModels = groupedModelsForProvider(uiState.appSettings.llmProvider)
+                                    groupedModels.forEach { (groupLabel, models) ->
                                         DropdownMenuItem(
-                                            text = { Text(formatModelName(model)) },
-                                            onClick = {
-                                                onUpdateSettings(uiState.appSettings.copy(analysisModel = model))
-                                                analysisModelExpanded = false
-                                            }
+                                            enabled = false,
+                                            text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
+                                            onClick = {}
                                         )
+                                        models.forEach { model ->
+                                            DropdownMenuItem(
+                                                text = { Text(formatModelName(model)) },
+                                                onClick = {
+                                                    onUpdateSettings(uiState.appSettings.copy(analysisModel = model))
+                                                    analysisModelExpanded = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -448,15 +461,22 @@ fun SettingsScreen(
                                     expanded = verdictModelExpanded,
                                     onDismissRequest = { verdictModelExpanded = false }
                                 ) {
-                                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
-                                    for (model in filteredModels) {
+                                    val groupedModels = groupedModelsForProvider(uiState.appSettings.llmProvider)
+                                    groupedModels.forEach { (groupLabel, models) ->
                                         DropdownMenuItem(
-                                            text = { Text(formatModelName(model)) },
-                                            onClick = {
-                                                onUpdateSettings(uiState.appSettings.copy(verdictModel = model))
-                                                verdictModelExpanded = false
-                                            }
+                                            enabled = false,
+                                            text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
+                                            onClick = {}
                                         )
+                                        models.forEach { model ->
+                                            DropdownMenuItem(
+                                                text = { Text(formatModelName(model)) },
+                                                onClick = {
+                                                    onUpdateSettings(uiState.appSettings.copy(verdictModel = model))
+                                                    verdictModelExpanded = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -481,15 +501,22 @@ fun SettingsScreen(
                                     expanded = reasoningModelExpanded,
                                     onDismissRequest = { reasoningModelExpanded = false }
                                 ) {
-                                    val filteredModels = LlmModel.values().filter { it.provider == uiState.appSettings.llmProvider }
-                                    for (model in filteredModels) {
+                                    val groupedModels = groupedModelsForProvider(uiState.appSettings.llmProvider)
+                                    groupedModels.forEach { (groupLabel, models) ->
                                         DropdownMenuItem(
-                                            text = { Text(formatModelName(model)) },
-                                            onClick = {
-                                                onUpdateSettings(uiState.appSettings.copy(reasoningModel = model))
-                                                reasoningModelExpanded = false
-                                            }
+                                            enabled = false,
+                                            text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
+                                            onClick = {}
                                         )
+                                        models.forEach { model ->
+                                            DropdownMenuItem(
+                                                text = { Text(formatModelName(model)) },
+                                                onClick = {
+                                                    onUpdateSettings(uiState.appSettings.copy(reasoningModel = model))
+                                                    reasoningModelExpanded = false
+                                                }
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -498,6 +525,239 @@ fun SettingsScreen(
                                 modifier = Modifier.padding(horizontal = 24.dp).alpha(0.1f),
                                 color = BrandPrimary
                             )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+                    SectionHeader("STAGE ROUTING OVERRIDES")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Text(
+                                text = "Assign provider/model per pipeline stage. Global AI settings are used only when a stage has no override.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            var stageProviderExpanded by remember { mutableStateOf<AnalysisStage?>(null) }
+                            var stageModelExpanded by remember { mutableStateOf<AnalysisStage?>(null) }
+                            var stageToolsExpanded by remember { mutableStateOf<AnalysisStage?>(null) }
+                            val stageOrder = listOf(
+                                AnalysisStage.RSS_VERIFY,
+                                AnalysisStage.SHORTLIST,
+                                AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS,
+                                AnalysisStage.DECISION_UPDATE,
+                                AnalysisStage.DEEP_DIVE
+                            )
+
+                            stageOrder.forEachIndexed { index, stage ->
+                                val stageConfig = uiState.appSettings.modelRouting.getConfigForStage(stage)
+
+                                Text(
+                                    text = stageDisplayName(stage),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = BrandPrimary,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stageDescription(stage),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Text(
+                                    "PROVIDER",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                ExposedDropdownMenuBox(
+                                    expanded = stageProviderExpanded == stage,
+                                    onExpandedChange = {
+                                        stageProviderExpanded = if (stageProviderExpanded == stage) null else stage
+                                    }
+                                ) {
+                                    OutlinedTextField(
+                                        value = stageConfig.provider.displayName,
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = stageProviderExpanded == stage)
+                                        },
+                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = stageProviderExpanded == stage,
+                                        onDismissRequest = { stageProviderExpanded = null }
+                                    ) {
+                                        LlmProvider.values().forEach { provider ->
+                                            DropdownMenuItem(
+                                                text = { Text(provider.displayName) },
+                                                onClick = {
+                                                    val providerModels = LlmModel.modelsForProvider(provider)
+                                                    val defaultModel = providerModels.firstOrNull {
+                                                        it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
+                                                    } ?: providerModels.firstOrNull()
+                                                    if (defaultModel != null) {
+                                                        val updatedTools = when {
+                                                            stage != AnalysisStage.DEEP_DIVE -> ToolsMode.NONE
+                                                            !provider.supportsWebTools() -> ToolsMode.NONE
+                                                            stageConfig.tools == ToolsMode.NONE -> ToolsMode.NONE
+                                                            provider == LlmProvider.GEMINI -> ToolsMode.GOOGLE_SEARCH
+                                                            else -> ToolsMode.WEB_SEARCH
+                                                        }
+                                                        onUpdateStageConfig(
+                                                            stage,
+                                                            stageConfig.copy(
+                                                                provider = provider,
+                                                                model = defaultModel.modelId,
+                                                                tools = updatedTools
+                                                            )
+                                                        )
+                                                    }
+                                                    stageProviderExpanded = null
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    "MODEL",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                ExposedDropdownMenuBox(
+                                    expanded = stageModelExpanded == stage,
+                                    onExpandedChange = {
+                                        stageModelExpanded = if (stageModelExpanded == stage) null else stage
+                                    }
+                                ) {
+                                    OutlinedTextField(
+                                        value = formatStageModelLabel(stageConfig.provider, stageConfig.model),
+                                        onValueChange = {},
+                                        readOnly = true,
+                                        trailingIcon = {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = stageModelExpanded == stage)
+                                        },
+                                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    ExposedDropdownMenu(
+                                        expanded = stageModelExpanded == stage,
+                                        onDismissRequest = { stageModelExpanded = null }
+                                    ) {
+                                        val groupedModels = groupedModelsForProvider(stageConfig.provider)
+                                        groupedModels.forEach { (groupLabel, models) ->
+                                            DropdownMenuItem(
+                                                enabled = false,
+                                                text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
+                                                onClick = {}
+                                            )
+                                            models.forEach { model ->
+                                                DropdownMenuItem(
+                                                    text = { Text(formatModelName(model)) },
+                                                    onClick = {
+                                                        onUpdateStageConfig(
+                                                            stage,
+                                                            stageConfig.copy(model = model.modelId)
+                                                        )
+                                                        stageModelExpanded = null
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (stage == AnalysisStage.DEEP_DIVE) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        "LIVE WEB SOURCES",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = 1.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    ExposedDropdownMenuBox(
+                                        expanded = stageToolsExpanded == stage,
+                                        onExpandedChange = {
+                                            stageToolsExpanded = if (stageToolsExpanded == stage) null else stage
+                                        }
+                                    ) {
+                                        OutlinedTextField(
+                                            value = if (stageConfig.tools == ToolsMode.NONE) "Disabled" else "Enabled",
+                                            onValueChange = {},
+                                            readOnly = true,
+                                            trailingIcon = {
+                                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = stageToolsExpanded == stage)
+                                            },
+                                            modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        ExposedDropdownMenu(
+                                            expanded = stageToolsExpanded == stage,
+                                            onDismissRequest = { stageToolsExpanded = null }
+                                        ) {
+                                            DropdownMenuItem(
+                                                text = { Text("Disabled") },
+                                                onClick = {
+                                                    onUpdateStageConfig(stage, stageConfig.copy(tools = ToolsMode.NONE))
+                                                    stageToolsExpanded = null
+                                                }
+                                            )
+                                            DropdownMenuItem(
+                                                enabled = stageConfig.provider.supportsWebTools(),
+                                                text = {
+                                                    Text(
+                                                        if (stageConfig.provider == LlmProvider.GEMINI) {
+                                                            "Enabled (Google Search)"
+                                                        } else {
+                                                            "Enabled (Web Search)"
+                                                        }
+                                                    )
+                                                },
+                                                onClick = {
+                                                    val toolsMode = if (stageConfig.provider == LlmProvider.GEMINI) {
+                                                        ToolsMode.GOOGLE_SEARCH
+                                                    } else {
+                                                        ToolsMode.WEB_SEARCH
+                                                    }
+                                                    onUpdateStageConfig(stage, stageConfig.copy(tools = toolsMode))
+                                                    stageToolsExpanded = null
+                                                }
+                                            )
+                                        }
+                                    }
+                                    if (!stageConfig.provider.supportsWebTools()) {
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = "Current provider does not support native web search tools for this stage.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                        )
+                                    }
+                                }
+
+                                if (index < stageOrder.lastIndex) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                }
+                            }
                         }
                     }
 
@@ -606,13 +866,19 @@ fun SettingsScreen(
                     SectionHeader("QUANTITATIVE TUNING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(20.dp)) {
-                    // Reasoning Depth / Thinking Budget
-                    val isGemini = uiState.appSettings.llmProvider == LlmProvider.GEMINI
-                    val isThinkingModel = uiState.appSettings.analysisModel.name.contains("GEMINI_3") || 
-                                         uiState.appSettings.analysisModel.name.contains("GPT_5")
-                    
+                    val activeProvider = uiState.appSettings.llmProvider
+                    val activeModelId = uiState.appSettings.analysisModel.modelId
+                    val normalizedModelId = LlmModel.normalizeModelIdAlias(activeModelId).lowercase()
+                    val supportsNativeReasoning = LlmModel.supportsNativeReasoningControl(activeProvider, activeModelId)
+                    val isGemini3 = activeProvider == LlmProvider.GEMINI && normalizedModelId.startsWith("gemini-3")
+                    val isGemini3Flash = isGemini3 && normalizedModelId.contains("flash")
+
                     Text(
-                        text = if (isGemini) "THINKING LEVEL" else "REASONING EFFORT", 
+                        text = when {
+                            activeProvider == LlmProvider.GEMINI && supportsNativeReasoning -> "THINKING LEVEL"
+                            supportsNativeReasoning -> "REASONING EFFORT"
+                            else -> "REASONING DEPTH (PROMPT GUIDANCE)"
+                        },
                         style = MaterialTheme.typography.labelSmall, 
                         fontWeight = FontWeight.Black, 
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), 
@@ -625,14 +891,11 @@ fun SettingsScreen(
                         onExpandedChange = { reasoningExpanded = !reasoningExpanded }
                     ) {
                         OutlinedTextField(
-                            value = when (uiState.appSettings.reasoningDepth) {
-                                ReasoningDepth.NONE -> if (isGemini) (if (uiState.appSettings.analysisModel.name.contains("FLASH")) "Minimal Thinking (Fastest)" else "Low Thinking Effort") else "No Effort (None)"
-                                ReasoningDepth.MINIMAL -> if (isGemini) (if (uiState.appSettings.analysisModel.name.contains("FLASH")) "Minimal Thinking" else "Low Thinking Effort") else "Minimal Effort"
-                                ReasoningDepth.LOW -> if (isGemini) "Low Thinking Effort" else "Low Effort"
-                                ReasoningDepth.MEDIUM -> if (isGemini) (if (uiState.appSettings.analysisModel.name.contains("FLASH")) "Medium Thinking" else "High Thinking (Default)") else "Medium Effort"
-                                ReasoningDepth.HIGH -> if (isGemini) "High Thinking (Dynamic)" else "High Effort"
-                                ReasoningDepth.EXTRA -> if (isGemini) "Maximum Thinking" else "Extreme Effort (X-High)"
-                            },
+                            value = formatReasoningDepthLabel(
+                                depth = uiState.appSettings.reasoningDepth,
+                                provider = activeProvider,
+                                modelId = activeModelId
+                            ),
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = reasoningExpanded) },
@@ -643,32 +906,14 @@ fun SettingsScreen(
                             expanded = reasoningExpanded,
                             onDismissRequest = { reasoningExpanded = false }
                         ) {
-                            val currentModel = uiState.appSettings.analysisModel
-                            val isFlash = currentModel.name.contains("FLASH")
-                            val isPro = currentModel.name.contains("PRO") && currentModel.name.contains("GEMINI_3")
-
                             for (depth in com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.values()) {
-                                // Model-specific constraints
-                                val isExtraSupported = currentModel.name.contains("GPT_5_2") || 
-                                                      currentModel.name.contains("PRO") ||
-                                                      currentModel.name.contains("GEMINI_3")
-                                
-                                if (depth == com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.EXTRA && !isExtraSupported) continue
-
-                                // Gemini Pro Specific Filtering: Only Low and High supported
-                                if (isPro && (depth == ReasoningDepth.MINIMAL || depth == ReasoningDepth.MEDIUM)) continue
+                                // Gemini 3 Pro currently supports low/high levels only.
+                                if (isGemini3 && !isGemini3Flash && (depth == ReasoningDepth.MINIMAL || depth == ReasoningDepth.MEDIUM)) {
+                                    continue
+                                }
 
                                 DropdownMenuItem(
-                                    text = { 
-                                        Text(when (depth) {
-                                            ReasoningDepth.NONE -> if (isGemini) (if (isFlash) "Minimal (Fastest)" else "Low Effort") else "None"
-                                            ReasoningDepth.MINIMAL -> if (isGemini) "Minimal" else "Minimal"
-                                            ReasoningDepth.LOW -> if (isGemini) "Low" else "Low"
-                                            ReasoningDepth.MEDIUM -> if (isGemini) "Medium / Balanced" else "Medium"
-                                            ReasoningDepth.HIGH -> if (isGemini) "High (Dynamic)" else "High"
-                                            ReasoningDepth.EXTRA -> if (isGemini) "Maximum" else "Extreme (X-High)"
-                                        })
-                                    },
+                                    text = { Text(formatReasoningDepthLabel(depth, activeProvider, activeModelId)) },
                                     onClick = {
                                         onUpdateSettings(uiState.appSettings.copy(reasoningDepth = depth))
                                         reasoningExpanded = false
@@ -678,6 +923,15 @@ fun SettingsScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    if (!supportsNativeReasoning) {
+                        Text(
+                            text = "Applied via prompt strategy for this provider/model.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -936,7 +1190,7 @@ fun SettingsScreen(
                         value = uiState.appSettings.vwapDipPercent,
                         range = 0.1f..5.0f,
                         steps = 49,
-                        format = { String.format("%.1f%%", it) },
+                        format = { String.format(Locale.US, "%.1f%%", it) },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(vwapDipPercent = it)) }
                     )
                     Spacer(modifier = Modifier.height(24.dp))
@@ -964,7 +1218,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "AI THRESHOLD OPTIMIZATION",
-                            suggestionText = "VWAP: ${String.format("%.1f%%", thresholdSuggestion.vwapDipPercent)} | RSI: ${thresholdSuggestion.rsiOversold.roundToInt()}/${thresholdSuggestion.rsiOverbought.roundToInt()}",
+                            suggestionText = "VWAP: ${String.format(Locale.US, "%.1f%%", thresholdSuggestion.vwapDipPercent)} | RSI: ${thresholdSuggestion.rsiOversold.roundToInt()}/${thresholdSuggestion.rsiOverbought.roundToInt()}",
                             rationale = thresholdSuggestion.rationale,
                             onApply = onApplyAi,
                             onDismiss = onDismissAi
@@ -973,7 +1227,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "LAST AI THRESHOLD",
-                            suggestionText = "VWAP: ${String.format("%.1f%%", lastThresholdSuggestion.vwapDipPercent)} | RSI: ${lastThresholdSuggestion.rsiOversold.roundToInt()}/${lastThresholdSuggestion.rsiOverbought.roundToInt()}",
+                            suggestionText = "VWAP: ${String.format(Locale.US, "%.1f%%", lastThresholdSuggestion.vwapDipPercent)} | RSI: ${lastThresholdSuggestion.rsiOversold.roundToInt()}/${lastThresholdSuggestion.rsiOverbought.roundToInt()}",
                             rationale = lastThresholdSuggestion.rationale,
                             onApply = onApplyAi,
                             onDismiss = onDismissAi,
@@ -1029,8 +1283,8 @@ fun SettingsScreen(
                         steps = 49,
                         format = { 
                             val vol = it.toLong()
-                            if (vol >= 1_000_000) String.format("%.1fM", vol / 1_000_000.0)
-                            else String.format("%dK", vol / 1_000)
+                            if (vol >= 1_000_000) String.format(Locale.US, "%.1fM", vol / 1_000_000.0)
+                            else String.format(Locale.US, "%dK", vol / 1_000)
                         },
                         onValueChange = { onUpdateSettings(uiState.appSettings.copy(screenerMinVolume = it.toLong())) }
                     )
@@ -1041,7 +1295,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "AI SCREENER OPTIMIZATION",
-                            suggestionText = "CONS: $${screenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${screenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${screenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format("%.1fM", screenerSuggestion.minVolume / 1_000_000.0)}",
+                            suggestionText = "CONS: $${screenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${screenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${screenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format(Locale.US, "%.1fM", screenerSuggestion.minVolume / 1_000_000.0)}",
                             rationale = screenerSuggestion.rationale,
                             onApply = onApplyScreenerAi,
                             onDismiss = onDismissScreenerAi
@@ -1050,7 +1304,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(32.dp))
                         AiSuggestionCard(
                             title = "LAST AI SCREENER",
-                            suggestionText = "CONS: $${lastScreenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${lastScreenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${lastScreenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format("%.1fM", lastScreenerSuggestion.minVolume / 1_000_000.0)}",
+                            suggestionText = "CONS: $${lastScreenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${lastScreenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${lastScreenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format(Locale.US, "%.1fM", lastScreenerSuggestion.minVolume / 1_000_000.0)}",
                             rationale = lastScreenerSuggestion.rationale,
                             onApply = onApplyScreenerAi,
                             onDismiss = onDismissScreenerAi,
@@ -1997,14 +2251,90 @@ private fun formatRssTimestamp(epochMillis: Long): String {
 }
 
 private fun formatModelName(model: LlmModel): String {
-    return when (model) {
-        LlmModel.GPT_5_2 -> "GPT 5.2"
-        LlmModel.GPT_5_1 -> "GPT 5.1"
-        LlmModel.GPT_5_MINI -> "GPT 5 MINI"
-        LlmModel.GPT_5_NANO -> "GPT 5 NANO"
-        LlmModel.GEMINI_3_FLASH -> "GEMINI 3 FLASH"
-        LlmModel.GEMINI_3_PRO -> "GEMINI 3 PRO"
-        else -> model.name.replace("_", " ")
+    val suffix = if (model.lowCost) " (Low cost)" else ""
+    return model.label + suffix
+}
+
+private fun groupedModelsForProvider(provider: LlmProvider): List<Pair<String, List<LlmModel>>> {
+    val models = LlmModel.modelsForProvider(provider)
+    if (models.isEmpty()) return emptyList()
+
+    val reasoning = models.filter { it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING }
+    val execution = models.filter { it.visibilityGroup == LlmModelVisibilityGroup.EXECUTION_AUTOMATION }
+    val additional = models.filter { it.visibilityGroup == LlmModelVisibilityGroup.ADDITIONAL }
+
+    val groups = mutableListOf<Pair<String, List<LlmModel>>>()
+    if (reasoning.isNotEmpty()) groups += "Reasoning & Synthesis" to reasoning
+    if (execution.isNotEmpty()) groups += "Execution-Focused Research" to execution
+    if (additional.isNotEmpty()) groups += "Additional" to additional
+    return groups
+}
+
+private fun formatStageModelLabel(provider: LlmProvider, modelId: String): String {
+    val normalized = LlmModel.normalizeModelIdAlias(modelId)
+    val model = LlmModel.modelsForProvider(provider).firstOrNull { candidate ->
+        candidate.modelId.equals(normalized, ignoreCase = true)
+    } ?: LlmModel.fromModelId(normalized)
+    return model?.let { formatModelName(it) } ?: modelId
+}
+
+private fun stageDisplayName(stage: AnalysisStage): String {
+    return when (stage) {
+        AnalysisStage.RSS_VERIFY -> "RSS REVIEW"
+        AnalysisStage.SHORTLIST -> "CANDIDATE SHORTLIST"
+        AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS -> "FUNDAMENTALS + NEWS SYNTHESIS"
+        AnalysisStage.DECISION_UPDATE -> "FINAL THESIS UPDATE"
+        AnalysisStage.DEEP_DIVE -> "DEEP ANALYSIS PASS"
+    }
+}
+
+private fun stageDescription(stage: AnalysisStage): String {
+    return when (stage) {
+        AnalysisStage.RSS_VERIFY -> "Validate feed quality before pulling full content."
+        AnalysisStage.SHORTLIST -> "Initial ranking pass over potential tickers."
+        AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS -> "Structured synthesis from fundamentals and catalysts."
+        AnalysisStage.DECISION_UPDATE -> "Final conviction and keep/drop decisions."
+        AnalysisStage.DEEP_DIVE -> "On-demand research pass with optional live web sources."
+    }
+}
+
+private fun formatReasoningDepthLabel(
+    depth: ReasoningDepth,
+    provider: LlmProvider,
+    modelId: String
+): String {
+    val normalizedModel = LlmModel.normalizeModelIdAlias(modelId).lowercase()
+    val isGemini3 = provider == LlmProvider.GEMINI && normalizedModel.startsWith("gemini-3")
+    val isGemini3Flash = isGemini3 && normalizedModel.contains("flash")
+    val nativeControl = LlmModel.supportsNativeReasoningControl(provider, modelId)
+
+    if (!nativeControl) {
+        return when (depth) {
+            ReasoningDepth.NONE -> "None"
+            ReasoningDepth.MINIMAL -> "Minimal"
+            ReasoningDepth.LOW -> "Low"
+            ReasoningDepth.MEDIUM -> "Medium"
+            ReasoningDepth.HIGH -> "High"
+            ReasoningDepth.EXTRA -> "Maximum"
+        }
+    }
+
+    if (provider == LlmProvider.GEMINI) {
+        return when (depth) {
+            ReasoningDepth.NONE, ReasoningDepth.MINIMAL -> if (isGemini3Flash) "Minimal" else "Low"
+            ReasoningDepth.LOW -> "Low"
+            ReasoningDepth.MEDIUM -> if (isGemini3Flash) "Medium" else "High"
+            ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "High"
+        }
+    }
+
+    return when (depth) {
+        ReasoningDepth.NONE -> "None"
+        ReasoningDepth.MINIMAL -> "Minimal"
+        ReasoningDepth.LOW -> "Low"
+        ReasoningDepth.MEDIUM -> "Medium"
+        ReasoningDepth.HIGH -> "High"
+        ReasoningDepth.EXTRA -> "High+"
     }
 }
 

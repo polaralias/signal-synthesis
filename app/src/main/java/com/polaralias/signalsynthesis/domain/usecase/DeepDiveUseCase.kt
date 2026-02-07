@@ -121,6 +121,7 @@ class DeepDiveUseCase(
         return when (provider) {
             LlmProvider.OPENAI -> RoutedProvider(openAi, model, apiKey, resolvedTimeout)
             LlmProvider.GEMINI -> RoutedProvider(gemini, model, apiKey, resolvedTimeout)
+            else -> null
         }
     }
 

@@ -169,6 +169,13 @@ fun ApiKeysScreen(
                     )
 
                     ApiKeyField(
+                        value = uiState.keys.anthropicKey,
+                        onValueChange = { onFieldChanged(KeyField.ANTHROPIC, it) },
+                        label = "Anthropic API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
                         value = uiState.keys.openAiKey,
                         onValueChange = { onFieldChanged(KeyField.OPENAI, it) },
                         label = "OpenAI API Key",
@@ -180,6 +187,61 @@ fun ApiKeysScreen(
                         onValueChange = { onFieldChanged(KeyField.GEMINI, it) },
                         label = "Gemini API Key",
                         isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.minimaxKey,
+                        onValueChange = { onFieldChanged(KeyField.MINIMAX, it) },
+                        label = "MiniMax API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.openRouterKey,
+                        onValueChange = { onFieldChanged(KeyField.OPENROUTER, it) },
+                        label = "OpenRouter API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.togetherKey,
+                        onValueChange = { onFieldChanged(KeyField.TOGETHER, it) },
+                        label = "Together API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.groqKey,
+                        onValueChange = { onFieldChanged(KeyField.GROQ, it) },
+                        label = "Groq API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.deepseekKey,
+                        onValueChange = { onFieldChanged(KeyField.DEEPSEEK, it) },
+                        label = "DeepSeek API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.siliconFlowKey,
+                        onValueChange = { onFieldChanged(KeyField.SILICONFLOW, it) },
+                        label = "SiliconFlow API Key",
+                        isBlacklisted = false
+                    )
+
+                    ApiKeyField(
+                        value = uiState.keys.customLlmKey,
+                        onValueChange = { onFieldChanged(KeyField.CUSTOM_LLM, it) },
+                        label = "Custom LLM API Key (Optional)",
+                        isBlacklisted = false
+                    )
+
+                    Text(
+                        text = "Local providers (Ollama, LocalAI, vLLM, TGI, SGLang) do not require API keys.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
                     
                     Spacer(modifier = Modifier.height(12.dp))
