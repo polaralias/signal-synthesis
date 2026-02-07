@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -25,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.polaralias.signalsynthesis.data.settings.AppSettings
+import com.polaralias.signalsynthesis.data.settings.LlmProviderConfiguration
 import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import com.polaralias.signalsynthesis.data.rss.RssFeedTier
 import com.polaralias.signalsynthesis.domain.ai.*
@@ -50,6 +52,14 @@ private fun AuthStatusItem(label: String, status: String, isActive: Boolean) {
             Icon(Icons.Default.Cancel, contentDescription = "Inactive", tint = ErrorRed.copy(alpha = 0.6f), modifier = Modifier.size(20.dp))
         }
     }
+}
+
+private enum class SettingsSection(val label: String) {
+    GENERAL("GENERAL"),
+    AI("AI CONFIG"),
+    NOTIFICATIONS("NOTIFICATIONS"),
+    RISK_DISCOVERY("RISK & DISCOVERY"),
+    SYSTEM("SYSTEM")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,11 +114,8 @@ fun SettingsScreen(
         uiState.aiRssSuggestion != null
     val aiSuggestedSettingsLocked = uiState.appSettings.aiSuggestedSettingsLocked
     var pendingAiOverrideSection by remember { mutableStateOf<String?>(null) }
-    var expandGeneral by remember { mutableStateOf(true) }
-    var expandAi by remember { mutableStateOf(false) }
-    var expandMonitoring by remember { mutableStateOf(false) }
-    var expandRiskAndDiscovery by remember { mutableStateOf(false) }
-    var expandSystem by remember { mutableStateOf(false) }
+    var activeSection by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
+    var pendingPrimaryProvider by remember { mutableStateOf<LlmProvider?>(null) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -152,12 +159,20 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
+                        IconButton(
+                            onClick = {
+                                if (activeSection == null) onBack() else activeSection = null
+                            }
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = if (activeSection == null) "Back" else "Back to sections",
+                                tint = BrandPrimary
+                            )
                         }
                         
                         RainbowMcpText(
-                            text = "CONFIGURATION",
+                            text = activeSection?.label ?: "CONFIGURATION",
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
                         )
 
@@ -176,166 +191,165 @@ fun SettingsScreen(
                     .verticalScroll(androidx.compose.foundation.rememberScrollState())
             ) {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    SectionHeader("AI SETTINGS SUGGESTIONS")
-                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.AutoMode, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "SUGGEST ALL SETTINGS",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Black,
-                                    color = BrandSecondary,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Select areas and generate AI recommendations. Apply to lock AI-managed settings.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            com.polaralias.signalsynthesis.ui.components.GlassBox(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                                    .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingSettings) { showSettingsAiDialog = true }
-                            ) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    if (activeSection == null || activeSection == SettingsSection.AI) {
+                        SectionHeader("AI SETTINGS SUGGESTIONS")
+                        com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.AutoMode, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
                                     Text(
-                                        text = if (uiState.isSuggestingSettings) "SYNTHESIZING..." else "SUGGEST ALL SETTINGS",
+                                        text = "SUGGEST ALL SETTINGS",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Black,
-                                        color = if (uiState.hasLlmKey) BrandSecondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        color = BrandSecondary,
                                         letterSpacing = 1.sp
                                     )
                                 }
-                            }
-                            if (uiState.isSuggestingSettings) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                LinearProgressIndicator(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    color = BrandSecondary,
-                                    trackColor = BrandSecondary.copy(alpha = 0.2f)
-                                )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = uiState.settingsSuggestionProgress ?: "Preparing...",
+                                    text = "Select areas and generate AI recommendations. Apply to lock AI-managed settings.",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                                 )
-                            } else if (uiState.settingsSuggestionCompletedAt != null) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = "Completed at ${formatTime(uiState.settingsSuggestionCompletedAt)}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = BrandPrimary
-                                    )
-                                }
-                                uiState.settingsSuggestionExplanation?.takeIf { it.isNotBlank() }?.let { explanation ->
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Text(
-                                        text = explanation,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                        lineHeight = 18.sp
-                                    )
-                                }
-                            }
-                            if (!uiState.hasLlmKey) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Add an AI key to enable suggestions.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                                )
-                            }
-                            if (uiState.lastAiSettingsPrompt.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "LAST PROMPT",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                    letterSpacing = 1.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = uiState.lastAiSettingsPrompt,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                    maxLines = 3
-                                )
-                            }
-                            if (hasPendingAiSuggestions) {
                                 Spacer(modifier = Modifier.height(16.dp))
                                 com.polaralias.signalsynthesis.ui.components.GlassBox(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(48.dp)
-                                        .clickable { onApplyAllAiSettings() }
+                                        .height(52.dp)
+                                        .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingSettings) { showSettingsAiDialog = true }
                                 ) {
                                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                         Text(
-                                            "APPLY ALL AI SUGGESTIONS",
+                                            text = if (uiState.isSuggestingSettings) "SYNTHESIZING..." else "SUGGEST ALL SETTINGS",
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Black,
-                                            color = BrandSecondary,
+                                            color = if (uiState.hasLlmKey) BrandSecondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
                                             letterSpacing = 1.sp
                                         )
                                     }
                                 }
-                            }
-                            if (aiSuggestedSettingsLocked) {
-                                Spacer(modifier = Modifier.height(12.dp))
-                                Text(
-                                    text = "AI-managed settings are locked. Tap a locked section to override.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = BrandSecondary.copy(alpha = 0.8f)
-                                )
+                                if (uiState.isSuggestingSettings) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    LinearProgressIndicator(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = BrandSecondary,
+                                        trackColor = BrandSecondary.copy(alpha = 0.2f)
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = uiState.settingsSuggestionProgress ?: "Preparing...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                } else if (uiState.settingsSuggestionCompletedAt != null) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "Completed at ${formatTime(uiState.settingsSuggestionCompletedAt)}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = BrandPrimary
+                                        )
+                                    }
+                                    uiState.settingsSuggestionExplanation?.takeIf { it.isNotBlank() }?.let { explanation ->
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Text(
+                                            text = explanation,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                            lineHeight = 18.sp
+                                        )
+                                    }
+                                }
+                                if (!uiState.hasLlmKey) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Add an AI key to enable suggestions.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                    )
+                                }
+                                if (uiState.lastAiSettingsPrompt.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = "LAST PROMPT",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                        fontWeight = FontWeight.Black,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                        letterSpacing = 1.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = uiState.lastAiSettingsPrompt,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                        maxLines = 3
+                                    )
+                                }
+                                if (hasPendingAiSuggestions) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(48.dp)
+                                            .clickable { onApplyAllAiSettings() }
+                                    ) {
+                                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                            Text(
+                                                "APPLY ALL AI SUGGESTIONS",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Black,
+                                                color = BrandSecondary,
+                                                letterSpacing = 1.sp
+                                            )
+                                        }
+                                    }
+                                }
+                                if (aiSuggestedSettingsLocked) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Text(
+                                        text = "AI-managed settings are locked. Tap a locked section to override.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = BrandSecondary.copy(alpha = 0.8f)
+                                    )
+                                }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
-                    SectionHeader("SETTINGS SECTIONS")
-                    SettingsAccordionHeader(
-                        title = "GENERAL",
-                        subtitle = "Appearance, auth, offline mode, usage",
-                        expanded = expandGeneral,
-                        onToggle = { expandGeneral = !expandGeneral }
-                    )
-                    SettingsAccordionHeader(
-                        title = "AI CONFIG",
-                        subtitle = "Provider, models, routing and tuning",
-                        expanded = expandAi,
-                        onToggle = { expandAi = !expandAi }
-                    )
-                    SettingsAccordionHeader(
-                        title = "NOTIFICATIONS",
-                        subtitle = "Monitoring and polling controls",
-                        expanded = expandMonitoring,
-                        onToggle = { expandMonitoring = !expandMonitoring }
-                    )
-                    SettingsAccordionHeader(
-                        title = "RISK & DISCOVERY",
-                        subtitle = "Thresholds, screener, RSS and tickers",
-                        expanded = expandRiskAndDiscovery,
-                        onToggle = { expandRiskAndDiscovery = !expandRiskAndDiscovery }
-                    )
-                    SettingsAccordionHeader(
-                        title = "SYSTEM",
-                        subtitle = "Cache, logs, maintenance",
-                        expanded = expandSystem,
-                        onToggle = { expandSystem = !expandSystem }
-                    )
+                    if (activeSection == null) {
+                        Spacer(modifier = Modifier.height(20.dp))
+                        SectionHeader("SETTINGS SECTIONS")
+                        SettingsSectionNavRow(
+                            title = SettingsSection.GENERAL.label,
+                            subtitle = "Appearance, auth, offline mode, usage",
+                            onClick = { activeSection = SettingsSection.GENERAL }
+                        )
+                        SettingsSectionNavRow(
+                            title = SettingsSection.AI.label,
+                            subtitle = "Primary provider, models, routing and tuning",
+                            onClick = { activeSection = SettingsSection.AI }
+                        )
+                        SettingsSectionNavRow(
+                            title = SettingsSection.NOTIFICATIONS.label,
+                            subtitle = "Monitoring and polling controls",
+                            onClick = { activeSection = SettingsSection.NOTIFICATIONS }
+                        )
+                        SettingsSectionNavRow(
+                            title = SettingsSection.RISK_DISCOVERY.label,
+                            subtitle = "Thresholds, screener, RSS and tickers",
+                            onClick = { activeSection = SettingsSection.RISK_DISCOVERY }
+                        )
+                        SettingsSectionNavRow(
+                            title = SettingsSection.SYSTEM.label,
+                            subtitle = "Cache, logs, maintenance",
+                            onClick = { activeSection = SettingsSection.SYSTEM }
+                        )
+                    }
 
-                    if (expandGeneral) {
+                    if (activeSection == SettingsSection.GENERAL) {
                     SectionHeader("APPEARANCE")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
@@ -444,7 +458,7 @@ fun SettingsScreen(
                     }
                     }
                     
-                    if (expandSystem) {
+                    if (activeSection == SettingsSection.SYSTEM) {
                         Spacer(modifier = Modifier.height(32.dp))
                         SectionHeader("DAILY TELEMETRY USAGE")
                         com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -517,7 +531,7 @@ fun SettingsScreen(
                         }
                     }
 
-                    if (expandAi) {
+                    if (activeSection == SettingsSection.AI) {
                     Spacer(modifier = Modifier.height(32.dp))
                     SectionHeader("AI CONFIGURATION")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -526,8 +540,13 @@ fun SettingsScreen(
                             var analysisModelExpanded by remember { mutableStateOf(false) }
                             var verdictModelExpanded by remember { mutableStateOf(false) }
                             var reasoningModelExpanded by remember { mutableStateOf(false) }
+                            val configuredProviders = uiState.keys.toLlmKeyMap()
+                                .filterValues { it.isNotBlank() }
+                                .keys
+                                .toList()
+                            val hasSavedPrimaryConfig = uiState.appSettings.llmProviderProfiles.containsKey(uiState.appSettings.llmProvider)
 
-                            Text("GLOBAL PROVIDER", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
+                            Text("PRIMARY PROVIDER", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             ExposedDropdownMenuBox(
                                 expanded = providerExpanded,
@@ -554,21 +573,40 @@ fun SettingsScreen(
                                         DropdownMenuItem(
                                             text = { Text(provider.displayName) },
                                             onClick = {
-                                                val providerModels = LlmModel.modelsForProvider(provider)
-                                                val defaultModel = providerModels.firstOrNull {
-                                                    it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
-                                                } ?: providerModels.firstOrNull() ?: uiState.appSettings.analysisModel
-                                                onUpdateSettings(uiState.appSettings.copy(
-                                                    llmProvider = provider,
-                                                    analysisModel = defaultModel,
-                                                    verdictModel = defaultModel,
-                                                    reasoningModel = defaultModel,
-                                                    deepDiveProvider = provider
-                                                ))
+                                                if (provider != uiState.appSettings.llmProvider) {
+                                                    pendingPrimaryProvider = provider
+                                                }
                                                 providerExpanded = false
                                             }
                                         )
                                     }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = if (configuredProviders.isEmpty()) {
+                                    "No provider keys configured."
+                                } else {
+                                    "Configured keys: ${configuredProviders.joinToString { it.displayName }}"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                TextButton(onClick = {
+                                    onUpdateSettings(savePrimaryProviderConfiguration(uiState.appSettings))
+                                }) {
+                                    Text("SAVE CONFIG", fontWeight = FontWeight.Black, color = BrandSecondary)
+                                }
+                                TextButton(
+                                    enabled = hasSavedPrimaryConfig,
+                                    onClick = {
+                                        onUpdateSettings(restorePrimaryProviderConfiguration(uiState.appSettings))
+                                    }
+                                ) {
+                                    Text("RESTORE", fontWeight = FontWeight.Black)
                                 }
                             }
 
@@ -704,7 +742,7 @@ fun SettingsScreen(
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
                             Text(
-                                text = "Assign provider/model per pipeline stage. Global AI settings are used only when a stage has no override.",
+                                text = "Assign provider/model per pipeline stage. Primary AI settings are used only when a stage has no override.",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -1197,7 +1235,7 @@ fun SettingsScreen(
             }
                     }
             
-            if (expandMonitoring) {
+            if (activeSection == SettingsSection.NOTIFICATIONS) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("AUTONOMOUS MONITORING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1272,7 +1310,7 @@ fun SettingsScreen(
             }
             }
             
-            if (expandRiskAndDiscovery) {
+            if (activeSection == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("TECHNICAL TRIGGER THRESHOLDS")
             AiLockedCard(
@@ -1427,7 +1465,7 @@ fun SettingsScreen(
             }
             }
             
-            if (expandSystem) {
+            if (activeSection == SettingsSection.SYSTEM) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CACHE CONTROL")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1539,7 +1577,7 @@ fun SettingsScreen(
             }
             }
 
-            if (expandRiskAndDiscovery) {
+            if (activeSection == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CUSTOM TICKERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1622,7 +1660,7 @@ fun SettingsScreen(
             }
             }
             
-            if (expandRiskAndDiscovery) {
+            if (activeSection == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("MARKET DATA FEEDS")
@@ -1884,7 +1922,7 @@ fun SettingsScreen(
             }
             }
 
-            if (expandRiskAndDiscovery) {
+            if (activeSection == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("BLACKLISTED NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1913,6 +1951,63 @@ fun SettingsScreen(
             }
         }
     }
+    }
+
+    pendingPrimaryProvider?.let { targetProvider ->
+        AlertDialog(
+            onDismissRequest = { pendingPrimaryProvider = null },
+            title = {
+                Text(
+                    "SWITCH PRIMARY PROVIDER",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black
+                )
+            },
+            text = {
+                Text(
+                    "Switch primary provider to ${targetProvider.displayName}. Save the current primary configuration before switching?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onUpdateSettings(
+                            switchPrimaryProvider(
+                                current = uiState.appSettings,
+                                target = targetProvider,
+                                saveCurrent = true
+                            )
+                        )
+                        pendingPrimaryProvider = null
+                    }
+                ) {
+                    Text("SAVE & SWITCH", fontWeight = FontWeight.Black, color = BrandSecondary)
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            onUpdateSettings(
+                                switchPrimaryProvider(
+                                    current = uiState.appSettings,
+                                    target = targetProvider,
+                                    saveCurrent = false
+                                )
+                            )
+                            pendingPrimaryProvider = null
+                        }
+                    ) {
+                        Text("SWITCH ONLY", fontWeight = FontWeight.Black)
+                    }
+                    TextButton(onClick = { pendingPrimaryProvider = null }) {
+                        Text("CANCEL", fontWeight = FontWeight.Black)
+                    }
+                }
+            },
+            shape = RoundedCornerShape(24.dp)
+        )
     }
 
     if (showSettingsAiDialog) {
@@ -2303,17 +2398,16 @@ private fun RssToggleRow(
 }
 
 @Composable
-private fun SettingsAccordionHeader(
+private fun SettingsSectionNavRow(
     title: String,
     subtitle: String,
-    expanded: Boolean,
-    onToggle: () -> Unit
+    onClick: () -> Unit
 ) {
     com.polaralias.signalsynthesis.ui.components.GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clickable { onToggle() }
+            .clickable { onClick() }
     ) {
         Row(
             modifier = Modifier
@@ -2336,9 +2430,10 @@ private fun SettingsAccordionHeader(
                 )
             }
             Icon(
-                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                tint = BrandPrimary
+                tint = BrandPrimary,
+                modifier = Modifier.size(16.dp)
             )
         }
     }
@@ -2506,6 +2601,90 @@ private fun groupedModelsForProvider(provider: LlmProvider): List<Pair<String, L
     return groups
 }
 
+private fun savePrimaryProviderConfiguration(settings: AppSettings): AppSettings {
+    val provider = settings.llmProvider
+    val saved = settings.llmProviderProfiles.toMutableMap()
+    saved[provider] = captureProviderConfiguration(settings, provider)
+    return settings.copy(llmProviderProfiles = saved)
+}
+
+private fun restorePrimaryProviderConfiguration(settings: AppSettings): AppSettings {
+    val provider = settings.llmProvider
+    val saved = settings.llmProviderProfiles[provider] ?: return settings
+    return applyProviderConfiguration(settings, provider, saved)
+}
+
+private fun switchPrimaryProvider(
+    current: AppSettings,
+    target: LlmProvider,
+    saveCurrent: Boolean
+): AppSettings {
+    if (target == current.llmProvider) return current
+
+    val saved = current.llmProviderProfiles.toMutableMap()
+    if (saveCurrent) {
+        saved[current.llmProvider] = captureProviderConfiguration(current, current.llmProvider)
+    }
+
+    val targetConfig = saved[target]
+    val switched = if (targetConfig != null) {
+        applyProviderConfiguration(current, target, targetConfig)
+    } else {
+        val defaultModel = defaultModelForProvider(target)
+        current.copy(
+            llmProvider = target,
+            analysisModel = defaultModel,
+            verdictModel = defaultModel,
+            reasoningModel = defaultModel,
+            deepDiveProvider = target
+        )
+    }
+
+    return switched.copy(llmProviderProfiles = saved)
+}
+
+private fun captureProviderConfiguration(settings: AppSettings, provider: LlmProvider): LlmProviderConfiguration {
+    return LlmProviderConfiguration(
+        analysisModel = normalizeModelForProvider(settings.analysisModel, provider),
+        verdictModel = normalizeModelForProvider(settings.verdictModel, provider),
+        reasoningModel = normalizeModelForProvider(settings.reasoningModel, provider),
+        deepDiveProvider = settings.deepDiveProvider,
+        reasoningDepth = settings.reasoningDepth,
+        outputLength = settings.outputLength,
+        verbosity = settings.verbosity,
+        modelRouting = settings.modelRouting
+    )
+}
+
+private fun applyProviderConfiguration(
+    settings: AppSettings,
+    provider: LlmProvider,
+    config: LlmProviderConfiguration
+): AppSettings {
+    return settings.copy(
+        llmProvider = provider,
+        analysisModel = normalizeModelForProvider(config.analysisModel, provider),
+        verdictModel = normalizeModelForProvider(config.verdictModel, provider),
+        reasoningModel = normalizeModelForProvider(config.reasoningModel, provider),
+        deepDiveProvider = config.deepDiveProvider,
+        reasoningDepth = config.reasoningDepth,
+        outputLength = config.outputLength,
+        verbosity = config.verbosity,
+        modelRouting = config.modelRouting
+    )
+}
+
+private fun normalizeModelForProvider(model: LlmModel, provider: LlmProvider): LlmModel {
+    return if (model.provider == provider) model else defaultModelForProvider(provider)
+}
+
+private fun defaultModelForProvider(provider: LlmProvider): LlmModel {
+    val providerModels = LlmModel.modelsForProvider(provider)
+    return providerModels.firstOrNull {
+        it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
+    } ?: providerModels.firstOrNull() ?: LlmModel.GPT_5_1
+}
+
 private fun formatStageModelLabel(provider: LlmProvider, modelId: String): String {
     val normalized = LlmModel.normalizeModelIdAlias(modelId)
     val model = LlmModel.modelsForProvider(provider).firstOrNull { candidate ->
@@ -2585,4 +2764,5 @@ private fun formatCategoryName(category: com.polaralias.signalsynthesis.util.Api
         com.polaralias.signalsynthesis.util.ApiUsageCategory.OTHER -> "Protocols"
     }
 }
+
 

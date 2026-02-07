@@ -57,7 +57,6 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
                         viewModel.updateIntent(intent)
                         navController.navigate(Screen.Analysis.route)
                     },
-                    onRefreshMarket = viewModel::refreshMarketOverview,
                     onOpenSettings = { navController.navigate(Screen.Settings.route) },
                     onOpenResults = { navController.navigate(Screen.Results.route) },
                     onOpenDetail = { symbol ->

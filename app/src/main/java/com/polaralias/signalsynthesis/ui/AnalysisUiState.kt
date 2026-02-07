@@ -4,7 +4,6 @@ import com.polaralias.signalsynthesis.data.provider.ApiKeys
 import com.polaralias.signalsynthesis.data.rss.RssFeedCatalog
 import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
-import com.polaralias.signalsynthesis.domain.model.MarketOverview
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import java.time.Instant
 
@@ -118,8 +117,6 @@ data class AnalysisUiState(
     val isPrefetching: Boolean = false,
     val prefetchCount: Int = 0,
     val aiSummaries: Map<String, AiSummaryState> = emptyMap(),
-    val marketOverview: MarketOverview? = null,
-    val isLoadingMarket: Boolean = false,
     val chartData: Map<String, ChartState> = emptyMap(),
     val customTickers: List<TickerEntry> = emptyList(),
     val tickerSearchResults: List<com.polaralias.signalsynthesis.domain.provider.SearchResult> = emptyList(),

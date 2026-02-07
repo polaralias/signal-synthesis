@@ -30,9 +30,6 @@ import com.polaralias.signalsynthesis.data.rss.RssFeedCatalogLoader
 import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import com.polaralias.signalsynthesis.util.Logger
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
-import com.polaralias.signalsynthesis.domain.model.IndexQuote
-import com.polaralias.signalsynthesis.domain.model.MarketOverview
-import com.polaralias.signalsynthesis.domain.model.MarketSection
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import com.polaralias.signalsynthesis.domain.rss.RssFeedResolver
 import com.polaralias.signalsynthesis.domain.rss.RssFeedSelection
@@ -136,7 +133,6 @@ class AnalysisViewModel(
         observeWatchlist()
         observeHistory()
         observeAppSettings()
-        refreshMarketOverview()
         observeDailyUsage()
         observeProviderBlacklist()
     }
@@ -1234,126 +1230,6 @@ class AnalysisViewModel(
     private fun buildUseCase(apiKeys: com.polaralias.signalsynthesis.data.provider.ApiKeys): RunAnalysisUseCase {
         val repository = getRepository(apiKeys)
         return RunAnalysisUseCase(repository, clock)
-    }
-
-    fun refreshMarketOverview() {
-        val state = _uiState.value
-        if (state.isLoadingMarket) return
-
-        _uiState.update { it.copy(isLoadingMarket = true) }
-        viewModelScope.launch(ioDispatcher) {
-            try {
-                val apiKeys = _uiState.value.keys.toApiKeys()
-                val repository = getRepository(apiKeys)
-                
-                // 1. Fetch main indices
-                // User requested: S&P 500, Gold, USD/GBP
-                val indexSymbols = listOf("SPY", "GLD", "GBPUSD")
-                
-                // If we have API keys, do NOT fallback to mock data silently.
-                // The repository might handle this, but let's ensure we are asking for real data.
-                val indexQuotes = if (apiKeys.hasAny()) {
-                     repository.getQuotes(indexSymbols)
-                } else {
-                     // In demo mode, repository uses mock provider automatically if configured
-                     repository.getQuotes(indexSymbols)
-                }
-                
-                val indexItems = indexSymbols.mapNotNull { symbol ->
-                    val quote = indexQuotes[symbol]
-                    // If no quote and we have keys, it means data unavailable -> show error or blank?
-                    // User said: "if unavailable be blank or show an accurate state message"
-                    // mapNotNull will allow us to skip it if null.
-                    // If all are null, we might show "Market Data Unavailable"
-                    
-                    if (quote == null) return@mapNotNull null
-                    
-                    val names = mapOf(
-                        "SPY" to "S&P 500",
-                        "GLD" to "Gold",
-                        "GBPUSD" to "USD/GBP"
-                    )
-                    IndexQuote(
-                        symbol = symbol,
-                        name = names[symbol] ?: symbol,
-                        price = quote.price,
-                        changePercent = quote.changePercent ?: 0.0,
-                        volume = quote.volume
-                    )
-                }
-                
-                // If items are empty and we have keys, it means failure.
-                if (indexItems.isEmpty() && apiKeys.hasAny()) {
-                     // We could add a "State Message" item or just leave it empty.
-                     // The UI handles empty sections by not showing them.
-                }
-
-                val sections = mutableListOf<MarketSection>()
-                if (indexItems.isNotEmpty()) {
-                    sections.add(MarketSection("Indices", indexItems))
-                }
-
-                // 2. Fetch Gainers
-                try {
-                    val gainerSymbols = repository.getTopGainers(5)
-                    if (gainerSymbols.isNotEmpty()) {
-                        val gainerQuotes = repository.getQuotes(gainerSymbols)
-                        val gainerItems = gainerSymbols.mapNotNull { symbol ->
-                            val quote = gainerQuotes[symbol] ?: return@mapNotNull null
-                            IndexQuote(
-                                symbol = symbol,
-                                name = symbol,
-                                price = quote.price,
-                                changePercent = quote.changePercent ?: 0.0,
-                                volume = quote.volume
-                            )
-                        }
-                        if (gainerItems.isNotEmpty()) {
-                            sections.add(MarketSection("Top Gainers", gainerItems))
-                        }
-                    }
-                } catch (e: Exception) {
-                    Logger.e("ViewModel", "Failed to fetch gainers", e)
-                }
-
-                // 3. Fetch Losers
-                try {
-                    val loserSymbols = repository.getTopLosers(5)
-                    if (loserSymbols.isNotEmpty()) {
-                        val loserQuotes = repository.getQuotes(loserSymbols)
-                        val loserItems = loserSymbols.mapNotNull { symbol ->
-                            val quote = loserQuotes[symbol] ?: return@mapNotNull null
-                            IndexQuote(
-                                symbol = symbol,
-                                name = symbol,
-                                price = quote.price,
-                                changePercent = quote.changePercent ?: 0.0,
-                                volume = quote.volume
-                            )
-                        }
-                        if (loserItems.isNotEmpty()) {
-                            sections.add(MarketSection("Top Losers", loserItems))
-                        }
-                    }
-                } catch (e: Exception) {
-                    Logger.e("ViewModel", "Failed to fetch losers", e)
-                }
-
-                if (sections.isNotEmpty()) {
-                    _uiState.update { 
-                        it.copy(
-                            marketOverview = MarketOverview(sections, clock.instant()),
-                            isLoadingMarket = false
-                        )
-                    }
-                } else {
-                    _uiState.update { it.copy(isLoadingMarket = false) }
-                }
-            } catch (e: Exception) {
-                Logger.e("ViewModel", "Market overview refresh failed", e)
-                _uiState.update { it.copy(isLoadingMarket = false) }
-            }
-        }
     }
 
     private fun buildSynthesisUseCase(

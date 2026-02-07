@@ -43,11 +43,23 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val deepDiveProvider: LlmProvider = LlmProvider.OPENAI,
     val modelRouting: UserModelRoutingConfig = UserModelRoutingConfig(),
+    val llmProviderProfiles: Map<LlmProvider, LlmProviderConfiguration> = emptyMap(),
     val rssEnabledTopics: Set<String> = RssFeedDefaults.defaultEnabledTopicKeys(),
     val rssTickerSources: Set<String> = RssFeedDefaults.defaultTickerSourceIds,
     val rssUseTickerFeedsForFinalStage: Boolean = true,
     val rssApplyExpandedToAll: Boolean = false,
     val aiSuggestedSettingsLocked: Boolean = false
+)
+
+data class LlmProviderConfiguration(
+    val analysisModel: LlmModel,
+    val verdictModel: LlmModel,
+    val reasoningModel: LlmModel,
+    val deepDiveProvider: LlmProvider,
+    val reasoningDepth: ReasoningDepth,
+    val outputLength: OutputLength,
+    val verbosity: Verbosity,
+    val modelRouting: UserModelRoutingConfig
 )
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }

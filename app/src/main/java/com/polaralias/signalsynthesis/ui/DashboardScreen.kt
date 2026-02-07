@@ -16,17 +16,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.*
 import com.polaralias.signalsynthesis.domain.model.*
 import com.polaralias.signalsynthesis.ui.theme.*
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     uiState: AnalysisUiState,
     onIntentSelected: (TradingIntent) -> Unit,
-    onRefreshMarket: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenResults: () -> Unit,
     onOpenDetail: (String) -> Unit,
@@ -36,6 +33,16 @@ fun DashboardScreen(
     onOpenWatchlist: () -> Unit // Adding Watchlist navigation
 ) {
     var symbolToBlock by remember { mutableStateOf<String?>(null) }
+    val quickAccessSymbols = uiState.result
+        ?.setups
+        ?.asSequence()
+        ?.filter { !uiState.removedAlerts.contains(it.symbol) }
+        ?.map { it.symbol }
+        ?.distinct()
+        ?.take(8)
+        ?.toList()
+        .orEmpty()
+    val hasResults = uiState.result != null || uiState.history.isNotEmpty()
 
     AmbientBackground {
         Scaffold(
@@ -51,8 +58,12 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onRefreshMarket) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh Telemetry", tint = BrandPrimary)
+                        IconButton(onClick = onOpenResults, enabled = hasResults) {
+                            Icon(
+                                Icons.Default.Insights,
+                                contentDescription = "Recent Results",
+                                tint = if (hasResults) BrandPrimary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                            )
                         }
                         
                         RainbowMcpText(
@@ -84,12 +95,11 @@ fun DashboardScreen(
                         onClick = onOpenSettings
                     )
 
-                    // Market Pulse Section
-                    uiState.marketOverview?.let { overview ->
-                        MarketSection(
-                            overview = overview,
-                            isLoading = uiState.isLoadingMarket,
-                            onOpenDetail = onOpenDetail
+                    if (quickAccessSymbols.isNotEmpty()) {
+                        QuickTickerAccessSection(
+                            symbols = quickAccessSymbols,
+                            onOpenDetail = onOpenDetail,
+                            onOpenResults = onOpenResults
                         )
                     }
 
@@ -136,6 +146,58 @@ fun DashboardScreen(
 }
 
 @Composable
+private fun QuickTickerAccessSection(
+    symbols: List<String>,
+    onOpenDetail: (String) -> Unit,
+    onOpenResults: () -> Unit
+) {
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            SectionHeader(title = "RESULT SHORTCUTS")
+            TextButton(onClick = onOpenResults) {
+                Text("ALL RESULTS", style = MaterialTheme.typography.labelSmall, color = BrandPrimary, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+            }
+        }
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(vertical = 4.dp)
+        ) {
+            items(symbols) { symbol ->
+                com.polaralias.signalsynthesis.ui.components.GlassBox(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .clickable { onOpenDetail(symbol) }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CandlestickChart,
+                            contentDescription = null,
+                            tint = BrandSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = symbol,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = BrandSecondary,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun WatchlistPreview(onOpenWatchlist: () -> Unit) {
     Column {
         Row(
@@ -164,110 +226,6 @@ private fun WatchlistPreview(onOpenWatchlist: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(12.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
-            }
-        }
-    }
-}
-
-@Composable
-private fun MarketSection(
-    overview: MarketOverview,
-    isLoading: Boolean,
-    onOpenDetail: (String) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Bottom
-        ) {
-            SectionHeader(title = "MARKET DATA")
-            if (isLoading) {
-                Box(modifier = Modifier.padding(bottom = 12.dp)) {
-                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = BrandPrimary)
-                }
-            } else {
-                Text(
-                    text = "SYNCED ${formatTime(overview.lastUpdated)}",
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 12.dp),
-                    letterSpacing = 1.sp
-                )
-            }
-        }
-        
-        overview.sections.forEach { section ->
-            Column {
-                Text(
-                    text = section.title.uppercase(),
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                    color = BrandSecondary,
-                    modifier = Modifier.padding(bottom = 6.dp, start = 4.dp),
-                    letterSpacing = 2.sp,
-                    fontWeight = FontWeight.Black
-                )
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(bottom = 4.dp)
-                ) {
-                    items(section.items) { index ->
-                        IndexCard(index, onClick = { onOpenDetail(index.symbol) })
-                    }
-                }
-            }
-        }
-    }
-}
-
-
-
-@Composable
-private fun IndexCard(index: IndexQuote, onClick: () -> Unit) {
-    val isUp = index.changePercent >= 0
-    val trendColor = if (isUp) BrandPrimary else ErrorRed
-    
-    com.polaralias.signalsynthesis.ui.components.GlassCard(
-        modifier = Modifier.width(150.dp),
-        onClick = onClick
-    ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            Text(
-                index.symbol,
-                fontWeight = FontWeight.Black,
-                style = MaterialTheme.typography.labelLarge,
-                color = BrandPrimary,
-                letterSpacing = 1.sp
-            )
-            Text(
-                index.name.uppercase(),
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
-                maxLines = 1,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.5.sp
-            )
-            Spacer(modifier = Modifier.height(14.dp))
-            Text(
-                formatPrice(index.price),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Black
-            )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (isUp) Icons.Filled.TrendingUp else Icons.Filled.TrendingDown,
-                    contentDescription = null,
-                    tint = trendColor.copy(alpha = 0.7f),
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "${String.format(Locale.US, "%.2f", index.changePercent)}%",
-                    color = trendColor.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
-                    fontWeight = FontWeight.Black
-                )
             }
         }
     }

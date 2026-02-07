@@ -5,10 +5,15 @@ import androidx.core.content.edit
 import com.polaralias.signalsynthesis.data.rss.RssFeedCatalogLoader
 import com.polaralias.signalsynthesis.data.rss.RssFeedDefaults
 import com.polaralias.signalsynthesis.data.settings.AppSettings
+import com.polaralias.signalsynthesis.data.settings.LlmProviderConfiguration
+import com.polaralias.signalsynthesis.domain.ai.LlmModel
+import com.polaralias.signalsynthesis.domain.ai.LlmModelVisibilityGroup
+import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 interface AppSettingsStorage {
     suspend fun loadSettings(): AppSettings
@@ -43,6 +48,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         } else {
             storedTickerSources
         }
+        val providerProfiles = parseProviderConfigurations(prefs.getString(KEY_LLM_PROVIDER_PROFILES, null))
 
         AppSettings(
             quoteRefreshIntervalMinutes = prefs.getInt(KEY_QUOTE_REFRESH, 5),
@@ -112,6 +118,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
                 com.polaralias.signalsynthesis.domain.ai.LlmProvider.OPENAI
             ),
             modelRouting = com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig.fromJson(prefs.getString(KEY_MODEL_ROUTING, null)),
+            llmProviderProfiles = providerProfiles,
             rssEnabledTopics = enabledTopics,
             rssTickerSources = tickerSources,
             rssUseTickerFeedsForFinalStage = prefs.getBoolean(KEY_RSS_TICKER_FINAL_STAGE, true),
@@ -156,6 +163,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             putString(KEY_THEME_MODE, settings.themeMode.name)
             putString(KEY_DEEP_DIVE_PROVIDER, settings.deepDiveProvider.name)
             putString(KEY_MODEL_ROUTING, settings.modelRouting.toJson())
+            putString(KEY_LLM_PROVIDER_PROFILES, serializeProviderConfigurations(settings.llmProviderProfiles))
             putString(KEY_RSS_ENABLED_TOPICS, stringListAdapter.toJson(settings.rssEnabledTopics.toList()))
             putString(KEY_RSS_TICKER_SOURCES, stringListAdapter.toJson(settings.rssTickerSources.toList()))
             putBoolean(KEY_RSS_TICKER_FINAL_STAGE, settings.rssUseTickerFeedsForFinalStage)
@@ -222,6 +230,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_THEME_MODE = "interface_theme_mode"
         private const val KEY_DEEP_DIVE_PROVIDER = "deep_dive_provider"
         private const val KEY_MODEL_ROUTING = "model_routing_by_stage"
+        private const val KEY_LLM_PROVIDER_PROFILES = "llm_provider_profiles"
         private const val KEY_RSS_FEEDS = "user_rss_feeds"
         private const val KEY_RSS_ENABLED_TOPICS = "rss_enabled_topics"
         private const val KEY_RSS_TICKER_SOURCES = "rss_ticker_sources"
@@ -244,6 +253,84 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             emptyList()
         }
     }
+
+    private fun parseProviderConfigurations(raw: String?): Map<LlmProvider, LlmProviderConfiguration> {
+        if (raw.isNullOrBlank()) return emptyMap()
+        return try {
+            val root = JSONObject(raw)
+            buildMap {
+                LlmProvider.values().forEach { provider ->
+                    val node = root.optJSONObject(provider.name) ?: return@forEach
+                    put(
+                        provider,
+                        LlmProviderConfiguration(
+                            analysisModel = parseProviderModel(provider, node.optNullableString("analysisModel")),
+                            verdictModel = parseProviderModel(provider, node.optNullableString("verdictModel")),
+                            reasoningModel = parseProviderModel(provider, node.optNullableString("reasoningModel")),
+                            deepDiveProvider = parseEnum(node.optNullableString("deepDiveProvider"), provider),
+                            reasoningDepth = parseEnum(
+                                node.optNullableString("reasoningDepth"),
+                                com.polaralias.signalsynthesis.domain.ai.ReasoningDepth.MEDIUM
+                            ),
+                            outputLength = parseEnum(
+                                node.optNullableString("outputLength"),
+                                com.polaralias.signalsynthesis.domain.ai.OutputLength.STANDARD
+                            ),
+                            verbosity = parseEnum(
+                                node.optNullableString("verbosity"),
+                                com.polaralias.signalsynthesis.domain.ai.Verbosity.MEDIUM
+                            ),
+                            modelRouting = com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig.fromJson(
+                                node.optNullableString("modelRouting")
+                            )
+                        )
+                    )
+                }
+            }
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
+
+    private fun serializeProviderConfigurations(configs: Map<LlmProvider, LlmProviderConfiguration>): String {
+        if (configs.isEmpty()) return "{}"
+        return buildString {
+            val root = JSONObject()
+            configs.forEach { (provider, config) ->
+                val node = JSONObject()
+                node.put("analysisModel", config.analysisModel.name)
+                node.put("verdictModel", config.verdictModel.name)
+                node.put("reasoningModel", config.reasoningModel.name)
+                node.put("deepDiveProvider", config.deepDiveProvider.name)
+                node.put("reasoningDepth", config.reasoningDepth.name)
+                node.put("outputLength", config.outputLength.name)
+                node.put("verbosity", config.verbosity.name)
+                node.put("modelRouting", config.modelRouting.toJson())
+                root.put(provider.name, node)
+            }
+            append(root.toString())
+        }
+    }
+
+    private fun parseProviderModel(provider: LlmProvider, storedValue: String?): LlmModel {
+        val defaultModel = defaultModelForProvider(provider)
+        if (storedValue.isNullOrBlank()) return defaultModel
+
+        val byEnumName = runCatching { LlmModel.valueOf(storedValue) }.getOrNull()
+        if (byEnumName != null && byEnumName.provider == provider) return byEnumName
+
+        val normalized = LlmModel.normalizeModelIdAlias(storedValue)
+        return LlmModel.modelsForProvider(provider).firstOrNull { model ->
+            model.modelId.equals(normalized, ignoreCase = true)
+        } ?: defaultModel
+    }
+
+    private fun defaultModelForProvider(provider: LlmProvider): LlmModel {
+        val providerModels = LlmModel.modelsForProvider(provider)
+        return providerModels.firstOrNull {
+            it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
+        } ?: providerModels.firstOrNull() ?: LlmModel.GPT_5_1
+    }
 }
 
 private fun parseDiscoveryMode(value: String?): com.polaralias.signalsynthesis.data.settings.DiscoveryMode {
@@ -258,4 +345,9 @@ private fun parseDiscoveryMode(value: String?): com.polaralias.signalsynthesis.d
 private inline fun <reified T : Enum<T>> parseEnum(value: String?, fallback: T): T {
     if (value.isNullOrBlank()) return fallback
     return enumValues<T>().firstOrNull { it.name == value } ?: fallback
+}
+
+private fun JSONObject.optNullableString(key: String): String? {
+    val value = optString(key)
+    return value.takeIf { it.isNotBlank() && !it.equals("null", ignoreCase = true) }
 }
