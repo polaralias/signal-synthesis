@@ -115,7 +115,8 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             rssEnabledTopics = enabledTopics,
             rssTickerSources = tickerSources,
             rssUseTickerFeedsForFinalStage = prefs.getBoolean(KEY_RSS_TICKER_FINAL_STAGE, true),
-            rssApplyExpandedToAll = prefs.getBoolean(KEY_RSS_EXPANDED_ALL, false)
+            rssApplyExpandedToAll = prefs.getBoolean(KEY_RSS_EXPANDED_ALL, false),
+            aiSuggestedSettingsLocked = prefs.getBoolean(KEY_AI_SUGGESTED_LOCKED, false)
         )
     }
 
@@ -159,6 +160,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             putString(KEY_RSS_TICKER_SOURCES, stringListAdapter.toJson(settings.rssTickerSources.toList()))
             putBoolean(KEY_RSS_TICKER_FINAL_STAGE, settings.rssUseTickerFeedsForFinalStage)
             putBoolean(KEY_RSS_EXPANDED_ALL, settings.rssApplyExpandedToAll)
+            putBoolean(KEY_AI_SUGGESTED_LOCKED, settings.aiSuggestedSettingsLocked)
         }
     }
 
@@ -225,6 +227,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_RSS_TICKER_SOURCES = "rss_ticker_sources"
         private const val KEY_RSS_TICKER_FINAL_STAGE = "rss_ticker_final_stage"
         private const val KEY_RSS_EXPANDED_ALL = "rss_expanded_all"
+        private const val KEY_AI_SUGGESTED_LOCKED = "ai_suggested_settings_locked"
     }
 
     private fun migrateLegacyTopics(): Set<String> {

@@ -47,14 +47,18 @@ interface MassiveService {
     ): MassiveTickersResponse
 
     companion object {
-        private const val BASE_URL = "https://api.polygon.io/"
+        const val BASE_URL_MASSIVE = "https://api.massive.com/"
+        const val BASE_URL_POLYGON = "https://api.polygon.io/"
 
-        fun create(client: OkHttpClient? = null): MassiveService {
+        fun create(
+            client: OkHttpClient? = null,
+            baseUrl: String = BASE_URL_MASSIVE
+        ): MassiveService {
             val moshi = Moshi.Builder()
                 .add(KotlinJsonAdapterFactory())
                 .build()
             val retrofit = Retrofit.Builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(baseUrl)
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
                 .client(client ?: OkHttpClient())
                 .build()

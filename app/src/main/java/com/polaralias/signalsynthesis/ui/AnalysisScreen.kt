@@ -23,6 +23,7 @@ import com.polaralias.signalsynthesis.ui.theme.*
 @Composable
 fun AnalysisScreen(
     uiState: AnalysisUiState,
+    onBack: () -> Unit,
     onIntentSelected: (TradingIntent) -> Unit,
     onAssetClassSelected: (com.polaralias.signalsynthesis.data.settings.AssetClass) -> Unit,
     onDiscoveryModeSelected: (com.polaralias.signalsynthesis.data.settings.DiscoveryMode) -> Unit,
@@ -58,8 +59,8 @@ fun AnalysisScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = onOpenHistory) {
-                            Icon(Icons.Default.History, contentDescription = "History", tint = BrandPrimary)
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = BrandPrimary)
                         }
                         
                         RainbowMcpText(
@@ -67,8 +68,13 @@ fun AnalysisScreen(
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp)
                         )
 
-                        IconButton(onClick = onOpenWatchlist) {
-                            Icon(Icons.Default.AutoAwesome, contentDescription = "Watchlist", tint = BrandSecondary)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(onClick = onOpenHistory) {
+                                Icon(Icons.Default.History, contentDescription = "History", tint = BrandPrimary)
+                            }
+                            IconButton(onClick = onOpenWatchlist) {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = "Watchlist", tint = BrandSecondary)
+                            }
                         }
                     }
                 }
@@ -254,7 +260,7 @@ fun AnalysisScreen(
                                     )
                                     Spacer(modifier = Modifier.width(16.dp))
                                     Text(
-                                        uiState.progressMessage?.uppercase() ?: "SYNTHESIZING...",
+                                        uiState.progressMessage ?: "Synthesizing...",
                                         style = MaterialTheme.typography.labelLarge,
                                         color = BrandPrimary,
                                         fontWeight = FontWeight.Black

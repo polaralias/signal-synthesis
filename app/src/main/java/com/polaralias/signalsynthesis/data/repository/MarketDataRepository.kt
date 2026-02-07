@@ -19,6 +19,8 @@ class MarketDataRepository(
     private val providers: ProviderBundle,
     cacheConfig: CacheTtlConfig = CacheTtlConfig()
 ) {
+    @Volatile
+    private var progressListener: ((String) -> Unit)? = null
 
     suspend fun searchSymbols(query: String): List<SearchResult> {
         if (query.isBlank()) return emptyList()
@@ -35,6 +37,10 @@ class MarketDataRepository(
     private val profileCache = TimedCache<String, CompanyProfile>(cacheConfig.profileTtlMs)
     private val metricsCache = TimedCache<String, FinancialMetrics>(cacheConfig.metricsTtlMs)
     private val sentimentCache = TimedCache<String, SentimentData>(cacheConfig.sentimentTtlMs)
+
+    fun setProgressListener(listener: ((String) -> Unit)?) {
+        progressListener = listener
+    }
 
     suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
@@ -65,10 +71,11 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(providerName)
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             if (missing.isEmpty()) break
             
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (quotes) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200) // Rate limit prevention
                 val fetched = RetryHelper.withRetry(providerName) {
@@ -147,8 +154,9 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (profile) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200)
                 val result = RetryHelper.withRetry(providerName) {
@@ -193,8 +201,9 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (metrics) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200)
                 val result = RetryHelper.withRetry(providerName) {
@@ -263,9 +272,10 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             if (allResults.size >= limit) break
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (screener) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200)
                 val results = RetryHelper.withRetry(providerName) {
@@ -289,9 +299,10 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             if (allResults.size >= limit) break
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (gainers) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200)
                 val results = RetryHelper.withRetry(providerName) {
@@ -314,9 +325,10 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             if (allResults.size >= limit) break
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (losers) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200)
                 val results = RetryHelper.withRetry(providerName) {
@@ -339,9 +351,10 @@ class MarketDataRepository(
             !ProviderStatusManager.isBlacklisted(provider::class.simpleName ?: "Unknown")
         }
 
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             if (allResults.size >= limit) break
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check (most active) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 delay(200)
                 val results = RetryHelper.withRetry(providerName) {
@@ -374,8 +387,9 @@ class MarketDataRepository(
         }
 
         val startTime = System.currentTimeMillis()
-        for (provider in filteredProviders) {
+        for ((index, provider) in filteredProviders.withIndex()) {
             val providerName = provider::class.simpleName ?: "Unknown"
+            emitProgress("Provider check ($dataType) ${index + 1}/${filteredProviders.size}: ${compactProviderName(providerName)}")
             try {
                 // Add a small delay between provider calls/network requests to avoid rate limits
                 delay(200)
@@ -405,6 +419,17 @@ class MarketDataRepository(
             }
         }
         return null
+    }
+
+    private fun emitProgress(message: String) {
+        progressListener?.invoke(message)
+    }
+
+    private fun compactProviderName(name: String): String {
+        return name
+            .replace("MarketDataProvider", "")
+            .replace("DataProvider", "")
+            .replace("Provider", "")
     }
 
 

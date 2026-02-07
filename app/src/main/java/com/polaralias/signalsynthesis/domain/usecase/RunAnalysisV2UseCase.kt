@@ -64,8 +64,10 @@ class RunAnalysisV2UseCase(
         rssCatalog: RssFeedCatalog? = null,
         onProgress: ((String) -> Unit)? = null
     ): AnalysisResult {
+        val totalStages = 11
+
         // Step 1: Discover candidates
-        onProgress?.invoke("Discovering candidates...")
+        onProgress?.invoke("Stage 1/$totalStages: Discovering candidates")
         val rawCandidateMap = discoverCandidates.execute(intent, risk, assetClass, discoveryMode, customTickers, screenerThresholds)
         
         // Filter out blocklisted tickers
@@ -84,7 +86,7 @@ class RunAnalysisV2UseCase(
         }
         
         // Step 2: Filter tradeable
-        onProgress?.invoke("Filtering tradeable symbols...")
+        onProgress?.invoke("Stage 2/$totalStages: Filtering tradeable symbols")
         val minPrice = if (risk == RiskTolerance.AGGRESSIVE) 0.1 else 1.0
         val tradeable = filterTradeable.execute(symbols, minPrice = minPrice)
         if (tradeable.isEmpty()) {
@@ -99,11 +101,11 @@ class RunAnalysisV2UseCase(
         }
         
         // Step 3: Fetch quotes for the shortlist stage
-        onProgress?.invoke("Fetching quotes...")
+        onProgress?.invoke("Stage 3/$totalStages: Checking quote providers")
         val quotes = repository.getQuotes(tradeable)
         
         // Step 4: LLM Shortlist Gate
-        onProgress?.invoke("LLM Shortlisting (Gate)...")
+        onProgress?.invoke("Stage 4/$totalStages: AI shortlist synthesis")
         val shortlistPlan = shortlistCandidates.execute(
             symbols = tradeable,
             quotes = quotes,
@@ -137,7 +139,9 @@ class RunAnalysisV2UseCase(
         Logger.i("RunAnalysisV2", "Proceeding with enrichment for ${shortlistedSymbols.size} symbols: $shortlistedSymbols")
 
         // Step 5: Targeted enrichment (ONLY for shortlisted symbols that requested it)
-        onProgress?.invoke("Targeted enrichment (${shortlistedSymbols.size} symbols)...")
+        onProgress?.invoke("Stage 5/$totalStages: Enriching intraday (${
+            shortlistedSymbols.size
+        } symbols)")
         
         val shortlistBySymbol = shortlistPlan.shortlist.associateBy { it.symbol.trim().uppercase(Locale.US) }
         val symbolsWithoutExplicitRequests = shortlistedSymbols.filter { symbol ->
@@ -185,12 +189,14 @@ class RunAnalysisV2UseCase(
             emptyMap()
         }
 
+        onProgress?.invoke("Stage 6/$totalStages: Enriching fundamentals/context")
         val contextData = if (contextTargets.isNotEmpty()) {
             enrichContext.execute(contextTargets)
         } else {
             emptyMap()
         }
 
+        onProgress?.invoke("Stage 7/$totalStages: Enriching end-of-day history")
         val eodStats = if (eodTargets.isNotEmpty()) {
             enrichEod.execute(eodTargets, days = 200)
         } else {
@@ -198,7 +204,7 @@ class RunAnalysisV2UseCase(
         }
         
         // Step 6: Rank and generate setups
-        onProgress?.invoke("Ranking setups...")
+        onProgress?.invoke("Stage 8/$totalStages: Ranking setups")
         val rawSetups = rankSetups.execute(
             symbols = shortlistedSymbols,
             quotes = quotes,
@@ -212,7 +218,7 @@ class RunAnalysisV2UseCase(
         val setupsWithSource = rawSetups.map { it.copy(source = candidateMap[it.symbol] ?: TickerSource.PREDEFINED) }
 
         // Step 7: Decision Update (keep/drop + bias)
-        onProgress?.invoke("Updating decisions...")
+        onProgress?.invoke("Stage 9/$totalStages: AI decision update")
         val decisionUpdate = updateDecisions.execute(
             setups = setupsWithSource,
             intent = intent,
@@ -286,12 +292,15 @@ class RunAnalysisV2UseCase(
 
         // Step 8: Build RSS Digest for final setups
         val rssDigest = if (rssDigestBuilder != null && feedUrls.isNotEmpty() && setups.isNotEmpty()) {
-            onProgress?.invoke("Building RSS digest...")
+            onProgress?.invoke("Stage 10/$totalStages: RSS search")
             try {
                 val rssTargets = setups.map { it.symbol }
                 rssDigestBuilder.execute(
                     tickers = rssTargets,
-                    feedUrls = feedUrls
+                    feedUrls = feedUrls,
+                    onProgress = { rssProgress ->
+                        onProgress?.invoke("Stage 10/$totalStages: $rssProgress")
+                    }
                 )
             } catch (e: Exception) {
                 Logger.e("RunAnalysisV2", "RSS digest failed", e)
@@ -301,7 +310,7 @@ class RunAnalysisV2UseCase(
 
         // Step 9: Fundamentals + news synthesis (optional)
         val fundamentalsNewsSynthesis = if (setups.isNotEmpty()) {
-            onProgress?.invoke("Synthesizing fundamentals and news...")
+            onProgress?.invoke("Stage 11/$totalStages: AI fundamentals/news synthesis")
             try {
                 synthesizeFundamentalsAndNews.execute(
                     setups = setups,

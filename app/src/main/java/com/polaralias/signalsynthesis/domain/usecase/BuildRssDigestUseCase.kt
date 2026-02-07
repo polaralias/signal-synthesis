@@ -24,10 +24,13 @@ class BuildRssDigestUseCase(
         tickers: List<String>,
         feedUrls: List<String>,
         timeWindowHours: Int = 48,
-        maxItemsPerTicker: Int = 3
+        maxItemsPerTicker: Int = 3,
+        onProgress: ((String) -> Unit)? = null
     ): RssDigest {
         // 1. Fetch and update all feeds
-        feedUrls.forEach { url ->
+        val totalFeeds = feedUrls.size.coerceAtLeast(1)
+        feedUrls.forEachIndexed { index, url ->
+            onProgress?.invoke("RSS search ${index + 1}/$totalFeeds")
             rssFeedClient.fetchFeed(url)
         }
         

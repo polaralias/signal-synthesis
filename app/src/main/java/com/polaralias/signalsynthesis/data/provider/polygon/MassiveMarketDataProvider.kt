@@ -12,6 +12,7 @@ import com.polaralias.signalsynthesis.domain.provider.MetricsProvider
 import com.polaralias.signalsynthesis.domain.provider.ProfileProvider
 import com.polaralias.signalsynthesis.domain.provider.QuoteProvider
 import com.polaralias.signalsynthesis.domain.provider.SentimentProvider
+import com.polaralias.signalsynthesis.util.Logger
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -20,7 +21,8 @@ import java.time.format.DateTimeFormatter
 
 class MassiveMarketDataProvider(
     private val apiKey: String,
-    private val service: MassiveService = MassiveService.create(),
+    private val primaryService: MassiveService = MassiveService.create(baseUrl = MassiveService.BASE_URL_MASSIVE),
+    private val fallbackService: MassiveService = MassiveService.create(baseUrl = MassiveService.BASE_URL_POLYGON),
     private val clock: Clock = Clock.systemUTC()
 ) : QuoteProvider,
     IntradayProvider,
@@ -33,11 +35,13 @@ class MassiveMarketDataProvider(
 
     override suspend fun searchSymbols(query: String, limit: Int): List<com.polaralias.signalsynthesis.domain.provider.SearchResult> {
         if (query.isBlank()) return emptyList()
-        val response = service.listTickers(
-            search = query,
-            limit = limit,
-            apiKey = apiKey
-        )
+        val response = withEndpointFallback { service ->
+            service.listTickers(
+                search = query,
+                limit = limit,
+                apiKey = apiKey
+            )
+        }
         return response.results?.map {
             com.polaralias.signalsynthesis.domain.provider.SearchResult(
                 symbol = it.ticker ?: "",
@@ -54,11 +58,13 @@ class MassiveMarketDataProvider(
         sector: String?,
         limit: Int
     ): List<String> {
-        val response = service.listTickers(
-            type = "CS", // Common Set
-            limit = limit,
-            apiKey = apiKey
-        )
+        val response = withEndpointFallback { service ->
+            service.listTickers(
+                type = "CS", // Common Set
+                limit = limit,
+                apiKey = apiKey
+            )
+        }
         return response.results?.mapNotNull { it.ticker } ?: emptyList()
     }
 
@@ -69,7 +75,9 @@ class MassiveMarketDataProvider(
     override suspend fun getQuotes(symbols: List<String>): Map<String, Quote> {
         if (symbols.isEmpty()) return emptyMap()
         return symbols.mapNotNull { symbol ->
-            val response = service.getSnapshot(symbol, apiKey)
+            val response = withEndpointFallback { service ->
+                service.getSnapshot(symbol, apiKey)
+            }
             response.toQuote()
         }.associateBy { it.symbol }
     }
@@ -77,34 +85,40 @@ class MassiveMarketDataProvider(
     override suspend fun getIntraday(symbol: String, days: Int): List<IntradayBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
         val (from, to) = getDateRange(days)
-        val response = service.getAggregates(
-            ticker = symbol,
-            multiplier = 5,
-            timespan = "minute",
-            from = from,
-            to = to,
-            apiKey = apiKey
-        )
+        val response = withEndpointFallback { service ->
+            service.getAggregates(
+                ticker = symbol,
+                multiplier = 5,
+                timespan = "minute",
+                from = from,
+                to = to,
+                apiKey = apiKey
+            )
+        }
         return response.toIntradayBars()
     }
 
     override suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
         val (from, to) = getDateRange(days)
-        val response = service.getAggregates(
-            ticker = symbol,
-            multiplier = 1,
-            timespan = "day",
-            from = from,
-            to = to,
-            apiKey = apiKey
-        )
+        val response = withEndpointFallback { service ->
+            service.getAggregates(
+                ticker = symbol,
+                multiplier = 1,
+                timespan = "day",
+                from = from,
+                to = to,
+                apiKey = apiKey
+            )
+        }
         return response.toDailyBars()
     }
 
     override suspend fun getProfile(symbol: String): CompanyProfile? {
         if (symbol.isBlank()) return null
-        val response = service.getTickerDetails(symbol, apiKey)
+        val response = withEndpointFallback { service ->
+            service.getTickerDetails(symbol, apiKey)
+        }
         return response.results?.let {
             CompanyProfile(
                 name = it.name ?: symbol,
@@ -117,7 +131,9 @@ class MassiveMarketDataProvider(
 
     override suspend fun getMetrics(symbol: String): FinancialMetrics? {
         if (symbol.isBlank()) return null
-        val response = service.getTickerDetails(symbol, apiKey)
+        val response = withEndpointFallback { service ->
+            service.getTickerDetails(symbol, apiKey)
+        }
         return response.results?.let {
             FinancialMetrics(
                 marketCap = it.market_cap?.toLong(),
@@ -137,6 +153,15 @@ class MassiveMarketDataProvider(
         val from = now.minusDays(days.toLong())
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
         return Pair(from.format(formatter), now.format(formatter))
+    }
+
+    private suspend fun <T> withEndpointFallback(request: suspend (MassiveService) -> T): T {
+        return try {
+            request(primaryService)
+        } catch (primaryError: Exception) {
+            Logger.w("MassiveProvider", "Primary endpoint failed, retrying fallback endpoint", primaryError)
+            request(fallbackService)
+        }
     }
 
     private fun MassiveSnapshotResponse.toQuote(): Quote? {

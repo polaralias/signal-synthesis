@@ -29,6 +29,10 @@ class TwelveDataMarketDataProvider(
         if (symbol.isBlank()) return null
         return try {
             val response = service.getProfile(symbol, apiKey)
+            if (response.hasError()) {
+                Logger.w("TwelveData", "Profile error for $symbol: ${response.message ?: response.status.orEmpty()}")
+                return null
+            }
             CompanyProfile(
                 name = response.name ?: symbol,
                 sector = response.sector,
@@ -45,14 +49,18 @@ class TwelveDataMarketDataProvider(
         if (symbol.isBlank()) return null
         return try {
             val response = service.getStatistics(symbol, apiKey)
+            if (response.hasError()) {
+                Logger.w("TwelveData", "Metrics error for $symbol: ${response.message ?: response.status.orEmpty()}")
+                return null
+            }
             val valuations = response.valuations_metrics
             val dividends = response.dividends_and_splits
             FinancialMetrics(
-                marketCap = valuations?.marketCap,
-                peRatio = valuations?.peRatio,
+                marketCap = valuations?.marketCapRaw.toLongSafe(),
+                peRatio = valuations?.peRatioRaw.toDoubleSafe(),
                 eps = null,
-                pbRatio = valuations?.pbRatio,
-                dividendYield = dividends?.dividendYield
+                pbRatio = valuations?.pbRatioRaw.toDoubleSafe(),
+                dividendYield = dividends?.dividendYieldRaw.toDoubleSafe()
             )
         } catch (e: Exception) {
             Logger.e("TwelveData", "Metrics fetch failed for $symbol", e)
@@ -65,8 +73,18 @@ class TwelveDataMarketDataProvider(
         // Twelve Data free tier usually processes one symbol at a time for the quote endpoint
         // unless using complex batching. We'll iterate for simplicity/safety.
         return symbols.mapNotNull { symbol ->
-            val q = service.getQuote(symbol, apiKey)
-            q.toQuote()
+            try {
+                val q = service.getQuote(symbol, apiKey)
+                if (q.hasError()) {
+                    Logger.w("TwelveData", "Quote error for $symbol: ${q.message ?: q.status.orEmpty()}")
+                    null
+                } else {
+                    q.toQuote()
+                }
+            } catch (e: Exception) {
+                Logger.e("TwelveData", "Quote fetch failed for $symbol", e)
+                null
+            }
         }.associateBy { it.symbol }
     }
 
@@ -74,26 +92,35 @@ class TwelveDataMarketDataProvider(
         if (symbol.isBlank() || days <= 0) return emptyList()
         // outputsize is approximate here, e.g. 2 days * 78 bars/day (for 5min)
         val response = service.getTimeSeries(symbol, "5min", days * 100, apiKey)
-        return response.values.toIntradayBars()
+        if (response.hasError()) {
+            Logger.w("TwelveData", "Intraday error for $symbol: ${response.message ?: response.status.orEmpty()}")
+            return emptyList()
+        }
+        return response.values.orEmpty().toIntradayBars()
     }
 
     override suspend fun getDaily(symbol: String, days: Int): List<DailyBar> {
         if (symbol.isBlank() || days <= 0) return emptyList()
         val response = service.getTimeSeries(symbol, "1day", days, apiKey)
-        return response.values.toDailyBars()
+        if (response.hasError()) {
+            Logger.w("TwelveData", "Daily error for $symbol: ${response.message ?: response.status.orEmpty()}")
+            return emptyList()
+        }
+        return response.values.orEmpty().toDailyBars()
     }
 
     private fun TwelveDataQuote.toQuote(): Quote? {
         val sym = symbol ?: return null
-        val p = price ?: return null
-        val vol = volume ?: 0L
-        val ts = timestamp?.let { Instant.ofEpochSecond(it) } ?: Instant.now(clock)
+        val p = priceRaw.toDoubleSafe() ?: return null
+        val vol = volumeRaw.toLongSafe() ?: 0L
+        val ts = timestampRaw.toEpochInstant() ?: Instant.now(clock)
         
         return Quote(
             symbol = sym,
             price = p,
             volume = vol,
-            timestamp = ts
+            timestamp = ts,
+            changePercent = percentChangeRaw.toDoubleSafe()
         )
     }
 
@@ -109,11 +136,11 @@ class TwelveDataMarketDataProvider(
             }
             IntradayBar(
                 time = time,
-                open = bar.open ?: 0.0,
-                high = bar.high ?: 0.0,
-                low = bar.low ?: 0.0,
-                close = bar.close ?: 0.0,
-                volume = bar.volume ?: 0L
+                open = bar.open.toDoubleSafe() ?: 0.0,
+                high = bar.high.toDoubleSafe() ?: 0.0,
+                low = bar.low.toDoubleSafe() ?: 0.0,
+                close = bar.close.toDoubleSafe() ?: 0.0,
+                volume = bar.volume.toLongSafe() ?: 0L
             )
         }
     }
@@ -134,12 +161,57 @@ class TwelveDataMarketDataProvider(
             }
             DailyBar(
                 date = date,
-                open = bar.open ?: 0.0,
-                high = bar.high ?: 0.0,
-                low = bar.low ?: 0.0,
-                close = bar.close ?: 0.0,
-                volume = bar.volume ?: 0L
+                open = bar.open.toDoubleSafe() ?: 0.0,
+                high = bar.high.toDoubleSafe() ?: 0.0,
+                low = bar.low.toDoubleSafe() ?: 0.0,
+                close = bar.close.toDoubleSafe() ?: 0.0,
+                volume = bar.volume.toLongSafe() ?: 0L
             )
+        }
+    }
+
+    private fun TwelveDataQuote.hasError(): Boolean {
+        return status.equals("error", ignoreCase = true) || !message.isNullOrBlank()
+    }
+
+    private fun TwelveDataTimeSeries.hasError(): Boolean {
+        return status.equals("error", ignoreCase = true) || !message.isNullOrBlank()
+    }
+
+    private fun TwelveDataProfile.hasError(): Boolean {
+        return status.equals("error", ignoreCase = true) || !message.isNullOrBlank()
+    }
+
+    private fun TwelveDataStatistics.hasError(): Boolean {
+        return status.equals("error", ignoreCase = true) || !message.isNullOrBlank()
+    }
+
+    private fun Any?.toDoubleSafe(): Double? {
+        val raw = when (this) {
+            null -> return null
+            is Number -> this.toDouble().toString()
+            else -> this.toString()
+        }
+        if (raw.isBlank()) return null
+        return raw.replace(",", "").toDoubleOrNull()
+    }
+
+    private fun Any?.toLongSafe(): Long? {
+        val raw = when (this) {
+            null -> return null
+            is Number -> this.toLong().toString()
+            else -> this.toString()
+        }
+        if (raw.isBlank()) return null
+        return raw.replace(",", "").toLongOrNull()
+    }
+
+    private fun Any?.toEpochInstant(): Instant? {
+        val epoch = toLongSafe() ?: return null
+        return if (epoch > 10_000_000_000L) {
+            Instant.ofEpochMilli(epoch)
+        } else {
+            Instant.ofEpochSecond(epoch)
         }
     }
 }

@@ -46,7 +46,8 @@ data class AppSettings(
     val rssEnabledTopics: Set<String> = RssFeedDefaults.defaultEnabledTopicKeys(),
     val rssTickerSources: Set<String> = RssFeedDefaults.defaultTickerSourceIds,
     val rssUseTickerFeedsForFinalStage: Boolean = true,
-    val rssApplyExpandedToAll: Boolean = false
+    val rssApplyExpandedToAll: Boolean = false,
+    val aiSuggestedSettingsLocked: Boolean = false
 )
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }

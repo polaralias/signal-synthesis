@@ -250,10 +250,16 @@ class AnalysisViewModel(
         Logger.event("analysis_started", mapOf("intent" to uiStateValue.intent.name, "useStaged" to useStaged))
         
         analysisJob = viewModelScope.launch(ioDispatcher) {
+            var repository: MarketDataRepository? = null
             try {
                 val state = _uiState.value
                 val customTickerList = state.customTickers.map { it.symbol }
-                val repository = getRepository(apiKeys)
+                repository = getRepository(apiKeys)
+                repository.setProgressListener { message ->
+                    _uiState.update { current ->
+                        if (!current.isLoading) current else current.copy(progressMessage = message)
+                    }
+                }
 
                 val result = if (useStaged) {
                     val rssClient = RssFeedClient(rssDao = rssDao)
@@ -278,7 +284,7 @@ class AnalysisViewModel(
                         }
                     )
                 } else {
-                    _uiState.update { it.copy(progressMessage = "Discovering candidates...") }
+                    _uiState.update { it.copy(progressMessage = "Stage 1/7: Discovering candidates") }
                     val useCase = RunAnalysisUseCase(repository, clock)
                     useCase.execute(
                         intent = state.intent,
@@ -291,7 +297,10 @@ class AnalysisViewModel(
                             "conservative" to state.appSettings.screenerConservativeThreshold,
                             "moderate" to state.appSettings.screenerModerateThreshold,
                             "aggressive" to state.appSettings.screenerAggressiveThreshold
-                        )
+                        ),
+                        onProgress = { msg ->
+                            _uiState.update { it.copy(progressMessage = msg) }
+                        }
                     )
                 }
 
@@ -365,7 +374,7 @@ class AnalysisViewModel(
                 }
             } catch (ex: kotlinx.coroutines.CancellationException) {
                 Logger.i("ViewModel", "Analysis cancelled")
-                _uiState.update { it.copy(isLoading = false) }
+                _uiState.update { it.copy(isLoading = false, progressMessage = null) }
             } catch (ex: Exception) {
                 Logger.e("ViewModel", "Analysis failed", ex)
                 _uiState.update {
@@ -376,6 +385,7 @@ class AnalysisViewModel(
                     )
                 }
             } finally {
+                repository?.setProgressListener(null)
                 analysisJob = null
             }
         }
@@ -711,11 +721,15 @@ class AnalysisViewModel(
             it.copy(
                 isSuggestingSettings = true,
                 lastAiSettingsPrompt = prompt,
-                lastAiSettingsSelection = selectedAreas
+                lastAiSettingsSelection = selectedAreas,
+                settingsSuggestionProgress = "Preparing prompt context...",
+                settingsSuggestionCompletedAt = null,
+                settingsSuggestionExplanation = null
             )
         }
         viewModelScope.launch(ioDispatcher) {
             try {
+                _uiState.update { it.copy(settingsSuggestionProgress = "Collecting allowed RSS topics...") }
                 val topicsList = rssCatalog.sources
                     .flatMap { source ->
                         source.topics.filter { !it.isTickerTemplate }.map { topic ->
@@ -755,11 +769,13 @@ class AnalysisViewModel(
                     stage = com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
                     expectedSchemaId = "AiSettingsSuggestion"
                 )
+                _uiState.update { it.copy(settingsSuggestionProgress = "Requesting AI settings recommendations...") }
                 val startTime = System.currentTimeMillis()
                 val response = stageModelRouter.run(com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE, request)
                 val duration = System.currentTimeMillis() - startTime
                 com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("SettingsSuggestion", prompt, response.rawText, true, duration)
 
+                _uiState.update { it.copy(settingsSuggestionProgress = "Parsing AI recommendations...") }
                 val payload = parseAiSettingsSuggestion(response.rawText)
                 val riskTolerance = payload.risk?.riskTolerance?.let { normalizeRiskTolerance(it) }
                 val riskSuggestion = riskTolerance?.let {
@@ -793,7 +809,16 @@ class AnalysisViewModel(
                         lastAiScreenerSuggestion = payload.screener,
                         lastAiRiskSuggestion = riskSuggestion,
                         lastAiRssSuggestion = rssSuggestion,
-                        isSuggestingSettings = false
+                        isSuggestingSettings = false,
+                        settingsSuggestionProgress = "Completed",
+                        settingsSuggestionCompletedAt = clock.instant(),
+                        settingsSuggestionExplanation = buildSettingsSuggestionExplanation(
+                            selectedAreas = selectedAreas,
+                            threshold = payload.thresholds,
+                            screener = payload.screener,
+                            risk = riskSuggestion,
+                            rss = rssSuggestion
+                        )
                     )
                 }
             } catch (ex: Exception) {
@@ -801,6 +826,7 @@ class AnalysisViewModel(
                 _uiState.update {
                     it.copy(
                         isSuggestingSettings = false,
+                        settingsSuggestionProgress = null,
                         errorMessage = "AI settings suggestion failed: ${ex.message}"
                     )
                 }
@@ -826,7 +852,8 @@ class AnalysisViewModel(
             screenerMinVolume = screener?.minVolume ?: state.appSettings.screenerMinVolume,
             riskTolerance = risk?.riskTolerance ?: state.appSettings.riskTolerance,
             rssEnabledTopics = rss?.enabledTopicKeys?.toSet() ?: state.appSettings.rssEnabledTopics,
-            rssTickerSources = rss?.tickerSourceIds?.toSet() ?: state.appSettings.rssTickerSources
+            rssTickerSources = rss?.tickerSourceIds?.toSet() ?: state.appSettings.rssTickerSources,
+            aiSuggestedSettingsLocked = true
         )
         updateAppSettings(updated)
         _uiState.update {
@@ -846,7 +873,8 @@ class AnalysisViewModel(
                 screenerConservativeThreshold = it.conservativeLimit,
                 screenerModerateThreshold = it.moderateLimit,
                 screenerAggressiveThreshold = it.aggressiveLimit,
-                screenerMinVolume = it.minVolume
+                screenerMinVolume = it.minVolume,
+                aiSuggestedSettingsLocked = true
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiScreenerSuggestion = null) }
@@ -867,7 +895,8 @@ class AnalysisViewModel(
         val suggestion = _uiState.value.aiRiskSuggestion ?: _uiState.value.lastAiRiskSuggestion
         suggestion?.let {
             val updated = _uiState.value.appSettings.copy(
-                riskTolerance = it.riskTolerance
+                riskTolerance = it.riskTolerance,
+                aiSuggestedSettingsLocked = true
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiRiskSuggestion = null) }
@@ -889,7 +918,8 @@ class AnalysisViewModel(
         suggestion?.let {
             val updated = _uiState.value.appSettings.copy(
                 rssEnabledTopics = it.enabledTopicKeys.toSet(),
-                rssTickerSources = it.tickerSourceIds.toSet()
+                rssTickerSources = it.tickerSourceIds.toSet(),
+                aiSuggestedSettingsLocked = true
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiRssSuggestion = null) }
@@ -912,7 +942,8 @@ class AnalysisViewModel(
             val updated = _uiState.value.appSettings.copy(
                 vwapDipPercent = it.vwapDipPercent,
                 rsiOversold = it.rsiOversold,
-                rsiOverbought = it.rsiOverbought
+                rsiOverbought = it.rsiOverbought,
+                aiSuggestedSettingsLocked = true
             )
             updateAppSettings(updated)
             _uiState.update { it.copy(aiThresholdSuggestion = null) }
@@ -1591,6 +1622,40 @@ class AnalysisViewModel(
         } catch (e: Exception) {
             Logger.e("AnalysisViewModel", "Failed to parse AI settings suggestion", e)
             return AiSettingsSuggestionPayload()
+        }
+    }
+
+    private fun buildSettingsSuggestionExplanation(
+        selectedAreas: Set<AiSettingsArea>,
+        threshold: AiThresholdSuggestion?,
+        screener: AiScreenerSuggestion?,
+        risk: AiRiskSuggestion?,
+        rss: AiRssSuggestion?
+    ): String {
+        val effectiveAreas = if (selectedAreas.isEmpty()) {
+            setOf(AiSettingsArea.RSS, AiSettingsArea.RISK, AiSettingsArea.THRESHOLDS, AiSettingsArea.SCREENER)
+        } else {
+            selectedAreas
+        }
+
+        val explanations = mutableListOf<String>()
+        if (effectiveAreas.contains(AiSettingsArea.THRESHOLDS)) {
+            threshold?.rationale?.takeIf { it.isNotBlank() }?.let { explanations += "Thresholds: $it" }
+        }
+        if (effectiveAreas.contains(AiSettingsArea.SCREENER)) {
+            screener?.rationale?.takeIf { it.isNotBlank() }?.let { explanations += "Screener: $it" }
+        }
+        if (effectiveAreas.contains(AiSettingsArea.RISK)) {
+            risk?.rationale?.takeIf { it.isNotBlank() }?.let { explanations += "Risk: $it" }
+        }
+        if (effectiveAreas.contains(AiSettingsArea.RSS)) {
+            rss?.rationale?.takeIf { it.isNotBlank() }?.let { explanations += "RSS: $it" }
+        }
+
+        return if (explanations.isEmpty()) {
+            "AI completed successfully. No rationale text was returned."
+        } else {
+            explanations.joinToString("\n")
         }
     }
 

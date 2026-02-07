@@ -40,9 +40,13 @@ class RunAnalysisUseCase(
         discoveryMode: com.polaralias.signalsynthesis.data.settings.DiscoveryMode = com.polaralias.signalsynthesis.data.settings.DiscoveryMode.STATIC,
         customTickers: List<String> = emptyList(),
         blocklist: List<String> = emptyList(),
-        screenerThresholds: Map<String, Double> = emptyMap()
+        screenerThresholds: Map<String, Double> = emptyMap(),
+        onProgress: ((String) -> Unit)? = null
     ): AnalysisResult {
+        val totalStages = if (intent == TradingIntent.DAY_TRADE) 6 else 7
+
         // Step 1: Discover candidates
+        onProgress?.invoke("Stage 1/$totalStages: Discovering candidates")
         val rawCandidateMap = discoverCandidates.execute(intent, risk, assetClass, discoveryMode, customTickers, screenerThresholds)
         
         // Filter out blocklisted tickers
@@ -61,6 +65,7 @@ class RunAnalysisUseCase(
         }
         
         // Step 2: Filter tradeable
+        onProgress?.invoke("Stage 2/$totalStages: Filtering tradeable symbols")
         val minPrice = if (risk == com.polaralias.signalsynthesis.data.settings.RiskTolerance.AGGRESSIVE) 0.1 else 1.0
         val tradeable = filterTradeable.execute(symbols, minPrice = minPrice)
         if (tradeable.isEmpty()) {
@@ -75,22 +80,27 @@ class RunAnalysisUseCase(
         }
         
         // Step 3: Fetch quotes for ranking
+        onProgress?.invoke("Stage 3/$totalStages: Checking quote providers")
         val quotes = repository.getQuotes(tradeable)
         
         // Step 4: Enrich with intraday stats
+        onProgress?.invoke("Stage 4/$totalStages: Enriching intraday data")
         val intradayStats = enrichIntraday.execute(tradeable, days = 2)
         
         // Step 5: Enrich with context data
+        onProgress?.invoke("Stage 5/$totalStages: Enriching fundamentals/context")
         val contextData = enrichContext.execute(tradeable)
         
         // Step 6: Enrich with EOD stats (for swing and long-term only)
         val eodStats = if (intent != TradingIntent.DAY_TRADE) {
+            onProgress?.invoke("Stage 6/$totalStages: Enriching end-of-day history")
             enrichEod.execute(tradeable, days = 200)
         } else {
             emptyMap()
         }
         
         // Step 7: Rank and generate setups
+        onProgress?.invoke("Stage $totalStages/$totalStages: Ranking setups")
         val rawSetups = rankSetups.execute(
             symbols = tradeable,
             quotes = quotes,

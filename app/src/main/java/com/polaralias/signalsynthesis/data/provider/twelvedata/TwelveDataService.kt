@@ -54,29 +54,37 @@ interface TwelveDataService {
 }
 
 data class TwelveDataQuote(
+    val status: String? = null,
+    val code: Int? = null,
+    val message: String? = null,
     val symbol: String? = null,
     val name: String? = null,
-    val price: Double? = null,
-    @Json(name = "percent_change") val percentChange: Double? = null,
-    val volume: Long? = null,
-    val timestamp: Long? = null
+    @Json(name = "price") val priceRaw: Any? = null,
+    @Json(name = "percent_change") val percentChangeRaw: Any? = null,
+    @Json(name = "volume") val volumeRaw: Any? = null,
+    @Json(name = "timestamp") val timestampRaw: Any? = null
 )
 
 data class TwelveDataTimeSeries(
-    val values: List<TwelveDataBar> = emptyList(),
-    val status: String? = null
+    val values: List<TwelveDataBar>? = null,
+    val status: String? = null,
+    val code: Int? = null,
+    val message: String? = null
 )
 
 data class TwelveDataBar(
     val datetime: String? = null,
-    val open: Double? = null,
-    val high: Double? = null,
-    val low: Double? = null,
-    val close: Double? = null,
-    val volume: Long? = null
+    val open: Any? = null,
+    val high: Any? = null,
+    val low: Any? = null,
+    val close: Any? = null,
+    val volume: Any? = null
 )
 
 data class TwelveDataProfile(
+    val status: String? = null,
+    val code: Int? = null,
+    val message: String? = null,
     val name: String? = null,
     val exchange: String? = null,
     val sector: String? = null,
@@ -85,16 +93,19 @@ data class TwelveDataProfile(
 )
 
 data class TwelveDataStatistics(
+    val status: String? = null,
+    val code: Int? = null,
+    val message: String? = null,
     val valuations_metrics: TwelveDataValuations? = null,
     val dividends_and_splits: TwelveDataDividends? = null
 )
 
 data class TwelveDataValuations(
-    @Json(name = "market_capitalization") val marketCap: Long? = null,
-    @Json(name = "pe_ratio") val peRatio: Double? = null,
-    @Json(name = "price_to_book") val pbRatio: Double? = null
+    @Json(name = "market_capitalization") val marketCapRaw: Any? = null,
+    @Json(name = "pe_ratio") val peRatioRaw: Any? = null,
+    @Json(name = "price_to_book") val pbRatioRaw: Any? = null
 )
 
 data class TwelveDataDividends(
-    @Json(name = "dividend_yield") val dividendYield: Double? = null
+    @Json(name = "dividend_yield") val dividendYieldRaw: Any? = null
 )

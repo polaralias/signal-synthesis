@@ -102,6 +102,13 @@ fun SettingsScreen(
         uiState.aiScreenerSuggestion != null ||
         uiState.aiRiskSuggestion != null ||
         uiState.aiRssSuggestion != null
+    val aiSuggestedSettingsLocked = uiState.appSettings.aiSuggestedSettingsLocked
+    var pendingAiOverrideSection by remember { mutableStateOf<String?>(null) }
+    var expandGeneral by remember { mutableStateOf(true) }
+    var expandAi by remember { mutableStateOf(false) }
+    var expandMonitoring by remember { mutableStateOf(false) }
+    var expandRiskAndDiscovery by remember { mutableStateOf(false) }
+    var expandSystem by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -169,6 +176,166 @@ fun SettingsScreen(
                     .verticalScroll(androidx.compose.foundation.rememberScrollState())
             ) {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    SectionHeader("AI SETTINGS SUGGESTIONS")
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.AutoMode, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = "SUGGEST ALL SETTINGS",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Black,
+                                    color = BrandSecondary,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Select areas and generate AI recommendations. Apply to lock AI-managed settings.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingSettings) { showSettingsAiDialog = true }
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = if (uiState.isSuggestingSettings) "SYNTHESIZING..." else "SUGGEST ALL SETTINGS",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black,
+                                        color = if (uiState.hasLlmKey) BrandSecondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        letterSpacing = 1.sp
+                                    )
+                                }
+                            }
+                            if (uiState.isSuggestingSettings) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = BrandSecondary,
+                                    trackColor = BrandSecondary.copy(alpha = 0.2f)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = uiState.settingsSuggestionProgress ?: "Preparing...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                )
+                            } else if (uiState.settingsSuggestionCompletedAt != null) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = BrandPrimary, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Completed at ${formatTime(uiState.settingsSuggestionCompletedAt)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = BrandPrimary
+                                    )
+                                }
+                                uiState.settingsSuggestionExplanation?.takeIf { it.isNotBlank() }?.let { explanation ->
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = explanation,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                        lineHeight = 18.sp
+                                    )
+                                }
+                            }
+                            if (!uiState.hasLlmKey) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Add an AI key to enable suggestions.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                                )
+                            }
+                            if (uiState.lastAiSettingsPrompt.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "LAST PROMPT",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = uiState.lastAiSettingsPrompt,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                    maxLines = 3
+                                )
+                            }
+                            if (hasPendingAiSuggestions) {
+                                Spacer(modifier = Modifier.height(16.dp))
+                                com.polaralias.signalsynthesis.ui.components.GlassBox(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                        .clickable { onApplyAllAiSettings() }
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        Text(
+                                            "APPLY ALL AI SUGGESTIONS",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Black,
+                                            color = BrandSecondary,
+                                            letterSpacing = 1.sp
+                                        )
+                                    }
+                                }
+                            }
+                            if (aiSuggestedSettingsLocked) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "AI-managed settings are locked. Tap a locked section to override.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = BrandSecondary.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    SectionHeader("SETTINGS SECTIONS")
+                    SettingsAccordionHeader(
+                        title = "GENERAL",
+                        subtitle = "Appearance, auth, offline mode, usage",
+                        expanded = expandGeneral,
+                        onToggle = { expandGeneral = !expandGeneral }
+                    )
+                    SettingsAccordionHeader(
+                        title = "AI CONFIG",
+                        subtitle = "Provider, models, routing and tuning",
+                        expanded = expandAi,
+                        onToggle = { expandAi = !expandAi }
+                    )
+                    SettingsAccordionHeader(
+                        title = "NOTIFICATIONS",
+                        subtitle = "Monitoring and polling controls",
+                        expanded = expandMonitoring,
+                        onToggle = { expandMonitoring = !expandMonitoring }
+                    )
+                    SettingsAccordionHeader(
+                        title = "RISK & DISCOVERY",
+                        subtitle = "Thresholds, screener, RSS and tickers",
+                        expanded = expandRiskAndDiscovery,
+                        onToggle = { expandRiskAndDiscovery = !expandRiskAndDiscovery }
+                    )
+                    SettingsAccordionHeader(
+                        title = "SYSTEM",
+                        subtitle = "Cache, logs, maintenance",
+                        expanded = expandSystem,
+                        onToggle = { expandSystem = !expandSystem }
+                    )
+
+                    if (expandGeneral) {
                     SectionHeader("APPEARANCE")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
@@ -275,71 +442,74 @@ fun SettingsScreen(
                             }
                         }
                     }
-                    
-                    Spacer(modifier = Modifier.height(32.dp))
-                    SectionHeader("DAILY TELEMETRY USAGE")
-                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Column {
-                                    Text("PROTOCOL TRANSACTIONS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                                    Text("Rolling 24h window", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
-                                }
-                                Text(uiState.dailyApiUsage.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = BrandPrimary)
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Column {
-                                    Text("MONTHLY AGGREGATE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                                    Text("Last 30 days (compare vs provider limits)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
-                                }
-                                Text(monthlyUsageTotal.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = BrandSecondary)
-                            }
-                        }
                     }
                     
-                    if (uiState.dailyProviderUsage.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        uiState.dailyProviderUsage.forEach { (provider, categories) ->
-                            val totalForProvider = categories.values.sum()
-                            com.polaralias.signalsynthesis.ui.components.GlassCard(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(20.dp)) {
-                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                        Text(
-                                            text = provider.uppercase(),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Black,
-                                            color = BrandSecondary,
-                                            letterSpacing = 1.sp
-                                        )
-                                        Text(
-                                            text = "$totalForProvider",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Black
-                                        )
+                    if (expandSystem) {
+                        Spacer(modifier = Modifier.height(32.dp))
+                        SectionHeader("DAILY TELEMETRY USAGE")
+                        com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(24.dp)) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text("PROTOCOL TRANSACTIONS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                        Text("Rolling 24h window", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
                                     }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    categories.forEach { (category, count) ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, top = 6.dp),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
+                                    Text(uiState.dailyApiUsage.toString(), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = BrandPrimary)
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                                androidx.compose.material3.HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text("MONTHLY AGGREGATE", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                                        Text("Last 30 days (compare vs provider limits)", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+                                    }
+                                    Text(monthlyUsageTotal.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = BrandSecondary)
+                                }
+                            }
+                        }
+
+                        if (uiState.dailyProviderUsage.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            uiState.dailyProviderUsage.forEach { (provider, categories) ->
+                                val totalForProvider = categories.values.sum()
+                                com.polaralias.signalsynthesis.ui.components.GlassCard(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(20.dp)) {
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Text(
-                                                text = formatCategoryName(category).uppercase(),
-                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                                fontWeight = FontWeight.Bold,
-                                                letterSpacing = 0.5.sp
+                                                text = provider.uppercase(),
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Black,
+                                                color = BrandSecondary,
+                                                letterSpacing = 1.sp
                                             )
                                             Text(
-                                                text = "$count",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                fontWeight = FontWeight.Medium
+                                                text = "$totalForProvider",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Black
                                             )
+                                        }
+                                        Spacer(modifier = Modifier.height(16.dp))
+                                        categories.forEach { (category, count) ->
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth().padding(start = 8.dp, top = 6.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Text(
+                                                    text = formatCategoryName(category).uppercase(),
+                                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                                                    fontWeight = FontWeight.Bold,
+                                                    letterSpacing = 0.5.sp
+                                                )
+                                                Text(
+                                                    text = "$count",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -347,6 +517,7 @@ fun SettingsScreen(
                         }
                     }
 
+                    if (expandAi) {
                     Spacer(modifier = Modifier.height(32.dp))
                     SectionHeader("AI CONFIGURATION")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -762,107 +933,6 @@ fun SettingsScreen(
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
-                    SectionHeader("AI SETTINGS SUGGESTIONS")
-                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.AutoMode, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = "SUGGEST ALL SETTINGS",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Black,
-                                    color = BrandSecondary,
-                                    letterSpacing = 1.sp
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Select which areas to configure, then provide a single prompt for the AI.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            com.polaralias.signalsynthesis.ui.components.GlassBox(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(52.dp)
-                                    .clickable(enabled = uiState.hasLlmKey && !uiState.isSuggestingSettings) { showSettingsAiDialog = true }
-                            ) {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Text(
-                                        text = if (uiState.isSuggestingSettings) "SYNTHESIZING..." else "SUGGEST ALL SETTINGS",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Black,
-                                        color = if (uiState.hasLlmKey) BrandSecondary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                                        letterSpacing = 1.sp
-                                    )
-                                }
-                            }
-                            if (!uiState.hasLlmKey) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = "Add an AI key to enable suggestions.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
-                                )
-                            }
-                            if (uiState.lastAiSettingsPrompt.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                Text(
-                                    text = "LAST PROMPT",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    fontWeight = FontWeight.Black,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                    letterSpacing = 1.sp
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = uiState.lastAiSettingsPrompt,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                    maxLines = 3
-                                )
-                                if (uiState.lastAiSettingsSelection.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    Text(
-                                        text = "LAST AREAS",
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                        fontWeight = FontWeight.Black,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
-                                        letterSpacing = 1.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = uiState.lastAiSettingsSelection.joinToString(", ") { it.name.replace("_", " ").lowercase().replaceFirstChar { ch -> ch.uppercase() } },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                            if (hasPendingAiSuggestions) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                com.polaralias.signalsynthesis.ui.components.GlassBox(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(48.dp)
-                                        .clickable { onApplyAllAiSettings() }
-                                ) {
-                                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                        Text(
-                                            "APPLY ALL AI SUGGESTIONS",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Black,
-                                            color = BrandSecondary,
-                                            letterSpacing = 1.sp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(24.dp))
                     SectionHeader("QUANTITATIVE TUNING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(20.dp)) {
@@ -1077,37 +1147,57 @@ fun SettingsScreen(
 
                     Text("RISK TOLERANCE PROFILE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f), letterSpacing = 1.sp)
                     Spacer(modifier = Modifier.height(8.dp))
-                    var riskExpanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = riskExpanded,
-                        onExpandedChange = { riskExpanded = !riskExpanded }
-                    ) {
-                        OutlinedTextField(
-                            value = uiState.appSettings.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = riskExpanded) },
-                            modifier = Modifier.menuAnchor().fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = riskExpanded,
-                            onDismissRequest = { riskExpanded = false }
+                    if (aiSuggestedSettingsLocked) {
+                        com.polaralias.signalsynthesis.ui.components.GlassBox(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .clickable { pendingAiOverrideSection = "risk profile" }
                         ) {
-                            for (risk in com.polaralias.signalsynthesis.data.settings.RiskTolerance.values()) {
-                                DropdownMenuItem(
-                                    text = { Text(risk.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                                    onClick = {
-                                        onUpdateSettings(uiState.appSettings.copy(riskTolerance = risk))
-                                        riskExpanded = false
-                                    }
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.CenterStart) {
+                                Text(
+                                    text = "AI suggested. Tap to override before editing.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = BrandSecondary,
+                                    modifier = Modifier.padding(horizontal = 12.dp)
                                 )
+                            }
+                        }
+                    } else {
+                        var riskExpanded by remember { mutableStateOf(false) }
+                        ExposedDropdownMenuBox(
+                            expanded = riskExpanded,
+                            onExpandedChange = { riskExpanded = !riskExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = uiState.appSettings.riskTolerance.name.lowercase().replaceFirstChar { it.uppercase() },
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = riskExpanded) },
+                                modifier = Modifier.menuAnchor().fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = riskExpanded,
+                                onDismissRequest = { riskExpanded = false }
+                            ) {
+                                for (risk in com.polaralias.signalsynthesis.data.settings.RiskTolerance.values()) {
+                                    DropdownMenuItem(
+                                        text = { Text(risk.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                                        onClick = {
+                                            onUpdateSettings(uiState.appSettings.copy(riskTolerance = risk))
+                                            riskExpanded = false
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+                    }
             
+            if (expandMonitoring) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("AUTONOMOUS MONITORING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1180,9 +1270,16 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
             
+            if (expandRiskAndDiscovery) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("TECHNICAL TRIGGER THRESHOLDS")
+            AiLockedCard(
+                locked = aiSuggestedSettingsLocked,
+                lockMessage = "AI suggested thresholds. Tap to override.",
+                onLockedClick = { pendingAiOverrideSection = "threshold settings" }
+            ) {
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     SettingsSlider(
@@ -1244,9 +1341,15 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
             
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("SCREENER PARAMETERS")
+            AiLockedCard(
+                locked = aiSuggestedSettingsLocked,
+                lockMessage = "AI suggested screener values. Tap to override.",
+                onLockedClick = { pendingAiOverrideSection = "screener settings" }
+            ) {
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     SettingsSlider(
@@ -1321,7 +1424,10 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
+            }
             
+            if (expandSystem) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CACHE CONTROL")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1431,7 +1537,9 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
 
+            if (expandRiskAndDiscovery) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CUSTOM TICKERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1512,10 +1620,17 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
             
+            if (expandRiskAndDiscovery) {
             Spacer(modifier = Modifier.height(32.dp))
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("MARKET DATA FEEDS")
+            AiLockedCard(
+                locked = aiSuggestedSettingsLocked,
+                lockMessage = "AI suggested RSS sources. Tap to override.",
+                onLockedClick = { pendingAiOverrideSection = "rss feed settings" }
+            ) {
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text("CURATED RSS CATALOG", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
@@ -1766,7 +1881,10 @@ fun SettingsScreen(
                     }
                 }
             }
+            }
+            }
 
+            if (expandRiskAndDiscovery) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("BLACKLISTED NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1810,6 +1928,41 @@ fun SettingsScreen(
         )
     }
 
+    if (pendingAiOverrideSection != null) {
+        AlertDialog(
+            onDismissRequest = { pendingAiOverrideSection = null },
+            title = {
+                Text(
+                    "AI SUGGESTED SETTINGS",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Black
+                )
+            },
+            text = {
+                Text(
+                    "These ${pendingAiOverrideSection!!.lowercase()} values were applied from AI suggestions. Override and edit manually?",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onUpdateSettings(uiState.appSettings.copy(aiSuggestedSettingsLocked = false))
+                        pendingAiOverrideSection = null
+                    }
+                ) {
+                    Text("OVERRIDE", fontWeight = FontWeight.Black, color = BrandSecondary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingAiOverrideSection = null }) {
+                    Text("CANCEL", fontWeight = FontWeight.Black)
+                }
+            },
+            shape = RoundedCornerShape(24.dp)
+        )
+    }
+
     rssPreviewSource?.let { source ->
         RssPreviewDialog(
             source = source,
@@ -1824,6 +1977,8 @@ fun SettingsScreen(
         )
     }
 }
+}
+
 
 @Composable
 private fun AiSettingsDialog(
@@ -2144,6 +2299,87 @@ private fun RssToggleRow(
                 checkedTrackColor = BrandPrimary.copy(alpha = 0.2f)
             )
         )
+    }
+}
+
+@Composable
+private fun SettingsAccordionHeader(
+    title: String,
+    subtitle: String,
+    expanded: Boolean,
+    onToggle: () -> Unit
+) {
+    com.polaralias.signalsynthesis.ui.components.GlassCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .clickable { onToggle() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Black,
+                    color = BrandPrimary,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
+                )
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null,
+                tint = BrandPrimary
+            )
+        }
+    }
+}
+
+@Composable
+private fun AiLockedCard(
+    locked: Boolean,
+    lockMessage: String,
+    onLockedClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .alpha(if (locked) 0.45f else 1f)
+        ) {
+            content()
+        }
+        if (locked) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f))
+                    .clickable { onLockedClick() }
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = BrandSecondary, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = lockMessage,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = BrandSecondary
+                    )
+                }
+            }
+        }
     }
 }
 

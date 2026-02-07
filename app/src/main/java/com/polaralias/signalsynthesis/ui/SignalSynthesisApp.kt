@@ -72,6 +72,11 @@ fun SignalSynthesisApp(viewModel: AnalysisViewModel, initialSymbol: String? = nu
             composable(Screen.Analysis.route) {
                 AnalysisScreen(
                     uiState = uiState,
+                    onBack = {
+                        if (!navController.popBackStack()) {
+                            navController.navigate(Screen.Dashboard.route)
+                        }
+                    },
                     onIntentSelected = viewModel::updateIntent,
                     onAssetClassSelected = viewModel::updateAssetClass,
                     onDiscoveryModeSelected = viewModel::updateDiscoveryMode,
