@@ -49,12 +49,20 @@ fun formatTime(instant: Instant?): String {
     return instant.atZone(ZoneId.systemDefault()).format(formatter)
 }
 
+object AppSpacing {
+    val ScreenHorizontal = 20.dp
+    val Section = 16.dp
+    val Item = 12.dp
+    val Block = 24.dp
+    val BottomInset = 48.dp
+}
+
 @Composable
 fun SectionHeader(title: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp)
+            .padding(bottom = 6.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(

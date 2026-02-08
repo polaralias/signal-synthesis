@@ -98,8 +98,8 @@ fun HistoryScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        contentPadding = PaddingValues(horizontal = AppSpacing.ScreenHorizontal, vertical = AppSpacing.Section),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.Section)
                     ) {
                         items(uiState.history) { result ->
                             HistoryItem(
@@ -107,6 +107,7 @@ fun HistoryScreen(
                                 onClick = { onViewResult(result) }
                             )
                         }
+                        item { Spacer(modifier = Modifier.height(AppSpacing.BottomInset)) }
                     }
                 }
             }

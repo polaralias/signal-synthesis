@@ -95,12 +95,13 @@ fun LogViewerScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        contentPadding = PaddingValues(horizontal = AppSpacing.ScreenHorizontal, vertical = AppSpacing.Section),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.Section)
                     ) {
                         items(activities) { entry ->
                             ActivityItem(entry)
                         }
+                        item { Spacer(modifier = Modifier.height(AppSpacing.BottomInset)) }
                     }
                 }
             }

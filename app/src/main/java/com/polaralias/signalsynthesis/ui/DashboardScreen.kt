@@ -84,11 +84,11 @@ fun DashboardScreen(
                     .padding(paddingValues)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.Section)
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                    modifier = Modifier.padding(horizontal = AppSpacing.ScreenHorizontal),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.Section)
                 ) {
                     MockModeBanner(
                         isVisible = !uiState.hasAnyApiKeys,
@@ -127,7 +127,7 @@ fun DashboardScreen(
                         onOpenAlertsList = onOpenAlertsList
                     )
                     
-                    Spacer(modifier = Modifier.height(48.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.BottomInset))
                 }
             }
         }
@@ -287,7 +287,7 @@ private fun RecentResultsSection(
     onBlockTicker: (String) -> Unit
 ) {
     val setups = uiState.result?.setups?.filter { !uiState.removedAlerts.contains(it.symbol) }?.take(3) ?: emptyList()
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.Item)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -313,9 +313,7 @@ private fun RecentResultsSection(
         } else {
             setups.forEach { setup ->
                 com.polaralias.signalsynthesis.ui.components.GlassCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     onClick = { onOpenDetail(setup.symbol) }
                 ) {
                     Row(

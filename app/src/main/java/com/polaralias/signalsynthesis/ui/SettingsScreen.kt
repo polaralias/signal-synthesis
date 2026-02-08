@@ -457,7 +457,7 @@ fun SettingsScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.Block))
                     SectionHeader("OFFLINE FALLBACK")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
@@ -493,7 +493,7 @@ fun SettingsScreen(
                     }
                     
                     if (page == SettingsSection.SYSTEM) {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         SectionHeader("DAILY TELEMETRY USAGE")
                         com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(24.dp)) {
@@ -566,7 +566,7 @@ fun SettingsScreen(
                     }
 
                     if (page == SettingsSection.AI) {
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.Block))
                     SectionHeader("AI CONFIGURATION")
                     val primaryProvider = uiState.appSettings.llmProvider
                     val keyedProviders = LlmProvider.values().filter { keyFieldForProvider(it) != null }
@@ -1299,7 +1299,7 @@ fun SettingsScreen(
                     }
             
             if (page == SettingsSection.NOTIFICATIONS) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("AUTONOMOUS MONITORING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -1352,7 +1352,7 @@ fun SettingsScreen(
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(AppSpacing.Block))
                     SettingsSlider(
                         label = "POLLING LATENCY",
                         value = uiState.appSettings.alertCheckIntervalMinutes.toDouble(),
@@ -1374,7 +1374,7 @@ fun SettingsScreen(
             }
             
             if (page == SettingsSection.RISK_DISCOVERY) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("TECHNICAL TRIGGER THRESHOLDS")
             AiLockedCard(
                 locked = aiSuggestedSettingsLocked,
@@ -1413,7 +1413,7 @@ fun SettingsScreen(
                     val thresholdSuggestion = uiState.aiThresholdSuggestion
                     val lastThresholdSuggestion = uiState.lastAiThresholdSuggestion
                     if (thresholdSuggestion != null) {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         AiSuggestionCard(
                             title = "AI THRESHOLD OPTIMIZATION",
                             suggestionText = "VWAP: ${String.format(Locale.US, "%.1f%%", thresholdSuggestion.vwapDipPercent)} | RSI: ${thresholdSuggestion.rsiOversold.roundToInt()}/${thresholdSuggestion.rsiOverbought.roundToInt()}",
@@ -1422,7 +1422,7 @@ fun SettingsScreen(
                             onDismiss = onDismissAi
                         )
                     } else if (lastThresholdSuggestion != null) {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         AiSuggestionCard(
                             title = "LAST AI THRESHOLD",
                             suggestionText = "VWAP: ${String.format(Locale.US, "%.1f%%", lastThresholdSuggestion.vwapDipPercent)} | RSI: ${lastThresholdSuggestion.rsiOversold.roundToInt()}/${lastThresholdSuggestion.rsiOverbought.roundToInt()}",
@@ -1433,7 +1433,7 @@ fun SettingsScreen(
                             dismissLabel = "CLEAR"
                         )
                     } else {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         Text(
                             text = "Run \"Suggest all settings\" to generate AI threshold tuning.",
                             style = MaterialTheme.typography.bodySmall,
@@ -1444,7 +1444,7 @@ fun SettingsScreen(
             }
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("SCREENER PARAMETERS")
             AiLockedCard(
                 locked = aiSuggestedSettingsLocked,
@@ -1496,7 +1496,7 @@ fun SettingsScreen(
                     val screenerSuggestion = uiState.aiScreenerSuggestion
                     val lastScreenerSuggestion = uiState.lastAiScreenerSuggestion
                     if (screenerSuggestion != null) {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         AiSuggestionCard(
                             title = "AI SCREENER OPTIMIZATION",
                             suggestionText = "CONS: $${screenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${screenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${screenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format(Locale.US, "%.1fM", screenerSuggestion.minVolume / 1_000_000.0)}",
@@ -1505,7 +1505,7 @@ fun SettingsScreen(
                             onDismiss = onDismissScreenerAi
                         )
                     } else if (lastScreenerSuggestion != null) {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         AiSuggestionCard(
                             title = "LAST AI SCREENER",
                             suggestionText = "CONS: $${lastScreenerSuggestion.conservativeLimit.roundToInt()} | MOD: $${lastScreenerSuggestion.moderateLimit.roundToInt()} | AGGR: $${lastScreenerSuggestion.aggressiveLimit.roundToInt()} | VOL: ${String.format(Locale.US, "%.1fM", lastScreenerSuggestion.minVolume / 1_000_000.0)}",
@@ -1516,7 +1516,7 @@ fun SettingsScreen(
                             dismissLabel = "CLEAR"
                         )
                     } else {
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.Block))
                         Text(
                             text = "Run \"Suggest all settings\" to generate AI screener parameters.",
                             style = MaterialTheme.typography.bodySmall,
@@ -1529,7 +1529,7 @@ fun SettingsScreen(
             }
             
             if (page == SettingsSection.SYSTEM) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("CACHE CONTROL")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -1589,7 +1589,7 @@ fun SettingsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("SYSTEM OPERATIONS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -1641,7 +1641,7 @@ fun SettingsScreen(
             }
 
             if (page == SettingsSection.RISK_DISCOVERY) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("CUSTOM TICKERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -1724,8 +1724,7 @@ fun SettingsScreen(
             }
             
             if (page == SettingsSection.RISK_DISCOVERY) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("MARKET DATA FEEDS")
             AiLockedCard(
                 locked = aiSuggestedSettingsLocked,
@@ -1986,7 +1985,7 @@ fun SettingsScreen(
             }
 
             if (page == SettingsSection.RISK_DISCOVERY) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.Block))
             SectionHeader("BLACKLISTED NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(24.dp)) {
@@ -2010,7 +2009,7 @@ fun SettingsScreen(
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.BottomInset))
             }
         }
     }
@@ -2866,5 +2865,6 @@ private fun formatCategoryName(category: com.polaralias.signalsynthesis.util.Api
         com.polaralias.signalsynthesis.util.ApiUsageCategory.OTHER -> "Protocols"
     }
 }
+
 
 

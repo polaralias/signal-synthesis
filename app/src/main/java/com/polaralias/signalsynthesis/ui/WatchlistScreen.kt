@@ -99,8 +99,8 @@ fun WatchlistScreen(
                 } else {
                     LazyColumn(
                         modifier = Modifier.weight(1f),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        contentPadding = PaddingValues(horizontal = AppSpacing.ScreenHorizontal, vertical = AppSpacing.Section),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.Section)
                     ) {
                         items(uiState.watchlist) { symbol ->
                             val setup = uiState.result?.setups?.find { it.symbol == symbol }
@@ -115,7 +115,7 @@ fun WatchlistScreen(
                                 onBlock = { symbolToBlock = symbol }
                             )
                         }
-                        item { Spacer(modifier = Modifier.height(48.dp)) }
+                        item { Spacer(modifier = Modifier.height(AppSpacing.BottomInset)) }
                     }
                 }
             }
