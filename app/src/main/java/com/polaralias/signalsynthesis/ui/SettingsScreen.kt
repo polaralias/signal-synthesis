@@ -4,6 +4,12 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.*
@@ -21,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +76,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onEditKeys: () -> Unit,
     onClearKeys: () -> Unit,
+    onUpdateKeyField: (KeyField, String) -> Unit = { _, _ -> },
+    onSaveKeys: () -> Unit = {},
     onUpdateSettings: (AppSettings) -> Unit,
     onToggleAlerts: (Boolean) -> Unit,
     onSuggestSettingsAi: (String, Set<AiSettingsArea>) -> Unit,
@@ -116,6 +125,12 @@ fun SettingsScreen(
     var pendingAiOverrideSection by remember { mutableStateOf<String?>(null) }
     var activeSection by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
     var pendingPrimaryProvider by remember { mutableStateOf<LlmProvider?>(null) }
+    val extraProviders = remember { mutableStateListOf<LlmProvider>() }
+    var addExtraProviderExpanded by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = activeSection != null) {
+        activeSection = null
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -190,8 +205,27 @@ fun SettingsScreen(
                     .padding(paddingValues)
                     .verticalScroll(androidx.compose.foundation.rememberScrollState())
             ) {
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    if (activeSection == null || activeSection == SettingsSection.AI) {
+                AnimatedContent(
+                    targetState = activeSection,
+                    transitionSpec = {
+                        val enteringSection = initialState == null && targetState != null
+                        val leavingSection = initialState != null && targetState == null
+                        when {
+                            enteringSection -> {
+                                slideInHorizontally { fullWidth -> fullWidth / 3 } + fadeIn() togetherWith
+                                    slideOutHorizontally { fullWidth -> -fullWidth / 5 } + fadeOut()
+                            }
+                            leavingSection -> {
+                                slideInHorizontally { fullWidth -> -fullWidth / 5 } + fadeIn() togetherWith
+                                    slideOutHorizontally { fullWidth -> fullWidth / 3 } + fadeOut()
+                            }
+                            else -> fadeIn() togetherWith fadeOut()
+                        }
+                    },
+                    label = "settings_section_transition"
+                ) { page ->
+                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    if (page == null || page == SettingsSection.AI) {
                         SectionHeader("AI SETTINGS SUGGESTIONS")
                         com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                             Column(modifier = Modifier.padding(24.dp)) {
@@ -319,7 +353,7 @@ fun SettingsScreen(
                         }
                     }
 
-                    if (activeSection == null) {
+                    if (page == null) {
                         Spacer(modifier = Modifier.height(20.dp))
                         SectionHeader("SETTINGS SECTIONS")
                         SettingsSectionNavRow(
@@ -349,7 +383,7 @@ fun SettingsScreen(
                         )
                     }
 
-                    if (activeSection == SettingsSection.GENERAL) {
+                    if (page == SettingsSection.GENERAL) {
                     SectionHeader("APPEARANCE")
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
@@ -458,7 +492,7 @@ fun SettingsScreen(
                     }
                     }
                     
-                    if (activeSection == SettingsSection.SYSTEM) {
+                    if (page == SettingsSection.SYSTEM) {
                         Spacer(modifier = Modifier.height(32.dp))
                         SectionHeader("DAILY TELEMETRY USAGE")
                         com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -531,20 +565,33 @@ fun SettingsScreen(
                         }
                     }
 
-                    if (activeSection == SettingsSection.AI) {
+                    if (page == SettingsSection.AI) {
                     Spacer(modifier = Modifier.height(32.dp))
                     SectionHeader("AI CONFIGURATION")
+                    val primaryProvider = uiState.appSettings.llmProvider
+                    val keyedProviders = LlmProvider.values().filter { keyFieldForProvider(it) != null }
+                    val providersWithKeys = keyedProviders.filter { provider ->
+                        providerKeyValue(uiState.keys, provider).isNotBlank()
+                    }
+                    val hasSavedPrimaryConfig = uiState.appSettings.llmProviderProfiles.containsKey(primaryProvider)
+                    val primaryField = keyFieldForProvider(primaryProvider)
+                    val primaryKeyValue = primaryField?.let { keyValueForField(uiState.keys, it) }.orEmpty()
+
+                    LaunchedEffect(primaryProvider, providersWithKeys.joinToString { it.name }) {
+                        extraProviders.remove(primaryProvider)
+                        providersWithKeys
+                            .filter { it != primaryProvider }
+                            .forEach { provider ->
+                                if (!extraProviders.contains(provider)) {
+                                    extraProviders.add(provider)
+                                }
+                            }
+                    }
+
+                    // Card 1: primary provider + primary key + save/restore.
                     com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(24.dp)) {
                             var providerExpanded by remember { mutableStateOf(false) }
-                            var analysisModelExpanded by remember { mutableStateOf(false) }
-                            var verdictModelExpanded by remember { mutableStateOf(false) }
-                            var reasoningModelExpanded by remember { mutableStateOf(false) }
-                            val configuredProviders = uiState.keys.toLlmKeyMap()
-                                .filterValues { it.isNotBlank() }
-                                .keys
-                                .toList()
-                            val hasSavedPrimaryConfig = uiState.appSettings.llmProviderProfiles.containsKey(uiState.appSettings.llmProvider)
 
                             Text("PRIMARY PROVIDER", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                             Spacer(modifier = Modifier.height(8.dp))
@@ -553,7 +600,7 @@ fun SettingsScreen(
                                 onExpandedChange = { providerExpanded = !providerExpanded }
                             ) {
                                 OutlinedTextField(
-                                    value = uiState.appSettings.llmProvider.displayName,
+                                    value = primaryProvider.displayName,
                                     onValueChange = {},
                                     readOnly = true,
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = providerExpanded) },
@@ -569,11 +616,11 @@ fun SettingsScreen(
                                     expanded = providerExpanded,
                                     onDismissRequest = { providerExpanded = false }
                                 ) {
-                                    for (provider in LlmProvider.values()) {
+                                    LlmProvider.values().forEach { provider ->
                                         DropdownMenuItem(
                                             text = { Text(provider.displayName) },
                                             onClick = {
-                                                if (provider != uiState.appSettings.llmProvider) {
+                                                if (provider != primaryProvider) {
                                                     pendingPrimaryProvider = provider
                                                 }
                                                 providerExpanded = false
@@ -583,18 +630,52 @@ fun SettingsScreen(
                                 }
                             }
 
+                            Spacer(modifier = Modifier.height(14.dp))
+                            if (primaryField != null) {
+                                Text(
+                                    "PRIMARY API KEY",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                OutlinedTextField(
+                                    value = primaryKeyValue,
+                                    onValueChange = { onUpdateKeyField(primaryField, it) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                                        autoCorrect = false
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    placeholder = { Text("Enter ${primaryProvider.displayName} key") }
+                                )
+                            } else {
+                                Text(
+                                    "This provider does not require an API key.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = if (configuredProviders.isEmpty()) {
+                                text = if (providersWithKeys.isEmpty()) {
                                     "No provider keys configured."
                                 } else {
-                                    "Configured keys: ${configuredProviders.joinToString { it.displayName }}"
+                                    "Configured keys: ${providersWithKeys.joinToString { it.displayName }}"
                                 },
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                TextButton(onClick = onSaveKeys) {
+                                    Text("SAVE KEY", fontWeight = FontWeight.Black, color = BrandPrimary)
+                                }
                                 TextButton(onClick = {
                                     onUpdateSettings(savePrimaryProviderConfiguration(uiState.appSettings))
                                 }) {
@@ -609,131 +690,113 @@ fun SettingsScreen(
                                     Text("RESTORE", fontWeight = FontWeight.Black)
                                 }
                             }
+                        }
+                    }
 
-                            Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // Card 2: add/manage extra provider keys in-place.
+                    com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(modifier = Modifier.padding(24.dp)) {
+                            val availableExtraProviders = keyedProviders.filter { provider ->
+                                provider != primaryProvider && !extraProviders.contains(provider)
+                            }
 
-                            Text("ANALYSIS MODEL (DATA INTERPRETATION)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                            Text("ADD EXTRA PROVIDERS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = BrandPrimary, letterSpacing = 1.sp)
                             Spacer(modifier = Modifier.height(8.dp))
                             ExposedDropdownMenuBox(
-                                expanded = analysisModelExpanded,
-                                onExpandedChange = { analysisModelExpanded = !analysisModelExpanded }
+                                expanded = addExtraProviderExpanded && availableExtraProviders.isNotEmpty(),
+                                onExpandedChange = {
+                                    if (availableExtraProviders.isNotEmpty()) {
+                                        addExtraProviderExpanded = !addExtraProviderExpanded
+                                    }
+                                }
                             ) {
                                 OutlinedTextField(
-                                    value = formatModelName(uiState.appSettings.analysisModel),
+                                    value = if (availableExtraProviders.isNotEmpty()) "Add provider key..." else "All key-based providers added",
                                     onValueChange = {},
                                     readOnly = true,
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = analysisModelExpanded) },
+                                    enabled = availableExtraProviders.isNotEmpty(),
+                                    trailingIcon = {
+                                        if (availableExtraProviders.isNotEmpty()) {
+                                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = addExtraProviderExpanded)
+                                        }
+                                    },
                                     modifier = Modifier.menuAnchor().fillMaxWidth(),
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 ExposedDropdownMenu(
-                                    expanded = analysisModelExpanded,
-                                    onDismissRequest = { analysisModelExpanded = false }
+                                    expanded = addExtraProviderExpanded && availableExtraProviders.isNotEmpty(),
+                                    onDismissRequest = { addExtraProviderExpanded = false }
                                 ) {
-                                    val groupedModels = groupedModelsForProvider(uiState.appSettings.llmProvider)
-                                    groupedModels.forEach { (groupLabel, models) ->
+                                    availableExtraProviders.forEach { provider ->
                                         DropdownMenuItem(
-                                            enabled = false,
-                                            text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                                            onClick = {}
-                                        )
-                                        models.forEach { model ->
-                                            DropdownMenuItem(
-                                                text = { Text(formatModelName(model)) },
-                                                onClick = {
-                                                    onUpdateSettings(uiState.appSettings.copy(analysisModel = model))
-                                                    analysisModelExpanded = false
+                                            text = { Text(provider.displayName) },
+                                            onClick = {
+                                                if (!extraProviders.contains(provider)) {
+                                                    extraProviders.add(provider)
                                                 }
-                                            )
-                                        }
+                                                addExtraProviderExpanded = false
+                                            }
+                                        )
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            val visibleExtraProviders = extraProviders
+                                .filter { it != primaryProvider }
+                                .distinct()
 
-                            Text("VERDICT MODEL (FINAL THESIS)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            ExposedDropdownMenuBox(
-                                expanded = verdictModelExpanded,
-                                onExpandedChange = { verdictModelExpanded = !verdictModelExpanded }
-                            ) {
-                                OutlinedTextField(
-                                    value = formatModelName(uiState.appSettings.verdictModel),
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = verdictModelExpanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp)
+                            if (visibleExtraProviders.isEmpty()) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    "No extra providers configured.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
-                                ExposedDropdownMenu(
-                                    expanded = verdictModelExpanded,
-                                    onDismissRequest = { verdictModelExpanded = false }
-                                ) {
-                                    val groupedModels = groupedModelsForProvider(uiState.appSettings.llmProvider)
-                                    groupedModels.forEach { (groupLabel, models) ->
-                                        DropdownMenuItem(
-                                            enabled = false,
-                                            text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                                            onClick = {}
+                            } else {
+                                Spacer(modifier = Modifier.height(14.dp))
+                                visibleExtraProviders.forEach { provider ->
+                                    val field = keyFieldForProvider(provider) ?: return@forEach
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            provider.displayName,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Black,
+                                            color = BrandSecondary,
+                                            modifier = Modifier.weight(1f)
                                         )
-                                        models.forEach { model ->
-                                            DropdownMenuItem(
-                                                text = { Text(formatModelName(model)) },
-                                                onClick = {
-                                                    onUpdateSettings(uiState.appSettings.copy(verdictModel = model))
-                                                    verdictModelExpanded = false
-                                                }
-                                            )
+                                        TextButton(
+                                            onClick = {
+                                                onUpdateKeyField(field, "")
+                                                extraProviders.remove(provider)
+                                                onSaveKeys()
+                                            }
+                                        ) {
+                                            Text("REMOVE", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
                                         }
                                     }
+                                    OutlinedTextField(
+                                        value = keyValueForField(uiState.keys, field),
+                                        onValueChange = { onUpdateKeyField(field, it) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = true,
+                                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Password,
+                                            autoCorrect = false
+                                        ),
+                                        shape = RoundedCornerShape(12.dp),
+                                        placeholder = { Text("Enter ${provider.displayName} key") }
+                                    )
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+                                TextButton(onClick = onSaveKeys) {
+                                    Text("SAVE EXTRA KEYS", fontWeight = FontWeight.Black, color = BrandSecondary)
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Text("REASONING MODEL (DEEP SEARCH)", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                            Spacer(modifier = Modifier.height(8.dp))
-                            ExposedDropdownMenuBox(
-                                expanded = reasoningModelExpanded,
-                                onExpandedChange = { reasoningModelExpanded = !reasoningModelExpanded }
-                            ) {
-                                OutlinedTextField(
-                                    value = formatModelName(uiState.appSettings.reasoningModel),
-                                    onValueChange = {},
-                                    readOnly = true,
-                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = reasoningModelExpanded) },
-                                    modifier = Modifier.menuAnchor().fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                ExposedDropdownMenu(
-                                    expanded = reasoningModelExpanded,
-                                    onDismissRequest = { reasoningModelExpanded = false }
-                                ) {
-                                    val groupedModels = groupedModelsForProvider(uiState.appSettings.llmProvider)
-                                    groupedModels.forEach { (groupLabel, models) ->
-                                        DropdownMenuItem(
-                                            enabled = false,
-                                            text = { Text(groupLabel.uppercase(), style = MaterialTheme.typography.labelSmall) },
-                                            onClick = {}
-                                        )
-                                        models.forEach { model ->
-                                            DropdownMenuItem(
-                                                text = { Text(formatModelName(model)) },
-                                                onClick = {
-                                                    onUpdateSettings(uiState.appSettings.copy(reasoningModel = model))
-                                                    reasoningModelExpanded = false
-                                                }
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 24.dp).alpha(0.1f),
-                                color = BrandPrimary
-                            )
                         }
                     }
 
@@ -1235,7 +1298,7 @@ fun SettingsScreen(
             }
                     }
             
-            if (activeSection == SettingsSection.NOTIFICATIONS) {
+            if (page == SettingsSection.NOTIFICATIONS) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("AUTONOMOUS MONITORING")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1310,7 +1373,7 @@ fun SettingsScreen(
             }
             }
             
-            if (activeSection == SettingsSection.RISK_DISCOVERY) {
+            if (page == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("TECHNICAL TRIGGER THRESHOLDS")
             AiLockedCard(
@@ -1465,7 +1528,7 @@ fun SettingsScreen(
             }
             }
             
-            if (activeSection == SettingsSection.SYSTEM) {
+            if (page == SettingsSection.SYSTEM) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CACHE CONTROL")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1577,7 +1640,7 @@ fun SettingsScreen(
             }
             }
 
-            if (activeSection == SettingsSection.RISK_DISCOVERY) {
+            if (page == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("CUSTOM TICKERS")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -1660,7 +1723,7 @@ fun SettingsScreen(
             }
             }
             
-            if (activeSection == SettingsSection.RISK_DISCOVERY) {
+            if (page == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("MARKET DATA FEEDS")
@@ -1922,7 +1985,7 @@ fun SettingsScreen(
             }
             }
 
-            if (activeSection == SettingsSection.RISK_DISCOVERY) {
+            if (page == SettingsSection.RISK_DISCOVERY) {
             Spacer(modifier = Modifier.height(32.dp))
             SectionHeader("BLACKLISTED NODES")
             com.polaralias.signalsynthesis.ui.components.GlassCard(modifier = Modifier.fillMaxWidth()) {
@@ -2070,6 +2133,7 @@ fun SettingsScreen(
                 rssPreviewTopicId = null
             }
         )
+    }
     }
 }
 }
@@ -2581,6 +2645,43 @@ private fun formatRssTimestamp(epochMillis: Long): String {
         .format(formatter)
 }
 
+private fun keyFieldForProvider(provider: LlmProvider): KeyField? {
+    return when (provider) {
+        LlmProvider.ANTHROPIC -> KeyField.ANTHROPIC
+        LlmProvider.OPENAI -> KeyField.OPENAI
+        LlmProvider.GEMINI -> KeyField.GEMINI
+        LlmProvider.MINIMAX -> KeyField.MINIMAX
+        LlmProvider.OPENROUTER -> KeyField.OPENROUTER
+        LlmProvider.TOGETHER -> KeyField.TOGETHER
+        LlmProvider.GROQ -> KeyField.GROQ
+        LlmProvider.DEEPSEEK -> KeyField.DEEPSEEK
+        LlmProvider.SILICONFLOW -> KeyField.SILICONFLOW
+        LlmProvider.CUSTOM -> KeyField.CUSTOM_LLM
+        else -> null
+    }
+}
+
+private fun keyValueForField(keys: ApiKeyUiState, field: KeyField): String {
+    return when (field) {
+        KeyField.ANTHROPIC -> keys.anthropicKey
+        KeyField.OPENAI -> keys.openAiKey
+        KeyField.GEMINI -> keys.geminiKey
+        KeyField.MINIMAX -> keys.minimaxKey
+        KeyField.OPENROUTER -> keys.openRouterKey
+        KeyField.TOGETHER -> keys.togetherKey
+        KeyField.GROQ -> keys.groqKey
+        KeyField.DEEPSEEK -> keys.deepseekKey
+        KeyField.SILICONFLOW -> keys.siliconFlowKey
+        KeyField.CUSTOM_LLM -> keys.customLlmKey
+        else -> ""
+    }
+}
+
+private fun providerKeyValue(keys: ApiKeyUiState, provider: LlmProvider): String {
+    val field = keyFieldForProvider(provider) ?: return ""
+    return keyValueForField(keys, field)
+}
+
 private fun formatModelName(model: LlmModel): String {
     val suffix = if (model.lowCost) " (Low cost)" else ""
     return model.label + suffix
@@ -2636,7 +2737,8 @@ private fun switchPrimaryProvider(
             analysisModel = defaultModel,
             verdictModel = defaultModel,
             reasoningModel = defaultModel,
-            deepDiveProvider = target
+            deepDiveProvider = target,
+            modelRouting = com.polaralias.signalsynthesis.domain.ai.UserModelRoutingConfig()
         )
     }
 
