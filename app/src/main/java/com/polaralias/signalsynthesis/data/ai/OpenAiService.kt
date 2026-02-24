@@ -41,6 +41,13 @@ data class OpenAiChatRequest(
     @Json(name = "max_tokens") val maxTokens: Int? = null,
     @Json(name = "reasoning_effort") val reasoningEffort: String? = null,
     val temperature: Float? = null,
+    @Json(name = "top_p") val topP: Float? = null,
+    @Json(name = "top_k") val topK: Int? = null,
+    @Json(name = "presence_penalty") val presencePenalty: Float? = null,
+    @Json(name = "frequency_penalty") val frequencyPenalty: Float? = null,
+    @Json(name = "enable_thinking") val enableThinking: Boolean? = null,
+    @Json(name = "chat_template_kwargs") val chatTemplateKwargs: Map<String, Any>? = null,
+    val stream: Boolean? = null,
     @Json(name = "response_format") val responseFormat: OpenAiResponseFormat? = null
 )
 

@@ -25,6 +25,44 @@ class OpenAiCompatibleLlmClient(
             OutputLength.FULL -> 1500
         }
 
+        val authHeader = if (provider.requiresApiKey && apiKey.isNotBlank()) {
+            "Bearer $apiKey"
+        } else if (!provider.requiresApiKey && apiKey.isNotBlank()) {
+            "Bearer $apiKey" // allow override even if not strictly required
+        } else if (provider == LlmProvider.OLLAMA) {
+            "Bearer ollama"
+        } else if (provider == LlmProvider.SGLANG) {
+            "Bearer EMPTY"
+        } else {
+            null
+        }
+
+        if (provider.supportsResponsesEndpoint) {
+            val endpoint = if (provider.baseUrl.trimEnd('/').endsWith("/v1")) {
+                "${provider.baseUrl.trimEnd('/')}/responses"
+            } else {
+                "${provider.baseUrl.trimEnd('/')}/v1/responses"
+            }
+
+            val request = OpenAiResponseRequest(
+                model = model,
+                input = listOf(
+                    OpenAiInputMessage(role = "system", content = systemPrompt ?: com.polaralias.signalsynthesis.domain.ai.AiPrompts.SYSTEM_ANALYST),
+                    OpenAiInputMessage(role = "user", content = prompt)
+                ),
+                maxOutputTokens = maxTokens,
+                temperature = 0.2f
+            )
+
+            val response = service.createResponse(
+                url = endpoint,
+                authorization = authHeader,
+                request = request
+            )
+
+            return response.extractText()
+        }
+
         val request = OpenAiChatRequest(
             model = model,
             messages = listOf(
@@ -32,8 +70,15 @@ class OpenAiCompatibleLlmClient(
                 OpenAiMessage(role = "user", content = prompt)
             ),
             maxCompletionTokens = if (provider == LlmProvider.MINIMAX) maxTokens else null,
-            maxTokens = if (provider == LlmProvider.MINIMAX) null else maxTokens,
-            temperature = 0.2f
+            maxTokens = if (provider != LlmProvider.MINIMAX) maxTokens else null,
+            temperature = 0.2f,
+            topP = 0.95f,
+            topK = if (provider.supportsTopK) 50 else null,
+            enableThinking = if (provider == LlmProvider.SILICONFLOW) true else null,
+            chatTemplateKwargs = if (provider.supportsNativeThinkingControl && (provider == LlmProvider.VLLM || provider == LlmProvider.SGLANG)) {
+                mapOf("enable_thinking" to true)
+            } else null,
+            stream = false
         )
 
         val endpoint = if (provider.baseUrl.trimEnd('/').endsWith("/v1")) {
@@ -44,7 +89,7 @@ class OpenAiCompatibleLlmClient(
 
         val response = service.createChatCompletion(
             url = endpoint,
-            authorization = if (apiKey.isBlank()) null else "Bearer $apiKey",
+            authorization = authHeader,
             request = request
         )
 

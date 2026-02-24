@@ -15,6 +15,46 @@ class OpenAiCompatibleStageRunner(
 
     override suspend fun run(request: LlmStageRequest): LlmStageResponse {
         val normalizedModel = LlmModel.normalizeModelIdAlias(model)
+        
+        val authHeader = if (provider.requiresApiKey && apiKey.isNotBlank()) {
+            "Bearer $apiKey"
+        } else if (!provider.requiresApiKey && apiKey.isNotBlank()) {
+            "Bearer $apiKey"
+        } else if (provider == LlmProvider.OLLAMA) {
+            "Bearer ollama"
+        } else if (provider == LlmProvider.SGLANG) {
+            "Bearer EMPTY"
+        } else {
+            null
+        }
+
+        if (provider.supportsResponsesEndpoint) {
+            val endpoint = if (provider.baseUrl.trimEnd('/').endsWith("/v1")) {
+                "${provider.baseUrl.trimEnd('/')}/responses"
+            } else {
+                "${provider.baseUrl.trimEnd('/')}/v1/responses"
+            }
+
+            val responseRequest = OpenAiResponseRequest(
+                model = normalizedModel,
+                input = listOf(
+                    OpenAiInputMessage(role = "system", content = request.systemPrompt),
+                    OpenAiInputMessage(role = "user", content = request.userPrompt)
+                ),
+                maxOutputTokens = request.maxOutputTokens,
+                temperature = request.temperature
+            )
+
+            val response = service.createResponse(endpoint, authHeader, responseRequest)
+            val text = response.extractText()
+
+            return LlmStageResponse(
+                rawText = text,
+                parsedJson = if (request.expectedSchemaId != null) extractJson(text) else null,
+                providerDebug = "model=$normalizedModel, api=openai-compatible-responses, provider=${provider.providerId}"
+            )
+        }
+
         val endpoint = chatEndpoint(provider.baseUrl)
 
         val chatRequest = OpenAiChatRequest(
@@ -24,17 +64,18 @@ class OpenAiCompatibleStageRunner(
                 OpenAiMessage(role = "user", content = request.userPrompt)
             ),
             maxCompletionTokens = if (provider == LlmProvider.MINIMAX) request.maxOutputTokens else null,
-            maxTokens = if (provider == LlmProvider.MINIMAX) null else request.maxOutputTokens,
-            temperature = request.temperature
+            maxTokens = if (provider != LlmProvider.MINIMAX) request.maxOutputTokens else null,
+            temperature = request.temperature,
+            topP = 0.95f,
+            topK = if (provider.supportsTopK) 50 else null,
+            enableThinking = if (provider == LlmProvider.SILICONFLOW) true else null,
+            chatTemplateKwargs = if (provider.supportsNativeThinkingControl && (provider == LlmProvider.VLLM || provider == LlmProvider.SGLANG)) {
+                mapOf("enable_thinking" to true)
+            } else null,
+            stream = false
         )
 
-        val authorization = if (apiKey.isBlank()) {
-            null
-        } else {
-            "Bearer $apiKey"
-        }
-
-        val response = service.createChatCompletion(endpoint, authorization, chatRequest)
+        val response = service.createChatCompletion(endpoint, authHeader, chatRequest)
         val text = response.choices.firstOrNull()?.message?.content.orEmpty()
 
         return LlmStageResponse(

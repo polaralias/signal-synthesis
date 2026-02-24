@@ -19,25 +19,42 @@ enum class LlmProvider(
     val displayName: String,
     val baseUrl: String,
     val apiFormat: LlmApiFormat,
-    val requiresApiKey: Boolean = true
+    val requiresApiKey: Boolean = true,
+    val supportsResponsesEndpoint: Boolean = false,
+    val supportsChatCompletionsEndpoint: Boolean = true,
+    val supportsNativeThinkingControl: Boolean = false,
+    val supportsOpenAIReasoningObject: Boolean = false,
+    val supportsOpenAIVerbosity: Boolean = false,
+    val supportsTopK: Boolean = false,
+    val requiresVersionHeader: Boolean = false,
+    val supportsStatefulResponses: Boolean = false
 ) {
     ANTHROPIC(
         providerId = "anthropic",
         displayName = "Anthropic",
         baseUrl = "https://api.anthropic.com",
-        apiFormat = LlmApiFormat.ANTHROPIC
+        apiFormat = LlmApiFormat.ANTHROPIC,
+        supportsChatCompletionsEndpoint = false,
+        supportsNativeThinkingControl = true,
+        requiresVersionHeader = true
     ),
     OPENAI(
         providerId = "openai",
         displayName = "OpenAI",
         baseUrl = "https://api.openai.com",
-        apiFormat = LlmApiFormat.OPENAI_RESPONSES
+        apiFormat = LlmApiFormat.OPENAI_RESPONSES,
+        supportsResponsesEndpoint = true,
+        supportsOpenAIReasoningObject = true,
+        supportsOpenAIVerbosity = true,
+        supportsStatefulResponses = true
     ),
     GEMINI(
         providerId = "google",
         displayName = "Google Gemini",
         baseUrl = "https://generativelanguage.googleapis.com",
-        apiFormat = LlmApiFormat.GOOGLE_GEMINI
+        apiFormat = LlmApiFormat.GOOGLE_GEMINI,
+        supportsChatCompletionsEndpoint = false,
+        supportsNativeThinkingControl = true
     ),
     MINIMAX(
         providerId = "minimax",
@@ -55,13 +72,16 @@ enum class LlmProvider(
         providerId = "together",
         displayName = "Together AI",
         baseUrl = "https://api.together.xyz/v1",
-        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE
+        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
+        supportsTopK = true
     ),
     GROQ(
         providerId = "groq",
         displayName = "Groq",
         baseUrl = "https://api.groq.com/openai/v1",
-        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE
+        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
+        supportsResponsesEndpoint = true,
+        supportsOpenAIReasoningObject = true
     ),
     DEEPSEEK(
         providerId = "deepseek",
@@ -73,28 +93,35 @@ enum class LlmProvider(
         providerId = "siliconflow",
         displayName = "SiliconFlow",
         baseUrl = "https://api.siliconflow.com/v1",
-        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE
+        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
+        supportsNativeThinkingControl = true
     ),
     OLLAMA(
         providerId = "ollama",
         displayName = "Ollama",
         baseUrl = "http://localhost:11434",
         apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
-        requiresApiKey = false
+        requiresApiKey = false,
+        supportsResponsesEndpoint = true
     ),
     LOCALAI(
         providerId = "localai",
         displayName = "LocalAI",
         baseUrl = "http://localhost:8080",
         apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
-        requiresApiKey = false
+        requiresApiKey = false,
+        supportsResponsesEndpoint = true,
+        supportsTopK = true
     ),
     VLLM(
         providerId = "vllm",
         displayName = "vLLM",
         baseUrl = "http://localhost:8000",
         apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
-        requiresApiKey = false
+        requiresApiKey = false,
+        supportsResponsesEndpoint = true,
+        supportsTopK = true,
+        supportsNativeThinkingControl = true
     ),
     TGI(
         providerId = "tgi",
@@ -108,13 +135,17 @@ enum class LlmProvider(
         displayName = "SGLang",
         baseUrl = "http://localhost:30000",
         apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
-        requiresApiKey = false
+        requiresApiKey = false,
+        supportsTopK = true,
+        supportsNativeThinkingControl = true
     ),
     CUSTOM(
         providerId = "custom",
         displayName = "Custom",
         baseUrl = "http://localhost:8000",
-        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE
+        apiFormat = LlmApiFormat.OPENAI_COMPATIBLE,
+        supportsResponsesEndpoint = true,
+        supportsTopK = true
     );
 
     fun supportsWebTools(): Boolean {

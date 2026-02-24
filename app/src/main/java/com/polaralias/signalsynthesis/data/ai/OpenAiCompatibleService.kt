@@ -18,6 +18,13 @@ interface OpenAiCompatibleService {
         @Body request: OpenAiChatRequest
     ): OpenAiChatResponse
 
+    @POST
+    suspend fun createResponse(
+        @Url url: String,
+        @Header("Authorization") authorization: String?,
+        @Body request: OpenAiResponseRequest
+    ): OpenAiResponseResponse
+
     companion object {
         private const val PLACEHOLDER_URL = "https://localhost/"
 
