@@ -1,7 +1,5 @@
 # LLM provider documentation extraction
 
-**Status: ✅ Fully Implemented** (Capability matrix added to `LlmProvider`, with dynamic endpoint routing in `OpenAiCompatibleLlmClient` and `OpenAiCompatibleStageRunner`).
-
 Below is a practical, implementation-ready update that gives you:
 
 1. **Exact doc URLs** (as a copyable mapping)
@@ -154,6 +152,190 @@ That approach avoids betting on undocumented `/responses` support and protects y
 * **OpenAI-compatible responses**: `model`, `input` (subset varies by implementation) ([Ollama Documentation][6])
 
 ---
+
+## Example Current Models
+
+Here’s the cleaned-up reality: for **Anthropic/OpenAI/Gemini/Groq/DeepSeek/MiniMax** you can maintain a curated “featured list” (flagship, balanced, cheap) and still allow **any** model ID. For **OpenRouter/Together/SiliconFlow** (aggregators) and **Ollama/LocalAI/vLLM/TGI/SGLang** (runtimes), trying to “hardcode all models” is a trap. Your only sane approach is **dynamic model discovery** via their model-list endpoints and treating model IDs as data, not code.
+
+Below are the **current official model IDs** and the **cheaper options** where the provider clearly offers them.
+
+---
+
+## Anthropic (Claude API)
+
+Official Claude API model IDs (and aliases): ([Claude][1])
+
+* **Flagship:** `claude-opus-4-6`
+* **Balanced:** `claude-sonnet-4-6`
+* **Cheap/fast:** `claude-haiku-4-5` (docs show `claude-haiku-4-5-20251001` as the specific versioned string) ([Claude][1])
+  Also: you can programmatically list what your key can use via **Models API** `GET /v1/models`. ([Claude][2])
+
+---
+
+## OpenAI
+
+The “Models” page is the authoritative source for what’s live right now. ([OpenAI Developers][3])
+Key **current** model IDs worth supporting explicitly:
+
+**General frontier (and cheaper tiers):**
+
+* `gpt-5.2`
+* `gpt-5 mini`
+* `gpt-5 nano` ([OpenAI Developers][3])
+
+**Coding (Codex family):**
+
+* `gpt-5.3-codex`
+* `gpt-5.2-codex`
+* `gpt-5.1-codex`
+* `gpt-5.1-codex-max`
+* `gpt-5-codex` ([OpenAI Developers][3])
+
+**Non-reasoning “straight chat” line still in use:**
+
+* `gpt-4.1`
+* `gpt-4.1 mini`
+* `gpt-4.1 nano` ([OpenAI Developers][3])
+
+If you want full coverage, implement `GET /models` and never assume the list is static. ([OpenAI Platform][4])
+
+---
+
+## Google Gemini (Gemini API + Vertex AI)
+
+Gemini 3 preview IDs (Gemini API docs): ([Google AI for Developers][5])
+
+* **Flagship preview:** `gemini-3.1-pro-preview`
+* **Also:** `gemini-3-pro-preview`
+* **Fast/cheaper preview:** `gemini-3-flash-preview`
+* **Image:** `gemini-3-pro-image-preview` ([Google AI for Developers][5])
+
+Gemini 2.x / 2.5 GA lineup (Vertex docs, useful for “cheap” tiers and stable prod): ([Google Cloud Documentation][6])
+
+* **High capability:** Gemini 2.5 Pro
+* **Workhorse:** Gemini 2.5 Flash
+* **Cheapest scale tier:** Gemini 2.5 Flash-Lite
+* Older but cost-effective: Gemini 2.0 Flash / 2.0 Flash-Lite ([Google Cloud Documentation][6])
+
+For “support everything”, use the Gemini **models endpoint** to list available model strings. ([Google AI for Developers][7])
+
+---
+
+## MiniMax
+
+MiniMax text model IDs (from their docs): ([platform.minimax.io][8])
+
+* **Flagship:** `MiniMax-M2.5`
+* **Fast variant:** `MiniMax-M2.5-highspeed`
+* Previous gen: `MiniMax-M2.1`, `MiniMax-M2.1-highspeed`, plus `MiniMax-M2` ([platform.minimax.io][8])
+
+---
+
+## Groq
+
+Groq’s “Supported Models” page lists production model IDs and pricing tiers. ([console.groq.com][9])
+Notable **cheap + fast** options:
+
+* `llama-3.1-8b-instant` (very low cost) ([console.groq.com][9])
+  Higher capability:
+* `llama-3.3-70b-versatile` ([console.groq.com][9])
+  Also present (open-weight OpenAI models on Groq):
+* `openai/gpt-oss-120b`
+* `openai/gpt-oss-20b` ([console.groq.com][9])
+
+---
+
+## DeepSeek
+
+DeepSeek’s API currently exposes two primary model IDs (V3.2): ([DeepSeek API Docs][10])
+
+* `deepseek-chat` (non-thinking)
+* `deepseek-reasoner` (thinking mode)
+
+They also document listing models via `GET /models`. ([DeepSeek API Docs][11])
+
+---
+
+## OpenRouter (aggregator)
+
+You **cannot** sensibly hardcode their catalogue (hundreds of models). Use their Models API: ([OpenRouter][12])
+
+* `GET https://openrouter.ai/api/v1/models` returns authoritative IDs like `openai/gpt-4`, etc. ([OpenRouter][12])
+
+Your “support all models” requirement here should mean:
+
+* dynamic fetch + cache
+* accept arbitrary IDs returned by that endpoint
+* treat “provider/model” IDs as opaque strings
+
+---
+
+## Together (aggregator + hosting)
+
+Together also has a huge catalogue. Use their “List All Models” endpoint as source of truth. ([Together.ai Docs][13])
+
+* You’ll see IDs in the form `org/model` (e.g. `Qwen/Qwen2.5-72B-Instruct-Turbo`). ([Together.ai Docs][14])
+
+---
+
+## SiliconFlow (aggregator)
+
+Same story: do not hardcode. They provide `GET /v1/models` to list IDs. ([SiliconFlow][15])
+
+---
+
+## Ollama (local model runner)
+
+There is no single “latest model list” you can bake in. Ollama uses its own tags under their library (and you can pull community models too). ([Ollama][16])
+Practical approach:
+
+* treat “model name” as an Ollama tag (e.g. `deepseek-r1`, `llama3.1`)
+* expose whatever is installed locally (via `ollama list`) in your integration, not a central hardcoded list
+
+---
+
+## LocalAI, vLLM, TGI, SGLang (runtimes, not model providers)
+
+These aren’t “providers with model catalogues”. They serve **whatever you deploy** (usually HF repo names / local paths / config-defined aliases). Your “full support” here should mean:
+
+* you support **OpenAI-compatible** request/response shapes (where applicable)
+* you support **dynamic model discovery** via the runtime’s own endpoints (if enabled), or via your deployment config
+* you don’t try to maintain a global “model list” in code
+
+---
+
+# What I’d implement (so this doesn’t rot every month)
+
+1. **Per-provider “Featured Models” config** (small, curated: flagship/balanced/cheap), seeded with the IDs above.
+2. **Dynamic model discovery** for anything with a models endpoint:
+
+   * Anthropic `GET /v1/models` ([Claude][2])
+   * OpenAI `GET /models` ([OpenAI Platform][4])
+   * Gemini models endpoint ([Google AI for Developers][7])
+   * OpenRouter models endpoint ([OpenRouter][12])
+   * Together models list ([Together.ai Docs][13])
+   * SiliconFlow `GET /v1/models` ([SiliconFlow][15])
+   * DeepSeek `GET /models` ([DeepSeek API Docs][11])
+3. **Allow arbitrary model IDs** (feature flag: “strict allowlist” off by default). Aggregators and self-hosted runtimes will break you otherwise.
+
+
+[1]: https://platform.claude.com/docs/en/about-claude/models/overview?utm_source=chatgpt.com "Models overview - Claude API Docs"
+[2]: https://platform.claude.com/docs/en/api/models/list?utm_source=chatgpt.com "List Models - Claude API Reference"
+[3]: https://developers.openai.com/api/docs/models?utm_source=chatgpt.com "Models | OpenAI API"
+[4]: https://platform.openai.com/docs/api-reference/models?utm_source=chatgpt.com "API Reference"
+[5]: https://ai.google.dev/gemini-api/docs/gemini-3 "Gemini 3 Developer Guide  |  Gemini API  |  Google AI for Developers"
+[6]: https://docs.cloud.google.com/vertex-ai/generative-ai/docs/models "Google models  |  Generative AI on Vertex AI  |  Google Cloud Documentation"
+[7]: https://ai.google.dev/api/models "Models  |  Gemini API  |  Google AI for Developers"
+[8]: https://platform.minimax.io/docs/guides/models-intro "Models - MiniMax API Docs"
+[9]: https://console.groq.com/docs/models "Supported Models - GroqDocs"
+[10]: https://api-docs.deepseek.com/?utm_source=chatgpt.com "DeepSeek API Docs: Your First API Call"
+[11]: https://api-docs.deepseek.com/api/list-models?utm_source=chatgpt.com "Lists Models | DeepSeek API Docs"
+[12]: https://openrouter.ai/docs/api/api-reference/models/get-models?utm_source=chatgpt.com "List all models and their properties"
+[13]: https://docs.together.ai/reference/models?utm_source=chatgpt.com "List All Models"
+[14]: https://docs.together.ai/docs/dedicated-models?utm_source=chatgpt.com "Dedicated Models"
+[15]: https://docs.siliconflow.cn/en/api-reference/models/get-model-list "List models - SiliconFlow"
+[16]: https://ollama.com/library?utm_source=chatgpt.com "library"
+
 
 ## Fully fledged example request per provider
 
