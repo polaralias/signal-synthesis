@@ -31,4 +31,25 @@ class LlmModelsTest {
         assertFalse(LlmModel.usesOpenAiResponsesApi("claude-sonnet-4-5"))
         assertFalse(LlmModel.usesOpenAiResponsesApi("gemini-2.5-pro"))
     }
+
+    @Test
+    fun geminiAliasesResolveToCurrentPreviewIds() {
+        assertEquals("gemini-3.1-pro-preview", LlmModel.normalizeModelIdAlias("gemini-3-pro"))
+        assertEquals("gemini-3-flash-preview", LlmModel.normalizeModelIdAlias("gemini-3-flash"))
+    }
+
+    @Test
+    fun deprecatedProviderAliasesResolveToCurrentModelIds() {
+        assertEquals("MiniMax-M2.5", LlmModel.normalizeModelIdAlias("M2"))
+        assertEquals("MiniMax-M2.5-highspeed", LlmModel.normalizeModelIdAlias("M2-Pro"))
+        assertEquals("llama-3.1-8b-instant", LlmModel.normalizeModelIdAlias("mixtral-8x7b-32768"))
+    }
+
+    @Test
+    fun openAiReasoningEffortAvoidsUnsupportedMinimalOnModernGpt5Variants() {
+        assertEquals("none", LlmModel.openAiReasoningEffort("gpt-5.1", ReasoningDepth.NONE))
+        assertEquals("low", LlmModel.openAiReasoningEffort("gpt-5.1", ReasoningDepth.MINIMAL))
+        assertEquals("none", LlmModel.openAiReasoningEffort("gpt-5.2", ReasoningDepth.NONE))
+        assertEquals("high", LlmModel.openAiReasoningEffort("gpt-5.2", ReasoningDepth.EXTRA))
+    }
 }

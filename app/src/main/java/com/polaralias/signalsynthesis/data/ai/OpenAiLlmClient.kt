@@ -29,23 +29,11 @@ class OpenAiLlmClient(
             instructions = systemPrompt ?: com.polaralias.signalsynthesis.domain.ai.AiPrompts.SYSTEM_ANALYST,
             input = listOf(OpenAiInputMessage(role = ROLE_USER, content = prompt)),
             maxOutputTokens = maxTokens,
-            reasoning = mapReasoningEffort(reasoningDepth)?.let { OpenAiReasoning(effort = it) },
+            reasoning = LlmModel.openAiReasoningEffort(model, reasoningDepth)?.let { OpenAiReasoning(effort = it) },
             temperature = if (LlmModel.supportsCustomTemperature(model)) 0.2f else null
         )
         val response = responsesService.createResponse("Bearer $apiKey", request)
         return response.extractText()
-    }
-
-    private fun mapReasoningEffort(depth: ReasoningDepth): String? {
-        if (!LlmModel.isReasoningFamily(model)) {
-            return null
-        }
-        return when (depth) {
-            ReasoningDepth.NONE, ReasoningDepth.MINIMAL -> "minimal"
-            ReasoningDepth.LOW -> "low"
-            ReasoningDepth.MEDIUM -> "medium"
-            ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
-        }
     }
 
     companion object {

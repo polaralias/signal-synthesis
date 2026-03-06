@@ -31,12 +31,16 @@ class GeminiLlmClient(
         val generationConfig = if (isGemini3) {
             GeminiGenerationConfig(
                 maxOutputTokens = maxTokens,
-                thinkingLevel = mapThinkingLevel(reasoningDepth, isFlash)
+                thinkingConfig = GeminiThinkingConfig(
+                    thinkingLevel = mapThinkingLevel(reasoningDepth, isFlash)
+                )
             )
         } else {
             GeminiGenerationConfig(
                 maxOutputTokens = maxTokens,
-                thinkingBudget = mapThinkingBudget(reasoningDepth)
+                thinkingConfig = GeminiThinkingConfig(
+                    thinkingBudget = mapThinkingBudget(reasoningDepth)
+                )
             )
         }
 

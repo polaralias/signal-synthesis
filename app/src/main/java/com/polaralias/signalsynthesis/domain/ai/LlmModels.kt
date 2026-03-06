@@ -281,14 +281,14 @@ enum class LlmModel(
     // Google Gemini (keep legacy enum names for compatibility)
     GEMINI_3_PRO(
         provider = LlmProvider.GEMINI,
-        modelId = "gemini-3-pro-preview-09-2026",
+        modelId = "gemini-3.1-pro-preview",
         label = "Gemini 3 Pro",
         description = "Reasoning-heavy long-context workflows",
         visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING
     ),
     GEMINI_3_FLASH(
         provider = LlmProvider.GEMINI,
-        modelId = "gemini-3-flash-preview-09-2026",
+        modelId = "gemini-3-flash-preview",
         label = "Gemini 3 Flash",
         description = "Fast, low-cost Gemini 3",
         visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING,
@@ -311,15 +311,15 @@ enum class LlmModel(
     // MiniMax
     MINIMAX_M2(
         provider = LlmProvider.MINIMAX,
-        modelId = "M2",
-        label = "MiniMax M2",
+        modelId = "MiniMax-M2.5",
+        label = "MiniMax M2.5",
         description = "MiniMax flagship"
     ),
     MINIMAX_M2_PRO(
         provider = LlmProvider.MINIMAX,
-        modelId = "M2-Pro",
-        label = "MiniMax M2 Pro",
-        description = "Higher-capability M2"
+        modelId = "MiniMax-M2.5-highspeed",
+        label = "MiniMax M2.5 Highspeed",
+        description = "Faster MiniMax M2.5 variant"
     ),
 
     // Ollama
@@ -459,9 +459,9 @@ enum class LlmModel(
     ),
     GROQ_MIXTRAL_8X7B(
         provider = LlmProvider.GROQ,
-        modelId = "mixtral-8x7b-32768",
-        label = "Mixtral 8x7B (Groq)",
-        description = "Mixtral on Groq",
+        modelId = "llama-3.1-8b-instant",
+        label = "Llama 3.1 8B Instant (Groq)",
+        description = "Low-cost Groq production model",
         lowCost = true
     ),
 
@@ -516,8 +516,11 @@ enum class LlmModel(
             "gpt-5.2-nano" to "gpt-5-nano",
             "gpt-5.1-nano" to "gpt-5-nano",
             "gpt-4o" to "gpt-5-mini",
-            "gemini-3-flash" to "gemini-3-flash-preview-09-2026",
-            "gemini-3-pro" to "gemini-3-pro-preview-09-2026"
+            "m2" to "MiniMax-M2.5",
+            "m2-pro" to "MiniMax-M2.5-highspeed",
+            "mixtral-8x7b-32768" to "llama-3.1-8b-instant",
+            "gemini-3-flash" to "gemini-3-flash-preview",
+            "gemini-3-pro" to "gemini-3.1-pro-preview"
         )
 
         fun normalizeModelIdAlias(modelId: String): String {
@@ -610,6 +613,28 @@ enum class LlmModel(
             return !isReasoningFamily(modelId)
         }
 
+        fun openAiReasoningEffort(modelId: String, depth: ReasoningDepth): String? {
+            if (!isReasoningFamily(modelId)) {
+                return null
+            }
+
+            val normalized = normalizeModelIdAlias(modelId).lowercase()
+            val supportsMinimalOnly = normalized == "gpt-5"
+            val supportsNone = normalized.startsWith("gpt-5") && !supportsMinimalOnly
+
+            return when (depth) {
+                ReasoningDepth.NONE -> when {
+                    supportsNone -> "none"
+                    supportsMinimalOnly -> "minimal"
+                    else -> null
+                }
+                ReasoningDepth.MINIMAL -> if (supportsMinimalOnly) "minimal" else "low"
+                ReasoningDepth.LOW -> "low"
+                ReasoningDepth.MEDIUM -> "medium"
+                ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
+            }
+        }
+
         fun supportsNativeReasoningControl(provider: LlmProvider, modelId: String): Boolean {
             val normalized = normalizeModelIdAlias(modelId).lowercase()
             return when (provider) {
@@ -622,7 +647,7 @@ enum class LlmModel(
 }
 
 /**
- * Maps to 'reasoning_effort' for OpenAI and 'thinking_level' for Gemini when supported.
+ * Maps to provider-native reasoning controls when supported.
  */
 enum class ReasoningDepth {
     NONE,

@@ -26,7 +26,7 @@ class OpenAiStageRunner(
             input = listOf(OpenAiInputMessage(role = "user", content = request.userPrompt)),
             maxOutputTokens = request.maxOutputTokens,
             text = structuredTextConfig(request.expectedSchemaId),
-            reasoning = mapReasoningEffort(request.reasoningDepth)?.let { OpenAiReasoning(it) },
+            reasoning = LlmModel.openAiReasoningEffort(model, request.reasoningDepth)?.let { OpenAiReasoning(it) },
             temperature = if (LlmModel.supportsCustomTemperature(model)) request.temperature else null
         )
 
@@ -49,7 +49,7 @@ class OpenAiStageRunner(
             text = structuredTextConfig(request.expectedSchemaId),
             tools = listOf(OpenAiTool(type = "web_search")),
             include = listOf("web_search_call.action.sources"),
-            reasoning = mapReasoningEffort(request.reasoningDepth)?.let { OpenAiReasoning(it) },
+            reasoning = LlmModel.openAiReasoningEffort(model, request.reasoningDepth)?.let { OpenAiReasoning(it) },
             temperature = if (LlmModel.supportsCustomTemperature(model)) request.temperature else null
         )
 
@@ -70,19 +70,6 @@ class OpenAiStageRunner(
             sources = sources,
             providerDebug = "model=$model, api=responses, tool=web_search, depth=${request.reasoningDepth}"
         )
-    }
-
-    private fun mapReasoningEffort(depth: ReasoningDepth): String? {
-        return if (LlmModel.isReasoningFamily(model)) {
-            when (depth) {
-                ReasoningDepth.NONE, ReasoningDepth.MINIMAL -> "minimal"
-                ReasoningDepth.LOW -> "low"
-                ReasoningDepth.MEDIUM -> "medium"
-                ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
-            }
-        } else {
-            null
-        }
     }
 
     private fun structuredTextConfig(expectedSchemaId: String?): OpenAiTextConfig? {

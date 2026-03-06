@@ -8,16 +8,16 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
-import retrofit2.http.Query
 
 interface GeminiService {
     @POST("{apiVersion}/models/{model}:generateContent")
     suspend fun generateContent(
         @Path("apiVersion") apiVersion: String,
         @Path("model") model: String,
-        @Query("key") apiKey: String,
+        @Header("x-goog-api-key") apiKey: String,
         @Body request: GeminiRequest
     ): GeminiResponse
 
@@ -66,8 +66,12 @@ data class GeminiGenerationConfig(
     val topK: Int = 40,
     val maxOutputTokens: Int = 1000,
     val responseMimeType: String? = null,
-    @Json(name = "thinking_level") val thinkingLevel: String? = null,
-    @Json(name = "thinking_budget") val thinkingBudget: Int? = null
+    val thinkingConfig: GeminiThinkingConfig? = null
+)
+
+data class GeminiThinkingConfig(
+    val thinkingLevel: String? = null,
+    val thinkingBudget: Int? = null
 )
 
 data class GeminiResponse(

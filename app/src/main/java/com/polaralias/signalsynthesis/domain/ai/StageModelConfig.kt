@@ -99,7 +99,7 @@ data class UserModelRoutingConfig(
                     model = "gpt-5-mini",
                     tools = ToolsMode.NONE,
                     temperature = 0.1f,
-                    reasoningDepth = ReasoningDepth.MINIMAL,
+                    reasoningDepth = ReasoningDepth.LOW,
                     maxOutputTokens = 500
                 )
             }

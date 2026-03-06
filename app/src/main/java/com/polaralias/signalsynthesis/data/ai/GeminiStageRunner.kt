@@ -27,7 +27,7 @@ class GeminiStageRunner(
         val genConfig = GeminiGenerationConfig(
             temperature = request.temperature?.toDouble() ?: 0.2,
             maxOutputTokens = request.maxOutputTokens,
-            thinkingLevel = thinkingLevel
+            thinkingConfig = buildThinkingConfig(request.reasoningDepth, normalizedModel, thinkingLevel)
         )
 
         val geminiRequest = GeminiRequest(
@@ -75,6 +75,30 @@ class GeminiStageRunner(
             ReasoningDepth.LOW -> "low"
             ReasoningDepth.MEDIUM -> if (isFlash) "medium" else "high"
             ReasoningDepth.HIGH, ReasoningDepth.EXTRA -> "high"
+        }
+    }
+
+    private fun buildThinkingConfig(
+        depth: ReasoningDepth,
+        modelId: String,
+        thinkingLevel: String?
+    ): GeminiThinkingConfig? {
+        val normalized = modelId.lowercase()
+        return if (normalized.startsWith("gemini-3")) {
+            thinkingLevel?.let { GeminiThinkingConfig(thinkingLevel = it) }
+        } else {
+            GeminiThinkingConfig(thinkingBudget = mapThinkingBudget(depth))
+        }
+    }
+
+    private fun mapThinkingBudget(depth: ReasoningDepth): Int {
+        return when (depth) {
+            ReasoningDepth.NONE -> 0
+            ReasoningDepth.MINIMAL -> 250
+            ReasoningDepth.LOW -> 500
+            ReasoningDepth.MEDIUM -> 1000
+            ReasoningDepth.HIGH -> 2000
+            ReasoningDepth.EXTRA -> 4000
         }
     }
 
