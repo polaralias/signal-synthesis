@@ -25,7 +25,8 @@ class RoomDatabaseRepository(
         .add(KotlinJsonAdapterFactory())
         .build()
     private val listType = Types.newParameterizedType(List::class.java, TradeSetup::class.java)
-    private val adapter = moshi.adapter<List<TradeSetup>>(listType)
+    private val tradeSetupListAdapter = moshi.adapter<List<TradeSetup>>(listType)
+    private val resultAdapter = moshi.adapter(AnalysisResult::class.java)
 
     override suspend fun addToWatchlist(symbol: String, intent: TradingIntent?) {
         watchlistDao.insert(
@@ -46,7 +47,7 @@ class RoomDatabaseRepository(
     }
 
     override suspend fun saveHistory(result: AnalysisResult) {
-        val json = adapter.toJson(result.setups)
+        val json = resultAdapter.toJson(result)
         historyDao.insert(
             HistoryEntity(
                 generatedAt = result.generatedAt.toEpochMilli(),
@@ -58,22 +59,29 @@ class RoomDatabaseRepository(
 
     override fun getHistory(): Flow<List<AnalysisResult>> {
         return historyDao.getAll().map { list ->
-            list.map { entity ->
-                val setups = adapter.fromJson(entity.setupsJson) ?: emptyList()
-                AnalysisResult(
-                    intent = TradingIntent.valueOf(entity.intent),
-                    totalCandidates = setups.size,
-                    tradeableCount = setups.size,
-                    setupCount = setups.size,
-                    setups = setups,
-                    generatedAt = Instant.ofEpochMilli(entity.generatedAt)
-                )
-            }
+            list.map(::decodeHistoryEntity)
         }
     }
 
     override suspend fun clearHistory() {
         historyDao.deleteAll()
+    }
+
+    private fun decodeHistoryEntity(entity: HistoryEntity): AnalysisResult {
+        val storedResult = runCatching { resultAdapter.fromJson(entity.setupsJson) }.getOrNull()
+        if (storedResult != null) {
+            return storedResult
+        }
+
+        val legacySetups = tradeSetupListAdapter.fromJson(entity.setupsJson) ?: emptyList()
+        return AnalysisResult(
+            intent = TradingIntent.valueOf(entity.intent),
+            totalCandidates = legacySetups.size,
+            tradeableCount = legacySetups.size,
+            setupCount = legacySetups.size,
+            setups = legacySetups,
+            generatedAt = Instant.ofEpochMilli(entity.generatedAt)
+        )
     }
 }
 

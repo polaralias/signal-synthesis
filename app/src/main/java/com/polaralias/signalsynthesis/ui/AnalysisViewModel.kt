@@ -399,6 +399,9 @@ class AnalysisViewModel(
         viewModelScope.launch(ioDispatcher) {
             val settings = appSettingsStore.loadSettings()
             appSettingsStore.saveSettings(settings.copy(isAnalysisPaused = !currentlyPaused))
+            if (currentlyPaused && _uiState.value.alertsEnabled) {
+                workScheduler.scheduleAlerts(true, _uiState.value.appSettings.alertCheckIntervalMinutes)
+            }
         }
     }
 
@@ -564,7 +567,7 @@ class AnalysisViewModel(
             ?: return
             
         val existing = state.deepDives[symbol]
-        if (existing?.status == DeepDiveStatus.LOADING || existing?.status == DeepDiveStatus.READY) return
+        if (existing?.status == DeepDiveStatus.LOADING) return
 
         updateDeepDive(symbol, DeepDiveState(status = DeepDiveStatus.LOADING))
         
@@ -947,7 +950,9 @@ class AnalysisViewModel(
     }
 
     fun updateAppSettings(settings: AppSettings) {
-        val oldInterval = _uiState.value.appSettings.alertCheckIntervalMinutes
+        val previousSettings = _uiState.value.appSettings
+        val oldInterval = previousSettings.alertCheckIntervalMinutes
+        val invalidateAiOutputs = shouldInvalidateAiOutputs(previousSettings, settings)
         viewModelScope.launch(ioDispatcher) {
             appSettingsStore.saveSettings(settings)
             com.polaralias.signalsynthesis.util.ActivityLogger.setVerboseLogging(settings.verboseLogging)
@@ -962,7 +967,9 @@ class AnalysisViewModel(
             _uiState.update { state ->
                 state.copy(
                     appSettings = settings,
-                    hasLlmKey = hasConfiguredLlmAccess(state.keys, settings)
+                    hasLlmKey = hasConfiguredLlmAccess(state.keys, settings),
+                    aiSummaries = if (invalidateAiOutputs) emptyMap() else state.aiSummaries,
+                    deepDives = if (invalidateAiOutputs) emptyMap() else state.deepDives
                 )
             }
             
@@ -1215,6 +1222,7 @@ class AnalysisViewModel(
     private fun refreshAlerts() {
         viewModelScope.launch(ioDispatcher) {
             val settings = alertStore.loadSettings()
+            val appSettings = appSettingsStore.loadSettings()
             val symbols = alertStore.loadSymbols()
             _uiState.update {
                 it.copy(
@@ -1223,7 +1231,7 @@ class AnalysisViewModel(
                     alertSymbols = symbols
                 )
             }
-            workScheduler.scheduleAlerts(settings.enabled)
+            workScheduler.scheduleAlerts(settings.enabled, appSettings.alertCheckIntervalMinutes)
         }
     }
 
@@ -1605,6 +1613,22 @@ class AnalysisViewModel(
 
     private fun firstAvailableLlmKey(keys: ApiKeyUiState): String {
         return keys.toLlmKeyMap().values.firstOrNull { it.isNotBlank() }.orEmpty()
+    }
+
+    private fun shouldInvalidateAiOutputs(oldSettings: AppSettings, newSettings: AppSettings): Boolean {
+        return oldSettings.llmProvider != newSettings.llmProvider ||
+            oldSettings.analysisModel != newSettings.analysisModel ||
+            oldSettings.verdictModel != newSettings.verdictModel ||
+            oldSettings.reasoningModel != newSettings.reasoningModel ||
+            oldSettings.deepDiveProvider != newSettings.deepDiveProvider ||
+            oldSettings.reasoningDepth != newSettings.reasoningDepth ||
+            oldSettings.outputLength != newSettings.outputLength ||
+            oldSettings.verbosity != newSettings.verbosity ||
+            oldSettings.modelRouting != newSettings.modelRouting ||
+            oldSettings.rssEnabledTopics != newSettings.rssEnabledTopics ||
+            oldSettings.rssTickerSources != newSettings.rssTickerSources ||
+            oldSettings.rssUseTickerFeedsForFinalStage != newSettings.rssUseTickerFeedsForFinalStage ||
+            oldSettings.rssApplyExpandedToAll != newSettings.rssApplyExpandedToAll
     }
 
 

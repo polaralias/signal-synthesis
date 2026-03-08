@@ -191,6 +191,7 @@ object UsageTracker {
         if (currentDay != lastDay) {
             // Archive yesterday's data before resetting
             if (lastDay?.isNotBlank() == true) {
+                loadCurrentDay(prefs)
                 archiveCurrentDay(lastDay)
             }
             

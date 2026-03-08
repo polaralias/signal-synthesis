@@ -58,14 +58,35 @@ class MassiveMarketDataProvider(
         sector: String?,
         limit: Int
     ): List<String> {
+        val candidateLimit = (limit.coerceAtLeast(1) * 5).coerceAtMost(100)
         val response = withEndpointFallback { service ->
             service.listTickers(
                 type = "CS", // Common Set
-                limit = limit,
+                limit = candidateLimit,
                 apiKey = apiKey
             )
         }
-        return response.results?.mapNotNull { it.ticker } ?: emptyList()
+        val symbols = response.results
+            ?.mapNotNull { it.ticker }
+            ?.distinct()
+            .orEmpty()
+        if (symbols.isEmpty()) return emptyList()
+
+        if (minPrice == null && maxPrice == null && minVolume == null) {
+            return symbols.take(limit)
+        }
+
+        val quotes = getQuotes(symbols)
+        return symbols.asSequence()
+            .mapNotNull { symbol -> quotes[symbol]?.let { quote -> symbol to quote } }
+            .filter { (_, quote) ->
+                (minPrice == null || quote.price >= minPrice) &&
+                    (maxPrice == null || quote.price <= maxPrice) &&
+                    (minVolume == null || quote.volume >= minVolume)
+            }
+            .map { (symbol, _) -> symbol }
+            .take(limit)
+            .toList()
     }
 
     override suspend fun getTopGainers(limit: Int): List<String> = emptyList()

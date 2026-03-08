@@ -105,18 +105,64 @@ class AnalysisViewModelTest {
         assertTrue(state.customTickers.any { it.symbol == "AAPL" })
     }
 
+    @Test
+    fun initSchedulesAlertsWithStoredInterval() = runTest(testDispatcher) {
+        val workScheduler = RecordingWorkScheduler()
+        createViewModel(
+            alertStore = FakeAlertSettingsStore(settings = AlertSettings(enabled = true)),
+            appSettingsStore = FakeAppSettingsStore(
+                AppSettings(
+                    alertCheckIntervalMinutes = 3,
+                    useMockDataWhenOffline = true
+                )
+            ),
+            workScheduler = workScheduler
+        )
+
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(workScheduler.calls.contains(true to 3))
+    }
+
+    @Test
+    fun unpausingReschedulesAlerts() = runTest(testDispatcher) {
+        val workScheduler = RecordingWorkScheduler()
+        val appSettingsStore = FakeAppSettingsStore(
+            AppSettings(
+                alertCheckIntervalMinutes = 3,
+                isAnalysisPaused = true,
+                useMockDataWhenOffline = true
+            )
+        )
+        val viewModel = createViewModel(
+            alertStore = FakeAlertSettingsStore(settings = AlertSettings(enabled = true)),
+            appSettingsStore = appSettingsStore,
+            workScheduler = workScheduler
+        )
+        testDispatcher.scheduler.advanceUntilIdle()
+        workScheduler.calls.clear()
+
+        viewModel.togglePause()
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        assertTrue(workScheduler.calls.contains(true to 3))
+    }
+
     private fun createViewModel(
         hasKeys: Boolean = false,
-        mockWhenOffline: Boolean = true
+        mockWhenOffline: Boolean = true,
+        alertStore: AlertSettingsStorage = FakeAlertSettingsStore(),
+        workScheduler: WorkScheduler = FakeWorkScheduler(),
+        appSettingsStore: AppSettingsStorage = FakeAppSettingsStore(AppSettings(useMockDataWhenOffline = mockWhenOffline))
     ): AnalysisViewModel {
         val keyStore = FakeApiKeyStore(hasKeys)
         return AnalysisViewModel(
             providerFactory = FakeProviderFactory(),
             keyStore = keyStore,
-            alertStore = FakeAlertSettingsStore(),
-            workScheduler = FakeWorkScheduler(),
+            alertStore = alertStore,
+            workScheduler = workScheduler,
             dbRepository = FakeDatabaseRepository(),
-            appSettingsStore = FakeAppSettingsStore(mockWhenOffline),
+            appSettingsStore = appSettingsStore,
             aiSummaryRepository = AiSummaryRepository(FakeAiSummaryDao()),
             rssDao = FakeRssDao(),
             application = FakeApplication(),
@@ -143,8 +189,10 @@ class AnalysisViewModelTest {
         override suspend fun clear() {}
     }
 
-    private class FakeAlertSettingsStore : AlertSettingsStorage {
-        override suspend fun loadSettings(): AlertSettings = AlertSettings()
+    private class FakeAlertSettingsStore(
+        private var settings: AlertSettings = AlertSettings()
+    ) : AlertSettingsStorage {
+        override suspend fun loadSettings(): AlertSettings = settings
         override suspend fun saveSettings(settings: AlertSettings) {}
         override suspend fun loadSymbols(): List<String> = emptyList()
         override suspend fun saveSymbols(symbols: List<String>) {}
@@ -158,6 +206,14 @@ class AnalysisViewModelTest {
         override fun scheduleAlerts(enabled: Boolean, intervalMinutes: Int) {}
     }
 
+    private class RecordingWorkScheduler : WorkScheduler {
+        val calls = mutableListOf<Pair<Boolean, Int>>()
+
+        override fun scheduleAlerts(enabled: Boolean, intervalMinutes: Int) {
+            calls += enabled to intervalMinutes
+        }
+    }
+
     private class FakeDatabaseRepository : DatabaseRepository {
         override suspend fun addToWatchlist(symbol: String, intent: com.polaralias.signalsynthesis.domain.model.TradingIntent?) {}
         override suspend fun removeFromWatchlist(symbol: String) {}
@@ -167,9 +223,16 @@ class AnalysisViewModelTest {
         override suspend fun clearHistory() {}
     }
 
-    private class FakeAppSettingsStore(private val mockWhenOffline: Boolean) : AppSettingsStorage {
-        override suspend fun loadSettings(): AppSettings = AppSettings(useMockDataWhenOffline = mockWhenOffline)
-        override suspend fun saveSettings(settings: AppSettings) {}
+    private class FakeAppSettingsStore(
+        private var settings: AppSettings
+    ) : AppSettingsStorage {
+        constructor(mockWhenOffline: Boolean) : this(AppSettings(useMockDataWhenOffline = mockWhenOffline))
+
+        override suspend fun loadSettings(): AppSettings = settings
+
+        override suspend fun saveSettings(settings: AppSettings) {
+            this.settings = settings
+        }
     }
 
     private class FakeAiSummaryDao : com.polaralias.signalsynthesis.data.db.dao.AiSummaryDao {
@@ -184,6 +247,7 @@ class AnalysisViewModelTest {
         override suspend fun getFeedState(url: String): com.polaralias.signalsynthesis.data.rss.RssFeedStateEntity? = null
         override suspend fun insertFeedState(state: com.polaralias.signalsynthesis.data.rss.RssFeedStateEntity) {}
         override suspend fun getAllRecentItems(since: Long): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
+        override suspend fun getRecentItemsForFeeds(feedUrls: List<String>, since: Long): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
         override suspend fun getItemsForFeed(url: String, limit: Int): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
         override suspend fun insertItems(items: List<com.polaralias.signalsynthesis.data.rss.RssItemEntity>) {}
         override suspend fun deleteOldItems(threshold: Long) {}

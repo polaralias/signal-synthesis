@@ -41,7 +41,11 @@ class BuildRssDigestUseCase(
         
         // 3. Get recent items within the requested window
         val since = Instant.now().minus(timeWindowHours.toLong(), ChronoUnit.HOURS).toEpochMilli()
-        val recentItems = rssDao.getAllRecentItems(since)
+        val recentItems = if (feedUrls.isEmpty()) {
+            emptyList()
+        } else {
+            rssDao.getRecentItemsForFeeds(feedUrls.distinct(), since)
+        }
         
         // 4. Match tickers in titles and snippets
         val digestMap = mutableMapOf<String, List<RssHeadline>>()

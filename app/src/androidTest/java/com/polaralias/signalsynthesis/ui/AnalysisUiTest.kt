@@ -187,6 +187,7 @@ class AnalysisUiTest {
         override suspend fun getFeedState(url: String): com.polaralias.signalsynthesis.data.rss.RssFeedStateEntity? = null
         override suspend fun insertFeedState(state: com.polaralias.signalsynthesis.data.rss.RssFeedStateEntity) {}
         override suspend fun getAllRecentItems(since: Long): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
+        override suspend fun getRecentItemsForFeeds(feedUrls: List<String>, since: Long): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
         override suspend fun getItemsForFeed(url: String, limit: Int): List<com.polaralias.signalsynthesis.data.rss.RssItemEntity> = emptyList()
         override suspend fun insertItems(items: List<com.polaralias.signalsynthesis.data.rss.RssItemEntity>) {}
         override suspend fun deleteOldItems(threshold: Long) {}
