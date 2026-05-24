@@ -68,4 +68,9 @@ object ProviderStatusManager {
     private fun updateFlow() {
         _blacklist.update { blacklistInternal.toMap() }
     }
+
+    fun clearForTesting() {
+        blacklistInternal.clear()
+        saveAndUpdate()
+    }
 }

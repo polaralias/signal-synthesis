@@ -76,15 +76,15 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             ),
             analysisModel = parseEnum(
                 prefs.getString(KEY_ANALYSIS_MODEL, null),
-                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_1
+                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_4
             ),
             verdictModel = parseEnum(
                 prefs.getString(KEY_VERDICT_MODEL, null),
-                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_1
+                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_4
             ),
             reasoningModel = parseEnum(
                 prefs.getString(KEY_REASONING_MODEL, null),
-                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_2
+                com.polaralias.signalsynthesis.domain.ai.LlmModel.GPT_5_4
             ),
             reasoningDepth = parseEnum(
                 prefs.getString(KEY_REASONING_DEPTH, null),
@@ -108,7 +108,6 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             ),
             discoveryMode = parseDiscoveryMode(prefs.getString(KEY_DISCOVERY_MODE, "STATIC")),
             isAnalysisPaused = prefs.getBoolean(KEY_ANALYSIS_PAUSED, false),
-            useStagedPipeline = prefs.getBoolean(KEY_USE_STAGED, false),
             themeMode = parseEnum(
                 prefs.getString(KEY_THEME_MODE, null),
                 com.polaralias.signalsynthesis.data.settings.ThemeMode.SYSTEM
@@ -159,7 +158,6 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
             putString(KEY_ASSET_CLASS, settings.preferredAssetClass.name)
             putString(KEY_DISCOVERY_MODE, settings.discoveryMode.name)
             putBoolean(KEY_ANALYSIS_PAUSED, settings.isAnalysisPaused)
-            putBoolean(KEY_USE_STAGED, settings.useStagedPipeline)
             putString(KEY_THEME_MODE, settings.themeMode.name)
             putString(KEY_DEEP_DIVE_PROVIDER, settings.deepDiveProvider.name)
             putString(KEY_MODEL_ROUTING, settings.modelRouting.toJson())
@@ -226,7 +224,6 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         private const val KEY_ASSET_CLASS = "preferred_asset_class"
         private const val KEY_DISCOVERY_MODE = "discovery_mode"
         private const val KEY_ANALYSIS_PAUSED = "analysis_paused"
-        private const val KEY_USE_STAGED = "use_staged_pipeline"
         private const val KEY_THEME_MODE = "interface_theme_mode"
         private const val KEY_DEEP_DIVE_PROVIDER = "deep_dive_provider"
         private const val KEY_MODEL_ROUTING = "model_routing_by_stage"
@@ -329,7 +326,7 @@ class AppSettingsStore(context: Context) : AppSettingsStorage {
         val providerModels = LlmModel.modelsForProvider(provider)
         return providerModels.firstOrNull {
             it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
-        } ?: providerModels.firstOrNull() ?: LlmModel.GPT_5_1
+        } ?: providerModels.firstOrNull() ?: LlmModel.GPT_5_4
     }
 }
 

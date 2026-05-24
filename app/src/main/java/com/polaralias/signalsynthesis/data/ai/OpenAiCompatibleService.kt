@@ -3,6 +3,7 @@ package com.polaralias.signalsynthesis.data.ai
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
@@ -35,9 +36,18 @@ interface OpenAiCompatibleService {
             val retrofit = Retrofit.Builder()
                 .baseUrl(PLACEHOLDER_URL)
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
-                .client(client ?: OkHttpClient())
+                .client(client ?: defaultClient())
                 .build()
             return retrofit.create(OpenAiCompatibleService::class.java)
+        }
+
+        private fun defaultClient(): OkHttpClient {
+            return OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .callTimeout(120, TimeUnit.SECONDS)
+                .build()
         }
     }
 }

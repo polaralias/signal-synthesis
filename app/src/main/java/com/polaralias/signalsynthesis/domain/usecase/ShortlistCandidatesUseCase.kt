@@ -70,7 +70,12 @@ class ShortlistCandidatesUseCase(
                 return ShortlistPlan()
             }
             
-            ShortlistPlan.fromJson(json)
+            val plan = ShortlistPlan.fromJson(json)
+            if (maxShortlist > 0 && plan.shortlist.size > maxShortlist) {
+                plan.copy(shortlist = plan.shortlist.take(maxShortlist))
+            } else {
+                plan
+            }
         } catch (e: Exception) {
             val duration = System.currentTimeMillis() - startTime
             com.polaralias.signalsynthesis.util.ActivityLogger.logLlm("Shortlist", prompt, e.message ?: "Error", false, duration)

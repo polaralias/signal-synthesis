@@ -677,14 +677,14 @@ fun SettingsScreen(
                                     Text("SAVE KEY", fontWeight = FontWeight.Black, color = BrandPrimary)
                                 }
                                 TextButton(onClick = {
-                                    onUpdateSettings(savePrimaryProviderConfiguration(uiState.appSettings))
+                                    onUpdateSettings(savePrimaryProviderConfiguration(uiState, uiState.appSettings))
                                 }) {
                                     Text("SAVE CONFIG", fontWeight = FontWeight.Black, color = BrandSecondary)
                                 }
                                 TextButton(
                                     enabled = hasSavedPrimaryConfig,
                                     onClick = {
-                                        onUpdateSettings(restorePrimaryProviderConfiguration(uiState.appSettings))
+                                        onUpdateSettings(restorePrimaryProviderConfiguration(uiState, uiState.appSettings))
                                     }
                                 ) {
                                     Text("RESTORE", fontWeight = FontWeight.Black)
@@ -872,7 +872,7 @@ fun SettingsScreen(
                                             DropdownMenuItem(
                                                 text = { Text(provider.displayName) },
                                                 onClick = {
-                                                    val providerModels = LlmModel.modelsForProvider(provider)
+                                                    val providerModels = providerModelsForUi(uiState, provider)
                                                     val defaultModel = providerModels.firstOrNull {
                                                         it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
                                                     } ?: providerModels.firstOrNull()
@@ -916,7 +916,7 @@ fun SettingsScreen(
                                     }
                                 ) {
                                     OutlinedTextField(
-                                        value = formatStageModelLabel(stageConfig.provider, stageConfig.model),
+                                        value = formatStageModelLabel(uiState, stageConfig.provider, stageConfig.model),
                                         onValueChange = {},
                                         readOnly = true,
                                         trailingIcon = {
@@ -929,7 +929,7 @@ fun SettingsScreen(
                                         expanded = stageModelExpanded == stage,
                                         onDismissRequest = { stageModelExpanded = null }
                                     ) {
-                                        val groupedModels = groupedModelsForProvider(stageConfig.provider)
+                                        val groupedModels = groupedModelsForProvider(uiState, stageConfig.provider)
                                         groupedModels.forEach { (groupLabel, models) ->
                                             DropdownMenuItem(
                                                 enabled = false,
@@ -2036,6 +2036,7 @@ fun SettingsScreen(
                     onClick = {
                         onUpdateSettings(
                             switchPrimaryProvider(
+                                uiState = uiState,
                                 current = uiState.appSettings,
                                 target = targetProvider,
                                 saveCurrent = true
@@ -2053,6 +2054,7 @@ fun SettingsScreen(
                         onClick = {
                             onUpdateSettings(
                                 switchPrimaryProvider(
+                                    uiState = uiState,
                                     current = uiState.appSettings,
                                     target = targetProvider,
                                     saveCurrent = false
@@ -2682,12 +2684,24 @@ private fun providerKeyValue(keys: ApiKeyUiState, provider: LlmProvider): String
 }
 
 private fun formatModelName(model: LlmModel): String {
-    val suffix = if (model.lowCost) " (Low cost)" else ""
+    val suffix = when (LlmModel.recommendationTier(model)) {
+        ModelRecommendationTier.PREMIUM -> " (Premium)"
+        ModelRecommendationTier.DEFAULT -> " (Default)"
+        ModelRecommendationTier.CHEAPER -> " (Cheaper)"
+        ModelRecommendationTier.CHEAPEST -> " (Cheapest)"
+        ModelRecommendationTier.NONE -> if (model.lowCost) " (Low cost)" else ""
+    }
     return model.label + suffix
 }
 
-private fun groupedModelsForProvider(provider: LlmProvider): List<Pair<String, List<LlmModel>>> {
-    val models = LlmModel.modelsForProvider(provider)
+private fun providerModelsForUi(uiState: AnalysisUiState, provider: LlmProvider): List<LlmModel> {
+    return uiState.availableProviderModels[provider].orEmpty().ifEmpty {
+        LlmModel.modelsForProvider(provider)
+    }
+}
+
+private fun groupedModelsForProvider(uiState: AnalysisUiState, provider: LlmProvider): List<Pair<String, List<LlmModel>>> {
+    val models = providerModelsForUi(uiState, provider)
     if (models.isEmpty()) return emptyList()
 
     val reasoning = models.filter { it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING }
@@ -2701,20 +2715,21 @@ private fun groupedModelsForProvider(provider: LlmProvider): List<Pair<String, L
     return groups
 }
 
-private fun savePrimaryProviderConfiguration(settings: AppSettings): AppSettings {
+private fun savePrimaryProviderConfiguration(uiState: AnalysisUiState, settings: AppSettings): AppSettings {
     val provider = settings.llmProvider
     val saved = settings.llmProviderProfiles.toMutableMap()
-    saved[provider] = captureProviderConfiguration(settings, provider)
+    saved[provider] = captureProviderConfiguration(uiState, settings, provider)
     return settings.copy(llmProviderProfiles = saved)
 }
 
-private fun restorePrimaryProviderConfiguration(settings: AppSettings): AppSettings {
+private fun restorePrimaryProviderConfiguration(uiState: AnalysisUiState, settings: AppSettings): AppSettings {
     val provider = settings.llmProvider
     val saved = settings.llmProviderProfiles[provider] ?: return settings
-    return applyProviderConfiguration(settings, provider, saved)
+    return applyProviderConfiguration(uiState, settings, provider, saved)
 }
 
 private fun switchPrimaryProvider(
+    uiState: AnalysisUiState,
     current: AppSettings,
     target: LlmProvider,
     saveCurrent: Boolean
@@ -2723,14 +2738,14 @@ private fun switchPrimaryProvider(
 
     val saved = current.llmProviderProfiles.toMutableMap()
     if (saveCurrent) {
-        saved[current.llmProvider] = captureProviderConfiguration(current, current.llmProvider)
+        saved[current.llmProvider] = captureProviderConfiguration(uiState, current, current.llmProvider)
     }
 
     val targetConfig = saved[target]
     val switched = if (targetConfig != null) {
-        applyProviderConfiguration(current, target, targetConfig)
+        applyProviderConfiguration(uiState, current, target, targetConfig)
     } else {
-        val defaultModel = defaultModelForProvider(target)
+        val defaultModel = defaultModelForProvider(uiState, target)
         current.copy(
             llmProvider = target,
             analysisModel = defaultModel,
@@ -2744,11 +2759,11 @@ private fun switchPrimaryProvider(
     return switched.copy(llmProviderProfiles = saved)
 }
 
-private fun captureProviderConfiguration(settings: AppSettings, provider: LlmProvider): LlmProviderConfiguration {
+private fun captureProviderConfiguration(uiState: AnalysisUiState, settings: AppSettings, provider: LlmProvider): LlmProviderConfiguration {
     return LlmProviderConfiguration(
-        analysisModel = normalizeModelForProvider(settings.analysisModel, provider),
-        verdictModel = normalizeModelForProvider(settings.verdictModel, provider),
-        reasoningModel = normalizeModelForProvider(settings.reasoningModel, provider),
+        analysisModel = normalizeModelForProvider(uiState, settings.analysisModel, provider),
+        verdictModel = normalizeModelForProvider(uiState, settings.verdictModel, provider),
+        reasoningModel = normalizeModelForProvider(uiState, settings.reasoningModel, provider),
         deepDiveProvider = settings.deepDiveProvider,
         reasoningDepth = settings.reasoningDepth,
         outputLength = settings.outputLength,
@@ -2758,15 +2773,16 @@ private fun captureProviderConfiguration(settings: AppSettings, provider: LlmPro
 }
 
 private fun applyProviderConfiguration(
+    uiState: AnalysisUiState,
     settings: AppSettings,
     provider: LlmProvider,
     config: LlmProviderConfiguration
 ): AppSettings {
     return settings.copy(
         llmProvider = provider,
-        analysisModel = normalizeModelForProvider(config.analysisModel, provider),
-        verdictModel = normalizeModelForProvider(config.verdictModel, provider),
-        reasoningModel = normalizeModelForProvider(config.reasoningModel, provider),
+        analysisModel = normalizeModelForProvider(uiState, config.analysisModel, provider),
+        verdictModel = normalizeModelForProvider(uiState, config.verdictModel, provider),
+        reasoningModel = normalizeModelForProvider(uiState, config.reasoningModel, provider),
         deepDiveProvider = config.deepDiveProvider,
         reasoningDepth = config.reasoningDepth,
         outputLength = config.outputLength,
@@ -2775,20 +2791,29 @@ private fun applyProviderConfiguration(
     )
 }
 
-private fun normalizeModelForProvider(model: LlmModel, provider: LlmProvider): LlmModel {
-    return if (model.provider == provider) model else defaultModelForProvider(provider)
+private fun normalizeModelForProvider(uiState: AnalysisUiState, model: LlmModel, provider: LlmProvider): LlmModel {
+    val providerModels = providerModelsForUi(uiState, provider)
+    return if (model.provider == provider && providerModels.contains(model)) {
+        model
+    } else {
+        defaultModelForProvider(uiState, provider)
+    }
 }
 
-private fun defaultModelForProvider(provider: LlmProvider): LlmModel {
-    val providerModels = LlmModel.modelsForProvider(provider)
-    return providerModels.firstOrNull {
+private fun defaultModelForProvider(uiState: AnalysisUiState, provider: LlmProvider): LlmModel {
+    val providerModels = providerModelsForUi(uiState, provider)
+    val reasoningModels = providerModels.filter {
         it.visibilityGroup == LlmModelVisibilityGroup.CORE_REASONING
-    } ?: providerModels.firstOrNull() ?: LlmModel.GPT_5_1
+    }
+    return LlmModel.preferredDefaultModel(provider, reasoningModels)
+        ?: LlmModel.preferredDefaultModel(provider, providerModels)
+        ?: providerModels.firstOrNull()
+        ?: LlmModel.GPT_5_4
 }
 
-private fun formatStageModelLabel(provider: LlmProvider, modelId: String): String {
+private fun formatStageModelLabel(uiState: AnalysisUiState, provider: LlmProvider, modelId: String): String {
     val normalized = LlmModel.normalizeModelIdAlias(modelId)
-    val model = LlmModel.modelsForProvider(provider).firstOrNull { candidate ->
+    val model = providerModelsForUi(uiState, provider).firstOrNull { candidate ->
         candidate.modelId.equals(normalized, ignoreCase = true)
     } ?: LlmModel.fromModelId(normalized)
     return model?.let { formatModelName(it) } ?: modelId

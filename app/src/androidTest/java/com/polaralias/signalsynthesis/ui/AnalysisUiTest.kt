@@ -1,12 +1,12 @@
 package com.polaralias.signalsynthesis.ui
 
 import android.app.Application
-import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -28,6 +28,10 @@ import com.polaralias.signalsynthesis.data.worker.WorkScheduler
 import com.polaralias.signalsynthesis.ui.theme.SignalSynthesisTheme
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -40,7 +44,7 @@ import org.junit.runner.RunWith
 class AnalysisUiTest {
 
     @get:Rule
-    val composeRule = createAndroidComposeRule<ComponentActivity>()
+    val composeRule = createComposeRule()
 
     @Test
     fun intentChipsUpdateSelection() {
@@ -110,8 +114,10 @@ class AnalysisUiTest {
         val viewModel = createViewModel(application)
 
         composeRule.setContent {
-            SignalSynthesisTheme {
-                SignalSynthesisApp(viewModel = viewModel)
+            CompositionLocalProvider(LocalLifecycleOwner provides testLifecycleOwner()) {
+                SignalSynthesisTheme {
+                    SignalSynthesisApp(viewModel = viewModel)
+                }
             }
         }
 
@@ -133,6 +139,17 @@ class AnalysisUiTest {
             application = application,
             ioDispatcher = Dispatchers.Main
         )
+    }
+
+    private fun testLifecycleOwner(): LifecycleOwner {
+        return object : LifecycleOwner {
+            private val registry = LifecycleRegistry(this).apply {
+                currentState = Lifecycle.State.RESUMED
+            }
+
+            override val lifecycle: Lifecycle
+                get() = registry
+        }
     }
 
     private class FakeProviderFactory : MarketDataProviderFactory {

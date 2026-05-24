@@ -37,7 +37,7 @@ class OpenAiLlmClient(
     }
 
     companion object {
-        private const val DEFAULT_MODEL = "gpt-5.1"
+        private const val DEFAULT_MODEL = "gpt-5.4"
         private const val ROLE_USER = "user"
     }
 }

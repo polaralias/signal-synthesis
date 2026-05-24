@@ -5,14 +5,24 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.polaralias.signalsynthesis.domain.ai.LlmModel
 import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface GeminiService {
+    @GET("{apiVersion}/models")
+    suspend fun listModels(
+        @Path("apiVersion") apiVersion: String,
+        @Header("x-goog-api-key") apiKey: String,
+        @Query("pageSize") pageSize: Int = 200
+    ): GeminiModelsResponse
+
     @POST("{apiVersion}/models/{model}:generateContent")
     suspend fun generateContent(
         @Path("apiVersion") apiVersion: String,
@@ -31,12 +41,34 @@ interface GeminiService {
             val retrofit = Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
-                .client(client ?: OkHttpClient())
+                .client(client ?: defaultClient())
                 .build()
             return retrofit.create(GeminiService::class.java)
         }
+
+        private fun defaultClient(): OkHttpClient {
+            return OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .callTimeout(120, TimeUnit.SECONDS)
+                .build()
+        }
     }
 }
+
+data class GeminiModelsResponse(
+    val models: List<GeminiModelInfo> = emptyList()
+)
+
+data class GeminiModelInfo(
+    val name: String,
+    val displayName: String? = null,
+    val description: String? = null,
+    val supportedGenerationMethods: List<String> = emptyList(),
+    val inputTokenLimit: Int? = null,
+    val outputTokenLimit: Int? = null
+)
 
 data class GeminiRequest(
     val contents: List<GeminiContent>,

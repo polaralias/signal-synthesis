@@ -5,13 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.polaralias.signalsynthesis.data.provider.MarketDataProviderFactory
 import com.polaralias.signalsynthesis.data.provider.ProviderBundle
 import com.polaralias.signalsynthesis.data.provider.ApiKeys
+import com.polaralias.signalsynthesis.data.ai.ProviderModelDiscovery
+import com.polaralias.signalsynthesis.data.ai.ProviderModelCatalogService
+import com.polaralias.signalsynthesis.data.ai.LiveProviderModelDiscovery
 import com.polaralias.signalsynthesis.data.repository.MarketDataRepository
 import com.polaralias.signalsynthesis.data.storage.AlertSettingsStorage
 import com.polaralias.signalsynthesis.data.repository.AiSummaryRepository
 import com.polaralias.signalsynthesis.data.repository.DatabaseRepository
 import com.polaralias.signalsynthesis.data.cache.CacheTtlConfig
-import com.polaralias.signalsynthesis.data.alerts.AlertTarget
-import com.polaralias.signalsynthesis.data.alerts.AlertDirection
 import com.polaralias.signalsynthesis.data.settings.AppSettings
 import com.polaralias.signalsynthesis.data.storage.ApiKeyStorage
 import com.polaralias.signalsynthesis.data.storage.AppSettingsStorage
@@ -19,7 +20,6 @@ import com.polaralias.signalsynthesis.data.storage.AppSettingsStore
 import com.polaralias.signalsynthesis.data.worker.WorkScheduler
 import com.polaralias.signalsynthesis.domain.ai.LlmClient
 import com.polaralias.signalsynthesis.domain.usecase.PrefetchAiSummariesUseCase
-import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisUseCase
 import com.polaralias.signalsynthesis.domain.usecase.RunAnalysisV2UseCase
 import com.polaralias.signalsynthesis.domain.usecase.SynthesizeSetupUseCase
 import com.polaralias.signalsynthesis.domain.usecase.BuildRssDigestUseCase
@@ -57,6 +57,10 @@ class AnalysisViewModel(
     private val aiSummaryRepository: AiSummaryRepository,
     private val rssDao: RssDao,
     private val application: android.app.Application,
+    private val stageModelRouterOverride: com.polaralias.signalsynthesis.domain.ai.StageModelRouter? = null,
+    private val rssCatalogOverride: com.polaralias.signalsynthesis.data.rss.RssFeedCatalog? = null,
+    private val rssFeedClientOverride: RssFeedClient? = null,
+    private val providerModelDiscovery: ProviderModelDiscovery = LiveProviderModelDiscovery(),
     private val clock: Clock = Clock.systemUTC(),
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ViewModel() {
@@ -78,8 +82,10 @@ class AnalysisViewModel(
     private val openAiCompatibleService by lazy { com.polaralias.signalsynthesis.data.ai.OpenAiCompatibleService.create() }
     private val anthropicService by lazy { com.polaralias.signalsynthesis.data.ai.AnthropicService.create() }
     private val geminiService by lazy { com.polaralias.signalsynthesis.data.ai.GeminiService.create() }
+    private val providerModelCatalogService by lazy { ProviderModelCatalogService(providerModelDiscovery) }
 
     private val stageModelRouter by lazy {
+            stageModelRouterOverride ?:
             com.polaralias.signalsynthesis.domain.ai.StageModelRouter(
                 runnerFactory = { provider, model, key ->
                     when (provider) {
@@ -123,9 +129,16 @@ class AnalysisViewModel(
         )
     }
 
-    private val rssCatalog by lazy { RssFeedCatalogLoader(application).load() }
-    private val rssFeedClient by lazy { RssFeedClient(rssDao = rssDao) }
+    private val rssCatalog by lazy { rssCatalogOverride ?: RssFeedCatalogLoader(application).load() }
+    private val rssFeedClient by lazy { rssFeedClientOverride ?: RssFeedClient(rssDao = rssDao) }
     private val rssFeedResolver = RssFeedResolver()
+    private val analysisRunCompletionService by lazy {
+        AnalysisRunCompletionService(
+            dbRepository = dbRepository,
+            alertStore = alertStore,
+            notifier = SystemTradeSignalNotifier(application)
+        )
+    }
 
     init {
         refreshKeys()
@@ -226,24 +239,21 @@ class AnalysisViewModel(
             return
         }
 
-        val useStaged = uiStateValue.appSettings.useStagedPipeline
-        if (useStaged) {
-            val missingProviders = missingLlmProvidersForStages(
-                listOf(
-                    com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST,
-                    com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
-                    com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS
-                )
+        val missingProviders = missingLlmProvidersForStages(
+            listOf(
+                com.polaralias.signalsynthesis.domain.model.AnalysisStage.SHORTLIST,
+                com.polaralias.signalsynthesis.domain.model.AnalysisStage.DECISION_UPDATE,
+                com.polaralias.signalsynthesis.domain.model.AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS
             )
-            if (missingProviders.isNotEmpty()) {
-                val providersLabel = missingProviders.joinToString { it.displayName }
-                _uiState.update { it.copy(errorMessage = "Missing API key(s) for: $providersLabel") }
-                return
-            }
+        )
+        if (missingProviders.isNotEmpty()) {
+            val providersLabel = missingProviders.joinToString { it.displayName }
+            _uiState.update { it.copy(errorMessage = "Missing API key(s) for: $providersLabel") }
+            return
         }
 
         _uiState.update { it.copy(isLoading = true, errorMessage = null, aiSummaries = emptyMap(), isPaused = false, removedAlerts = emptySet()) }
-        Logger.event("analysis_started", mapOf("intent" to uiStateValue.intent.name, "useStaged" to useStaged))
+        Logger.event("analysis_started", mapOf("intent" to uiStateValue.intent.name, "useStaged" to true))
         
         analysisJob = viewModelScope.launch(ioDispatcher) {
             var repository: MarketDataRepository? = null
@@ -257,48 +267,26 @@ class AnalysisViewModel(
                     }
                 }
 
-                val result = if (useStaged) {
-                    val rssClient = RssFeedClient(rssDao = rssDao)
-                    val rssDigestBuilder = BuildRssDigestUseCase(rssClient, rssDao)
-                    val useCase = RunAnalysisV2UseCase(repository, stageModelRouter, rssDigestBuilder, clock)
-                    useCase.execute(
-                        intent = state.intent,
-                        risk = state.appSettings.riskTolerance,
-                        assetClass = state.assetClass,
-                        discoveryMode = state.appSettings.discoveryMode,
-                        customTickers = customTickerList,
-                        blocklist = state.blocklist,
-                        screenerThresholds = mapOf(
-                            "conservative" to state.appSettings.screenerConservativeThreshold,
-                            "moderate" to state.appSettings.screenerModerateThreshold,
-                            "aggressive" to state.appSettings.screenerAggressiveThreshold
-                        ),
-                        rssSelection = rssSelectionFrom(state.appSettings),
-                        rssCatalog = rssCatalog,
-                        onProgress = { msg ->
-                            _uiState.update { it.copy(progressMessage = msg) }
-                        }
-                    )
-                } else {
-                    _uiState.update { it.copy(progressMessage = "Stage 1/7: Discovering candidates") }
-                    val useCase = RunAnalysisUseCase(repository, clock)
-                    useCase.execute(
-                        intent = state.intent,
-                        risk = state.appSettings.riskTolerance,
-                        assetClass = state.assetClass,
-                        discoveryMode = state.appSettings.discoveryMode,
-                        customTickers = customTickerList,
-                        blocklist = state.blocklist,
-                        screenerThresholds = mapOf(
-                            "conservative" to state.appSettings.screenerConservativeThreshold,
-                            "moderate" to state.appSettings.screenerModerateThreshold,
-                            "aggressive" to state.appSettings.screenerAggressiveThreshold
-                        ),
-                        onProgress = { msg ->
-                            _uiState.update { it.copy(progressMessage = msg) }
-                        }
-                    )
-                }
+                val rssDigestBuilder = BuildRssDigestUseCase(rssFeedClient, rssDao)
+                val useCase = RunAnalysisV2UseCase(repository, stageModelRouter, rssDigestBuilder, clock)
+                val result = useCase.execute(
+                    intent = state.intent,
+                    risk = state.appSettings.riskTolerance,
+                    assetClass = state.assetClass,
+                    discoveryMode = state.appSettings.discoveryMode,
+                    customTickers = customTickerList,
+                    blocklist = state.blocklist,
+                    screenerThresholds = mapOf(
+                        "conservative" to state.appSettings.screenerConservativeThreshold,
+                        "moderate" to state.appSettings.screenerModerateThreshold,
+                        "aggressive" to state.appSettings.screenerAggressiveThreshold
+                    ),
+                    rssSelection = rssSelectionFrom(state.appSettings),
+                    rssCatalog = rssCatalog,
+                    onProgress = { msg ->
+                        _uiState.update { it.copy(progressMessage = msg) }
+                    }
+                )
 
                 _uiState.update { it.copy(isLoading = false, progressMessage = null) }
                 Logger.event("analysis_completed", mapOf("setups" to result.setups.size))
@@ -310,31 +298,15 @@ class AnalysisViewModel(
                         navigationEvent = NavigationEvent.Results
                     )
                 }
-                dbRepository.saveHistory(result)
-                val resultsWithoutRemoved = result.setups.filter { !state.removedAlerts.contains(it.symbol) }
-                val symbols = resultsWithoutRemoved.map { it.symbol }.distinct().filter { !state.blocklist.contains(it) }
-                alertStore.saveSymbols(symbols)
-                val targets = resultsWithoutRemoved
-                    .filter { symbols.contains(it.symbol) }
-                    .map { setup ->
-                        val direction = if (setup.targetPrice >= setup.triggerPrice) AlertDirection.ABOVE else AlertDirection.BELOW
-                        AlertTarget(
-                            symbol = setup.symbol,
-                            targetPrice = setup.targetPrice,
-                            direction = direction
-                        )
-                    }
-                alertStore.saveTargets(targets)
-                _uiState.update { it.copy(alertSymbolCount = symbols.size, alertSymbols = symbols) }
-
-                // Notify for high-confidence signals
-                result.setups.filter { it.confidence > 0.8 }.forEach { setup ->
-                    com.polaralias.signalsynthesis.util.NotificationHelper.showTradeSignal(
-                        context = application,
-                        symbol = setup.symbol,
-                        setupType = setup.setupType,
-                        confidence = setup.confidence,
-                        intent = setup.intent
+                val completionOutcome = analysisRunCompletionService.handleCompletedAnalysis(
+                    result = result,
+                    removedAlerts = state.removedAlerts,
+                    blocklist = state.blocklist
+                )
+                _uiState.update {
+                    it.copy(
+                        alertSymbolCount = completionOutcome.alertSymbolCount,
+                        alertSymbols = completionOutcome.alertSymbols
                     )
                 }
 
@@ -778,7 +750,7 @@ class AnalysisViewModel(
                 val payload = parseAiSettingsSuggestion(response.rawText)
                 val riskTolerance = payload.risk?.riskTolerance?.let { normalizeRiskTolerance(it) }
                 val riskSuggestion = riskTolerance?.let {
-                    AiRiskSuggestion(it, payload.risk?.rationale.orEmpty())
+                    AiRiskSuggestion(it, payload.risk.rationale.orEmpty())
                 }
                 val validTopicKeys = payload.rss?.enabledTopicKeys
                     ?.map { it.trim() }
@@ -1209,11 +1181,21 @@ class AnalysisViewModel(
             val apiKeys = keyStore.loadApiKeys()
             val llmKeys = keyStore.loadLlmKeys()
             val uiKeys = ApiKeyUiState.from(apiKeys, llmKeys)
+            val discoveredModels = providerModelCatalogService.discoverAvailableModels(llmKeys) { provider, error ->
+                Logger.w("AnalysisViewModel", "Model discovery failed for ${provider.displayName}: ${error.message}")
+            }
+            val storedSettings = appSettingsStore.loadSettings()
+            val alignedSettings = providerModelCatalogService.alignSettingsWithDiscoveredModels(storedSettings, discoveredModels)
+            if (alignedSettings != storedSettings) {
+                appSettingsStore.saveSettings(alignedSettings)
+            }
             _uiState.update {
                 it.copy(
                     keys = uiKeys,
                     hasAnyApiKeys = apiKeys.hasAny(),
-                    hasLlmKey = hasConfiguredLlmAccess(uiKeys, it.appSettings)
+                    hasLlmKey = hasConfiguredLlmAccess(uiKeys, alignedSettings),
+                    appSettings = alignedSettings,
+                    availableProviderModels = discoveredModels
                 )
             }
         }
@@ -1233,11 +1215,6 @@ class AnalysisViewModel(
             }
             workScheduler.scheduleAlerts(settings.enabled, appSettings.alertCheckIntervalMinutes)
         }
-    }
-
-    private fun buildUseCase(apiKeys: com.polaralias.signalsynthesis.data.provider.ApiKeys): RunAnalysisUseCase {
-        val repository = getRepository(apiKeys)
-        return RunAnalysisUseCase(repository, clock)
     }
 
     private fun buildSynthesisUseCase(

@@ -21,14 +21,20 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Remove local.properties
         run: rm -f local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Run JVM unit tests
+        run: ./gradlew testDebugUnitTest --console=plain
+
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --console=plain
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4

@@ -34,8 +34,10 @@ class LlmModelsTest {
 
     @Test
     fun geminiAliasesResolveToCurrentPreviewIds() {
-        assertEquals("gemini-3.1-pro-preview", LlmModel.normalizeModelIdAlias("gemini-3-pro"))
+        assertEquals("gemini-3-pro-preview", LlmModel.normalizeModelIdAlias("gemini-3-pro"))
         assertEquals("gemini-3-flash-preview", LlmModel.normalizeModelIdAlias("gemini-3-flash"))
+        assertEquals("gemini-3-pro-preview", LlmModel.normalizeModelIdAlias("models/gemini-3-pro-preview"))
+        assertEquals("gemini-3.5-flash", LlmModel.normalizeModelIdAlias("models/gemini-3.5-flash"))
     }
 
     @Test
@@ -51,5 +53,50 @@ class LlmModelsTest {
         assertEquals("low", LlmModel.openAiReasoningEffort("gpt-5.1", ReasoningDepth.MINIMAL))
         assertEquals("none", LlmModel.openAiReasoningEffort("gpt-5.2", ReasoningDepth.NONE))
         assertEquals("high", LlmModel.openAiReasoningEffort("gpt-5.2", ReasoningDepth.EXTRA))
+    }
+
+    @Test
+    fun availableModelsForProviderPreferDiscoveredCurrentFrontierModels() {
+        val openAiModels = LlmModel.availableModelsForProvider(
+            LlmProvider.OPENAI,
+            setOf("gpt-5.4", "gpt-5.4-mini", "gpt-5.5", "gpt-5.2")
+        )
+        assertEquals(
+            listOf(LlmModel.GPT_5_4, LlmModel.GPT_5_4_MINI, LlmModel.GPT_5_5, LlmModel.GPT_5_2),
+            openAiModels
+        )
+
+        val geminiModels = LlmModel.availableModelsForProvider(
+            LlmProvider.GEMINI,
+            setOf("models/gemini-3-pro-preview", "gemini-3.5-flash", "gemini-3-flash-preview", "gemini-2.5-pro")
+        )
+        assertEquals(
+            listOf(LlmModel.GEMINI_3_PRO, LlmModel.GEMINI_3_5_FLASH, LlmModel.GEMINI_3_FLASH, LlmModel.GEMINI_2_5_PRO),
+            geminiModels
+        )
+    }
+
+    @Test
+    fun recommendationTierUsesGenerationAndTierTogether() {
+        assertEquals(ModelRecommendationTier.DEFAULT, LlmModel.recommendationTier(LlmModel.GPT_5_4))
+        assertEquals(ModelRecommendationTier.CHEAPER, LlmModel.recommendationTier(LlmModel.GPT_5_4_MINI))
+        assertEquals(ModelRecommendationTier.CHEAPEST, LlmModel.recommendationTier(LlmModel.GPT_5_4_NANO))
+        assertEquals(ModelRecommendationTier.PREMIUM, LlmModel.recommendationTier(LlmModel.GPT_5_5))
+        assertEquals(ModelRecommendationTier.PREMIUM, LlmModel.recommendationTier(LlmModel.CLAUDE_OPUS_4_6))
+        assertEquals(ModelRecommendationTier.DEFAULT, LlmModel.recommendationTier(LlmModel.CLAUDE_SONNET_4_5))
+        assertEquals(ModelRecommendationTier.CHEAPER, LlmModel.recommendationTier(LlmModel.CLAUDE_HAIKU_4_5))
+        assertEquals(ModelRecommendationTier.PREMIUM, LlmModel.recommendationTier(LlmModel.GEMINI_3_PRO))
+        assertEquals(ModelRecommendationTier.DEFAULT, LlmModel.recommendationTier(LlmModel.GEMINI_3_5_FLASH))
+        assertEquals(ModelRecommendationTier.CHEAPER, LlmModel.recommendationTier(LlmModel.GEMINI_3_FLASH))
+    }
+
+    @Test
+    fun preferredDefaultModelChoosesClaudeSonnetOverOpusWhenAvailable() {
+        val preferred = LlmModel.preferredDefaultModel(
+            LlmProvider.ANTHROPIC,
+            listOf(LlmModel.CLAUDE_OPUS_4_6, LlmModel.CLAUDE_SONNET_4_5, LlmModel.CLAUDE_HAIKU_4_5)
+        )
+
+        assertEquals(LlmModel.CLAUDE_SONNET_4_5, preferred)
     }
 }

@@ -4,13 +4,20 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import retrofit2.http.GET
 import retrofit2.http.Body
 import retrofit2.http.Header
 import retrofit2.http.POST
 
 interface OpenAiResponsesService {
+    @GET("v1/models")
+    suspend fun listModels(
+        @Header("Authorization") authorization: String
+    ): OpenAiModelsResponse
+
     @POST("v1/responses")
     suspend fun createResponse(
         @Header("Authorization") authorization: String,
@@ -27,9 +34,18 @@ interface OpenAiResponsesService {
             val retrofit = Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(MoshiConverterFactory.create(moshi))
-                .client(client ?: OkHttpClient())
+                .client(client ?: defaultClient())
                 .build()
             return retrofit.create(OpenAiResponsesService::class.java)
+        }
+
+        private fun defaultClient(): OkHttpClient {
+            return OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .callTimeout(120, TimeUnit.SECONDS)
+                .build()
         }
     }
 }
@@ -69,6 +85,14 @@ data class OpenAiTool(
 
 data class OpenAiResponseResponse(
     val output: List<OpenAiResponseOutputItem> = emptyList()
+)
+
+data class OpenAiModelsResponse(
+    val data: List<OpenAiModelInfo> = emptyList()
+)
+
+data class OpenAiModelInfo(
+    val id: String
 )
 
 data class OpenAiResponseOutputItem(

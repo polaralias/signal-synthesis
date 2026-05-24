@@ -3,6 +3,7 @@ package com.polaralias.signalsynthesis.data.ai
 import com.polaralias.signalsynthesis.domain.ai.LlmStageRequest
 import com.polaralias.signalsynthesis.domain.ai.LlmStageResponse
 import com.polaralias.signalsynthesis.domain.ai.StageLlmRunner
+import kotlinx.coroutines.withTimeout
 
 class AnthropicStageRunner(
     private val service: AnthropicService,
@@ -11,29 +12,31 @@ class AnthropicStageRunner(
 ) : StageLlmRunner {
 
     override suspend fun run(request: LlmStageRequest): LlmStageResponse {
-        val anthropicRequest = AnthropicRequest(
-            model = model,
-            maxTokens = request.maxOutputTokens,
-            system = request.systemPrompt,
-            messages = listOf(AnthropicMessage(role = "user", content = request.userPrompt)),
-            temperature = request.temperature
-        )
+        return withTimeout(request.timeoutMs) {
+            val anthropicRequest = AnthropicRequest(
+                model = model,
+                maxTokens = request.maxOutputTokens,
+                system = request.systemPrompt,
+                messages = listOf(AnthropicMessage(role = "user", content = request.userPrompt)),
+                temperature = request.temperature
+            )
 
-        val response = service.createMessage(
-            apiKey = apiKey,
-            request = anthropicRequest
-        )
+            val response = service.createMessage(
+                apiKey = apiKey,
+                request = anthropicRequest
+            )
 
-        val text = response.content
-            .asSequence()
-            .mapNotNull { it.text }
-            .joinToString("")
+            val text = response.content
+                .asSequence()
+                .mapNotNull { it.text }
+                .joinToString("")
 
-        return LlmStageResponse(
-            rawText = text,
-            parsedJson = if (request.expectedSchemaId != null) extractJson(text) else null,
-            providerDebug = "model=$model, api=anthropic"
-        )
+            LlmStageResponse(
+                rawText = text,
+                parsedJson = if (request.expectedSchemaId != null) extractJson(text) else null,
+                providerDebug = "model=$model, api=anthropic"
+            )
+        }
     }
 
     private fun extractJson(text: String): String? {

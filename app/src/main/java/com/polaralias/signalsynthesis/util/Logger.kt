@@ -25,37 +25,37 @@ object Logger {
     val logs: StateFlow<List<LogEntry>> = _logs.asStateFlow()
     
     fun d(tag: String, message: String) {
-        Log.d("$TAG:$tag", message)
+        safeLog { Log.d("$TAG:$tag", message) }
         addLog(LogLevel.DEBUG, tag, message)
     }
     
     fun i(tag: String, message: String) {
-        Log.i("$TAG:$tag", message)
+        safeLog { Log.i("$TAG:$tag", message) }
         addLog(LogLevel.INFO, tag, message)
     }
     
     fun w(tag: String, message: String, throwable: Throwable? = null) {
         if (throwable != null) {
-            Log.w("$TAG:$tag", message, throwable)
+            safeLog { Log.w("$TAG:$tag", message, throwable) }
         } else {
-            Log.w("$TAG:$tag", message)
+            safeLog { Log.w("$TAG:$tag", message) }
         }
         addLog(LogLevel.WARN, tag, message, throwable?.stackTraceToString())
     }
     
     fun e(tag: String, message: String, throwable: Throwable? = null) {
         if (throwable != null) {
-            Log.e("$TAG:$tag", message, throwable)
+            safeLog { Log.e("$TAG:$tag", message, throwable) }
             CrashReporter.recordException(throwable)
         } else {
-            Log.e("$TAG:$tag", message)
+            safeLog { Log.e("$TAG:$tag", message) }
         }
         addLog(LogLevel.ERROR, tag, message, throwable?.stackTraceToString())
     }
     
     fun event(name: String, params: Map<String, Any> = emptyMap()) {
         val message = "$name: $params"
-        Log.d("$TAG:Event", message)
+        safeLog { Log.d("$TAG:Event", message) }
         addLog(LogLevel.EVENT, "Event", message)
     }
 
@@ -68,5 +68,9 @@ object Logger {
             val newEntry = LogEntry(level = level, tag = tag, message = message, throwable = throwable)
             (listOf(newEntry) + current).take(MAX_LOGS)
         }
+    }
+
+    private inline fun safeLog(block: () -> Unit) {
+        runCatching(block)
     }
 }

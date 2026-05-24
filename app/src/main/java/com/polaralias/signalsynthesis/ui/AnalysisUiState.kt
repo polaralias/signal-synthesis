@@ -3,6 +3,8 @@ package com.polaralias.signalsynthesis.ui
 import com.polaralias.signalsynthesis.data.provider.ApiKeys
 import com.polaralias.signalsynthesis.data.rss.RssFeedCatalog
 import com.polaralias.signalsynthesis.data.settings.AppSettings
+import com.polaralias.signalsynthesis.domain.ai.LlmModel
+import com.polaralias.signalsynthesis.domain.ai.LlmProvider
 import com.polaralias.signalsynthesis.domain.model.AnalysisResult
 import com.polaralias.signalsynthesis.domain.model.TradingIntent
 import java.time.Instant
@@ -88,6 +90,7 @@ data class AnalysisUiState(
     val keys: ApiKeyUiState = ApiKeyUiState(),
     val hasAnyApiKeys: Boolean = false,
     val hasLlmKey: Boolean = false,
+    val availableProviderModels: Map<LlmProvider, List<LlmModel>> = emptyMap(),
     val alertsEnabled: Boolean = false,
     val alertSymbolCount: Int = 0,
     val alertSymbols: List<String> = emptyList(),

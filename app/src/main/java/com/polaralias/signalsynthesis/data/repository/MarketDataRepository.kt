@@ -14,6 +14,7 @@ import com.polaralias.signalsynthesis.data.provider.RetryHelper
 import com.polaralias.signalsynthesis.domain.provider.SearchResult
 import com.polaralias.signalsynthesis.util.Logger
 import kotlinx.coroutines.delay
+import retrofit2.HttpException
 
 class MarketDataRepository(
     private val providers: ProviderBundle,
@@ -94,10 +95,7 @@ class MarketDataRepository(
             } catch (e: Exception) {
                 val errorMessage = e.message ?: "Unknown error"
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Quotes", errorMessage, false, 0)
-                
-                if (errorMessage.contains("403") || (e is retrofit2.HttpException && e.code() == 403)) {
-                    ProviderStatusManager.blacklistProvider(providerName, ENFORCED_COOLDOWN_MS)
-                }
+                handleProviderFailure(providerName, errorMessage, e)
             }
         }
         
@@ -180,6 +178,7 @@ class MarketDataRepository(
                 }
             } catch (e: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Profile", e.message ?: "Error", false, 0)
+                handleProviderFailure(providerName, e.message ?: "Error", e)
             }
         }
 
@@ -233,6 +232,7 @@ class MarketDataRepository(
                 }
             } catch (e: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Metrics", e.message ?: "Error", false, 0)
+                handleProviderFailure(providerName, e.message ?: "Error", e)
             }
         }
 
@@ -288,6 +288,7 @@ class MarketDataRepository(
                 }
             } catch (e: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Screener", e.message ?: "Error", false, 0)
+                handleProviderFailure(providerName, e.message ?: "Error", e)
             }
         }
         return allResults.toList()
@@ -314,6 +315,7 @@ class MarketDataRepository(
                 }
             } catch (e: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Gainers", e.message ?: "Error", false, 0)
+                handleProviderFailure(providerName, e.message ?: "Error", e)
             }
         }
         return allResults.toList()
@@ -340,6 +342,7 @@ class MarketDataRepository(
                 }
             } catch (e: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Losers", e.message ?: "Error", false, 0)
+                handleProviderFailure(providerName, e.message ?: "Error", e)
             }
         }
         return allResults.toList()
@@ -366,6 +369,7 @@ class MarketDataRepository(
                 }
             } catch (e: Exception) {
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, "Actives", e.message ?: "Error", false, 0)
+                handleProviderFailure(providerName, e.message ?: "Error", e)
             }
         }
         return allResults.toList()
@@ -407,18 +411,37 @@ class MarketDataRepository(
             } catch (e: Exception) {
                 val errorMessage = e.message ?: "Unknown error"
                 com.polaralias.signalsynthesis.util.ActivityLogger.logApi(providerName, dataType, errorMessage, false, 0)
-                
-                // Handle 403 Forbidden - Blacklist for 10 minutes
-                if (errorMessage.contains("403") || (e is retrofit2.HttpException && e.code() == 403)) {
-                    Logger.e("Repository", "PROVIDER BLOCKED: $providerName returned 403 Forbidden. Blacklisting for 10 minutes.")
-                    ProviderStatusManager.blacklistProvider(providerName, ENFORCED_COOLDOWN_MS)
-                    Logger.event("provider_blacklisted", mapOf("provider" to providerName, "reason" to "403 Forbidden"))
-                } else {
-                    Logger.w("Repository", "FAILED: $dataType from $providerName: $errorMessage")
-                }
+                handleProviderFailure(providerName, errorMessage, e)
+                Logger.w("Repository", "FAILED: $dataType from $providerName: $errorMessage")
             }
         }
         return null
+    }
+
+    private fun handleProviderFailure(
+        providerName: String,
+        errorMessage: String,
+        exception: Exception
+    ) {
+        when {
+            errorMessage.contains("403") || (exception is HttpException && exception.code() == 403) -> {
+                Logger.e("Repository", "PROVIDER BLOCKED: $providerName returned 403 Forbidden. Blacklisting for 10 minutes.")
+                ProviderStatusManager.blacklistProvider(providerName, ENFORCED_COOLDOWN_MS)
+                Logger.event("provider_blacklisted", mapOf("provider" to providerName, "reason" to "403 Forbidden"))
+            }
+
+            exception is HttpException && exception.code() == 429 -> {
+                val cooldownMs = rateLimitCooldownMs(exception)
+                Logger.w("Repository", "PROVIDER RATE LIMITED: $providerName returned 429. Blacklisting for ${cooldownMs}ms.")
+                ProviderStatusManager.blacklistProvider(providerName, cooldownMs)
+                Logger.event("provider_blacklisted", mapOf("provider" to providerName, "reason" to "429 Rate Limit"))
+            }
+        }
+    }
+
+    private fun rateLimitCooldownMs(exception: HttpException): Long {
+        val retryAfterSeconds = exception.response()?.headers()?.get("Retry-After")?.toLongOrNull()
+        return retryAfterSeconds?.times(1000)?.coerceAtLeast(1_000L) ?: RATE_LIMIT_COOLDOWN_MS
     }
 
     private fun emitProgress(message: String) {
@@ -436,6 +459,7 @@ class MarketDataRepository(
 
     companion object {
         private const val ENFORCED_COOLDOWN_MS = 10 * 60 * 1000L // 10 minutes
+        private const val RATE_LIMIT_COOLDOWN_MS = 60 * 1000L // 1 minute
     }
 
     fun clearAllCaches() {

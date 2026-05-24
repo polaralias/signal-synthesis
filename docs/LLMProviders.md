@@ -179,9 +179,10 @@ Key **current** model IDs worth supporting explicitly:
 
 **General frontier (and cheaper tiers):**
 
-* `gpt-5.2`
-* `gpt-5 mini`
-* `gpt-5 nano` ([OpenAI Developers][3])
+* `gpt-5.4`
+* `gpt-5.4-mini`
+* `gpt-5.4-nano`
+* `gpt-5.5` when exposed to the key ([OpenAI Developers][3])
 
 **Coding (Codex family):**
 
@@ -205,8 +206,7 @@ If you want full coverage, implement `GET /models` and never assume the list is 
 
 Gemini 3 preview IDs (Gemini API docs): ([Google AI for Developers][5])
 
-* **Flagship preview:** `gemini-3.1-pro-preview`
-* **Also:** `gemini-3-pro-preview`
+* **Flagship preview:** `gemini-3-pro-preview`
 * **Fast/cheaper preview:** `gemini-3-flash-preview`
 * **Image:** `gemini-3-pro-image-preview` ([Google AI for Developers][5])
 

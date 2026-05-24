@@ -14,6 +14,14 @@ enum class LlmModelVisibilityGroup {
     ADDITIONAL
 }
 
+enum class ModelRecommendationTier {
+    PREMIUM,
+    DEFAULT,
+    CHEAPER,
+    CHEAPEST,
+    NONE
+}
+
 enum class LlmProvider(
     val providerId: String,
     val displayName: String,
@@ -193,6 +201,40 @@ enum class LlmModel(
     ),
 
     // OpenAI (keep legacy enum names for settings compatibility)
+    GPT_5_4(
+        provider = LlmProvider.OPENAI,
+        modelId = "gpt-5.4",
+        label = "GPT-5.4",
+        description = "Current OpenAI flagship for reasoning and coding",
+        visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING,
+        apiFormatOverride = LlmApiFormat.OPENAI_RESPONSES
+    ),
+    GPT_5_4_MINI(
+        provider = LlmProvider.OPENAI,
+        modelId = "gpt-5.4-mini",
+        label = "GPT-5.4 Mini",
+        description = "Lower-latency GPT-5.4 tier",
+        visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING,
+        lowCost = true,
+        apiFormatOverride = LlmApiFormat.OPENAI_RESPONSES
+    ),
+    GPT_5_4_NANO(
+        provider = LlmProvider.OPENAI,
+        modelId = "gpt-5.4-nano",
+        label = "GPT-5.4 Nano",
+        description = "Lowest-cost GPT-5.4 tier",
+        visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING,
+        lowCost = true,
+        apiFormatOverride = LlmApiFormat.OPENAI_RESPONSES
+    ),
+    GPT_5_5(
+        provider = LlmProvider.OPENAI,
+        modelId = "gpt-5.5",
+        label = "GPT-5.5",
+        description = "Higher-cost frontier tier when available",
+        visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING,
+        apiFormatOverride = LlmApiFormat.OPENAI_RESPONSES
+    ),
     GPT_5_2(
         provider = LlmProvider.OPENAI,
         modelId = "gpt-5.2",
@@ -281,9 +323,16 @@ enum class LlmModel(
     // Google Gemini (keep legacy enum names for compatibility)
     GEMINI_3_PRO(
         provider = LlmProvider.GEMINI,
-        modelId = "gemini-3.1-pro-preview",
+        modelId = "gemini-3-pro-preview",
         label = "Gemini 3 Pro",
         description = "Reasoning-heavy long-context workflows",
+        visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING
+    ),
+    GEMINI_3_5_FLASH(
+        provider = LlmProvider.GEMINI,
+        modelId = "gemini-3.5-flash",
+        label = "Gemini 3.5 Flash",
+        description = "Newer Gemini flash tier with higher capability",
         visibilityGroup = LlmModelVisibilityGroup.CORE_REASONING
     ),
     GEMINI_3_FLASH(
@@ -510,7 +559,10 @@ enum class LlmModel(
         private val modelById = values().associateBy { it.modelId.lowercase() }
 
         private val modelIdAliases = mapOf(
-            "gpt-5" to "gpt-5.2",
+            "gpt-5" to "gpt-5.4",
+            "gpt-5.4-pro" to "gpt-5.5",
+            "gpt-5.2-pro" to "gpt-5.5",
+            "gpt-5-pro" to "gpt-5.5",
             "gpt-5.2-mini" to "gpt-5-mini",
             "gpt-5.1-mini" to "gpt-5-mini",
             "gpt-5.2-nano" to "gpt-5-nano",
@@ -520,17 +572,44 @@ enum class LlmModel(
             "m2-pro" to "MiniMax-M2.5-highspeed",
             "mixtral-8x7b-32768" to "llama-3.1-8b-instant",
             "gemini-3-flash" to "gemini-3-flash-preview",
-            "gemini-3-pro" to "gemini-3.1-pro-preview"
+            "gemini-3-pro" to "gemini-3-pro-preview",
+            "gemini-3.1-pro-preview" to "gemini-3-pro-preview"
+        )
+
+        private val discoveryPreferredOrder = listOf(
+            GPT_5_4,
+            GPT_5_4_MINI,
+            GPT_5_5,
+            GPT_5_4_NANO,
+            GPT_5_2,
+            GPT_5_MINI,
+            GPT_5_NANO,
+            GPT_5_1,
+            GPT_5_3_CODEX,
+            GPT_5_2_CODEX,
+            GPT_5_1_CODEX,
+            GPT_5_1_CODEX_MINI,
+            GPT_5_1_CODEX_MAX,
+            COMPUTER_USE_PREVIEW,
+            CLAUDE_SONNET_4_5,
+            CLAUDE_OPUS_4_6,
+            CLAUDE_HAIKU_4_5,
+            GEMINI_3_PRO,
+            GEMINI_3_5_FLASH,
+            GEMINI_3_FLASH,
+            GEMINI_2_5_PRO,
+            GEMINI_2_5_FLASH
         )
 
         fun normalizeModelIdAlias(modelId: String): String {
             val trimmed = modelId.trim()
             if (trimmed.isEmpty()) return ""
-            val canonical = trimmed.lowercase().replace(Regex("[_\\s]+"), "-")
+            val withoutPrefix = trimmed.removePrefix("models/")
+            val canonical = withoutPrefix.lowercase().replace(Regex("[_\\s]+"), "-")
             val alias = modelIdAliases[canonical]
             if (alias != null) return alias
             val exact = modelById[canonical]
-            return exact?.modelId ?: trimmed
+            return exact?.modelId ?: withoutPrefix
         }
 
         fun fromModelId(modelId: String): LlmModel? {
@@ -540,6 +619,68 @@ enum class LlmModel(
 
         fun modelsForProvider(provider: LlmProvider): List<LlmModel> {
             return values().filter { it.provider == provider }
+        }
+
+        fun availableModelsForProvider(
+            provider: LlmProvider,
+            availableModelIds: Set<String>?
+        ): List<LlmModel> {
+            val providerModels = modelsForProvider(provider)
+            if (availableModelIds.isNullOrEmpty()) {
+                return providerModels
+            }
+
+            val normalized = availableModelIds.mapTo(mutableSetOf()) { normalizeModelIdAlias(it).lowercase() }
+            val available = providerModels.filter { normalized.contains(it.modelId.lowercase()) }
+            if (available.isEmpty()) {
+                return providerModels
+            }
+
+            val preferred = discoveryPreferredOrder.filter { it.provider == provider && available.contains(it) }
+            val remainder = available.filterNot { preferred.contains(it) }
+            return preferred + remainder
+        }
+
+        fun recommendationTier(model: LlmModel): ModelRecommendationTier {
+            val id = model.modelId.lowercase()
+            return when (model.provider) {
+                LlmProvider.OPENAI -> when {
+                    id.contains("pro") || id == "gpt-5.5" -> ModelRecommendationTier.PREMIUM
+                    id == "gpt-5.4" -> ModelRecommendationTier.DEFAULT
+                    id == "gpt-5.4-mini" || id == "gpt-5-mini" -> ModelRecommendationTier.CHEAPER
+                    id == "gpt-5.4-nano" || id == "gpt-5-nano" -> ModelRecommendationTier.CHEAPEST
+                    else -> ModelRecommendationTier.NONE
+                }
+                LlmProvider.GEMINI -> when {
+                    id.contains("pro") -> ModelRecommendationTier.PREMIUM
+                    id == "gemini-3.5-flash" -> ModelRecommendationTier.DEFAULT
+                    id.contains("flash-lite") -> ModelRecommendationTier.CHEAPEST
+                    id.contains("flash") -> ModelRecommendationTier.CHEAPER
+                    else -> ModelRecommendationTier.NONE
+                }
+                LlmProvider.ANTHROPIC -> when {
+                    id.contains("opus") -> ModelRecommendationTier.PREMIUM
+                    id.contains("sonnet") -> ModelRecommendationTier.DEFAULT
+                    id.contains("haiku") -> ModelRecommendationTier.CHEAPER
+                    else -> ModelRecommendationTier.NONE
+                }
+                else -> ModelRecommendationTier.NONE
+            }
+        }
+
+        fun preferredDefaultModel(provider: LlmProvider, models: List<LlmModel>): LlmModel? {
+            if (models.isEmpty()) return null
+
+            val default = models.firstOrNull { it.provider == provider && recommendationTier(it) == ModelRecommendationTier.DEFAULT }
+            if (default != null) return default
+
+            val cheaper = models.firstOrNull { it.provider == provider && recommendationTier(it) == ModelRecommendationTier.CHEAPER }
+            if (cheaper != null) return cheaper
+
+            val premium = models.firstOrNull { it.provider == provider && recommendationTier(it) == ModelRecommendationTier.PREMIUM }
+            if (premium != null) return premium
+
+            return models.firstOrNull { it.provider == provider }
         }
 
         fun inferProvider(modelId: String): LlmProvider {

@@ -66,28 +66,28 @@ data class UserModelRoutingConfig(
             return when (stage) {
                 AnalysisStage.SHORTLIST -> StageModelConfig(
                     provider = LlmProvider.OPENAI,
-                    model = "gpt-5.2",
+                    model = "gpt-5.4",
                     temperature = 0.2f,
                     reasoningDepth = ReasoningDepth.MEDIUM,
                     maxOutputTokens = 1000
                 )
                 AnalysisStage.DECISION_UPDATE -> StageModelConfig(
                     provider = LlmProvider.OPENAI,
-                    model = "gpt-5.2",
+                    model = "gpt-5.4",
                     temperature = 0.2f,
                     reasoningDepth = ReasoningDepth.HIGH,
                     maxOutputTokens = 1500
                 )
                 AnalysisStage.FUNDAMENTALS_NEWS_SYNTHESIS -> StageModelConfig(
                     provider = LlmProvider.OPENAI,
-                    model = "gpt-5.2",
+                    model = "gpt-5.4",
                     temperature = 0.3f,
                     reasoningDepth = ReasoningDepth.HIGH,
                     maxOutputTokens = 2000
                 )
                 AnalysisStage.DEEP_DIVE -> StageModelConfig(
                     provider = LlmProvider.OPENAI,
-                    model = "gpt-5.2",
+                    model = "gpt-5.4",
                     tools = ToolsMode.WEB_SEARCH,
                     temperature = 0.2f,
                     reasoningDepth = ReasoningDepth.HIGH,
@@ -96,7 +96,7 @@ data class UserModelRoutingConfig(
                 )
                 AnalysisStage.RSS_VERIFY -> StageModelConfig(
                     provider = LlmProvider.OPENAI,
-                    model = "gpt-5-mini",
+                    model = "gpt-5.4-mini",
                     tools = ToolsMode.NONE,
                     temperature = 0.1f,
                     reasoningDepth = ReasoningDepth.LOW,
