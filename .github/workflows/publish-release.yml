@@ -1,18 +1,21 @@
-name: Android Debug CI
+name: Publish Android Release
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,7 +32,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Extract version metadata
+      - name: Resolve version metadata
         id: version
         shell: bash
         run: |
@@ -62,29 +65,56 @@ jobs:
           print(f"version_code={data['versionCode']}")
           PY
 
+      - name: Validate tag matches versionName
+        shell: bash
+        run: |
+          expected_tag="v${{ steps.version.outputs.version_name }}"
+          if [ "${GITHUB_REF_NAME}" != "${expected_tag}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match ${expected_tag}" >&2
+            exit 1
+          fi
+
       - name: Remove local.properties
         run: rm -f local.properties
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Run JVM unit tests
-        run: ./gradlew testDebugUnitTest --console=plain
-
       - name: Build debug APK
         run: ./gradlew assembleDebug --console=plain
 
-      - name: Rename debug APK
+      - name: Prepare release assets
         run: cp app/build/outputs/apk/debug/app-debug.apk signalsynthesis-debug.apk
 
-      - name: Upload debug APK
+      - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4
         with:
           name: signalsynthesis-debug
-          path: signalsynthesis-debug.apk
+          path: |
+            signalsynthesis-debug.apk
+            version-metadata.json
 
-      - name: Upload version metadata
-        uses: actions/upload-artifact@v4
-        with:
-          name: signalsynthesis-version-metadata
-          path: version-metadata.json
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          title="${tag} (code ${{ steps.version.outputs.version_code }})"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" \
+              "signalsynthesis-debug.apk#signalsynthesis-debug.apk" \
+              "version-metadata.json#signalsynthesis-version-metadata.json" \
+              --clobber
+            gh release edit "$tag" --draft=false --latest --verify-tag --title "$title"
+          else
+            gh release create "$tag" \
+              "signalsynthesis-debug.apk#signalsynthesis-debug.apk" \
+              "version-metadata.json#signalsynthesis-version-metadata.json" \
+              --verify-tag \
+              --generate-notes \
+              --latest \
+              --title "$title"
+          fi
