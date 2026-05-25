@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" alt="Signal Synthesis app icon" width="160" />
+</p>
+
 # Signal Synthesis
 
 Signal Synthesis is an Android application for staged LLM market screening and trade setup synthesis using bring-your-own market-data and LLM providers.
