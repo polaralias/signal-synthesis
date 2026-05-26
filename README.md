@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo-round.png" alt="Signal Synthesis app icon" width="180" />
+  <img src="Signal%20Synthesis%20Banner.png" alt="Signal Synthesis banner" width="960" />
 </p>
 
 # Signal Synthesis
