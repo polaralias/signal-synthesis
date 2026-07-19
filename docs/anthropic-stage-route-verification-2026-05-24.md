@@ -44,13 +44,13 @@ This run intentionally isolated the live dependency to Claude-routed stages:
 - decision update drop symbols: none
 - synthesis review symbols: `AAPL`, `MSFT`
 
-All three staged Anthropic calls completed successfully in the recorded report artifact:
+All three staged Anthropic calls completed successfully in the recorded report artefact:
 
 - `SHORTLIST`
 - `DECISION_UPDATE`
 - `FUNDAMENTALS_NEWS_SYNTHESIS`
 
-Report artifact:
+Report artefact:
 
 - `app/build/reports/live-verification/anthropic-stage-route-live-report.json`
 

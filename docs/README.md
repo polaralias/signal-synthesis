@@ -81,7 +81,7 @@ Distinguish clearly between:
 At the time of this knowledge-base setup:
 
 - the supported product contract is one staged LLM synthesis pipeline
-- canonical product docs should not present legacy alternative pipelines as supported product behavior
+- canonical product docs should not present legacy alternative pipelines as supported product behaviour
 - the repository has a coherent Android app architecture
 - the staged LLM synthesis path is now `verified working` at product-path level
 - the repository now also has a verified local publish baseline covering build, unit tests, connected Android tests, and a bounded publish-safety/doc-alignment pass

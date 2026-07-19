@@ -8,7 +8,7 @@ Use these files as archaeology, not as current contract.
 
 - useful for understanding how the repository evolved
 - useful for tracing old assumptions and prior plans
-- not automatically trustworthy as current behavior
+- not automatically trustworthy as current behaviour
 - subordinate to the root `README.md`, `docs/README.md`, `GLOSSARY.md`, and current canonical docs in `docs/`
 
 ## What Lives Here

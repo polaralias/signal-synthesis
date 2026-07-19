@@ -81,7 +81,7 @@ milestone.
 
 ### Acceptance Checks
 - Repository can return mock or test data in isolation.
-- Fallback logic and cache TTL behavior are validated with unit tests
+- Fallback logic and cache TTL behaviour are validated with unit tests
   or a simple harness.
 
 ## Phase 3: Indicator and Enrichment Logic
@@ -182,8 +182,8 @@ milestone.
 ## Phase 7: AI Reasoning & Foundation
 
 ### Goals
-- Implement the foundational AI layer that synthesizes market data.
-- Ensure the default view prioritizes AI insights when keys are available.
+- Implement the foundational AI layer that synthesises market data.
+- Ensure the default view prioritises AI insights when keys are available.
 
 ### Inputs
 - LLM API key storage and updated prompting strategy (analyst persona).
@@ -198,7 +198,7 @@ milestone.
 
 ### Acceptance Checks
 - AI analysis runs automatically on setup view if key is present.
-- UI displays the synthesized summary prominently.
+- UI displays the synthesised summary prominently.
 - Fallback to raw data view is available.
 
 ## Phase 8: Hardening and Testing

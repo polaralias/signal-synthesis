@@ -20,7 +20,7 @@ Read these in order before making material changes:
 - The supported product contract is one staged LLM synthesis pipeline.
 - Active product docs should describe only that supported pipeline.
 - Legacy pipeline references belong only in evidence, architecture, or convergence docs when needed to explain current implementation drift.
-- Code and docs should converge toward the single supported staged pipeline contract.
+- Code and docs should converge towards the single supported staged pipeline contract.
 
 ## Source Of Truth Rules
 
@@ -39,7 +39,7 @@ Use these labels precisely:
 
 Agents may upgrade a capability from `verified limited` to `verified working` only when both are true:
 
-- the behavior is covered by meaningful deterministic automated tests for the full path being claimed
+- the behaviour is covered by meaningful deterministic automated tests for the full path being claimed
 - at least one documented manual real-provider scenario exists for stages that depend on external providers or live integrations
 
 ## Knowledge Capture Rules

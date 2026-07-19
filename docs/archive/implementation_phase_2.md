@@ -1,6 +1,6 @@
 Agent Prompts for Missing Functionality (Ordered by Priority)
 
-Below are detailed, actionable prompts for implementing all identified gaps from the QA analysis, ordered to maximize stability and debuggability before adding complex new features.
+Below are detailed, actionable prompts for implementing all identified gaps from the QA analysis, ordered to maximise stability and debuggability before adding complex new features.
 
 1. Execute and Verify Test Suite
 Prompt: Verify All Unit Tests Pass
@@ -37,7 +37,7 @@ Execute all unit tests and fix any failures to ensure the test suite passes comp
 2. Run `./gradlew testDebugUnitTest --info`
 3. Capture any test failures with full stack traces
 4. For each failing test: 
-   - Analyze the root cause (test bug vs implementation bug)
+   - Analyse the root cause (test bug vs implementation bug)
    - Fix the appropriate code
    - Re-run to confirm the fix
 5. Ensure all tests pass with zero failures
@@ -1079,7 +1079,7 @@ expand_less
 ## Task: Add Dashboard/Home Screen with Market Overview
 
 ### Context
-The product vision document specifies:  "A Dashboard or home screen will likely summarize the current market status (maybe a few major indices or user-selected favorites) and provide an entry point to run the analysis."
+The product vision document specifies:  "A Dashboard or home screen will likely summarise the current market status (maybe a few major indices or user-selected favorites) and provide an entry point to run the analysis."
 
 Currently, the app opens directly to the Analysis screen. A dashboard would provide a better user experience. 
 

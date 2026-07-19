@@ -22,7 +22,7 @@ In implementation, we might create a `ChartView` composable that takes a
 list of `IntradayBar` or `DailyBar` points and renders a line chart or
 candlesticks. The chart can be interactive (scroll/zoom) or static. The
 key is to integrate it into the **signal detail screen** below the AI
-summary. This aligns with our goal of richer visualization in the detail
+summary. This aligns with our goal of richer visualisation in the detail
 view. Notably, the data for these charts is already being fetched in the
 pipeline (the EnrichIntraday/EOD steps), so we just need to cache or
 pass it to the UI. If needed, we could store the fetched time-series in
@@ -32,7 +32,7 @@ our Compose UI, a real-time chart can be drawn without much overhead.
 ## Enhanced Data in the Signal Detail View
 
 Currently, when viewing a trade setup's details, the UI mainly shows the
-AI's synthesized summary and basic levels (trigger, stop,
+AI's synthesised summary and basic levels (trigger, stop,
 target)[\[3\]](app/src/main/java/com/polaralias/signalsynthesis/ui/ResultsScreen.kt#L121-L129).
 We should expand this to include the underlying **raw data and
 indicators** that informed the decision. This means displaying things
@@ -184,7 +184,7 @@ or clutter for casual users).
 For longer-term analyses (swing trades, long-term holds), including
 upcoming **earnings dates** can improve decision quality. Currently, we
 don't fetch earnings dates, but our data providers do offer this info.
-For instance, the Financial Modeling Prep API returns an
+For instance, the Financial Modelling Prep API returns an
 `earningsAnnouncement` date as part of the quote
 data[\[17\]](app/src/main/java/com/polaralias/signalsynthesis/data/provider/fmp/FmpService.kt#L82-L88).
 We should start pulling this in the context enrichment phase.
@@ -247,7 +247,7 @@ surface the intent context in the UI.
 
 **Solution:** We can simply display the `TradeSetup.intent` field
 alongside each item. For example, on each result card, add a small label
-or color code for intent: - Text label like "(Day Trade)" or "(Swing)"
+or colour code for intent: - Text label like "(Day Trade)" or "(Swing)"
 under the symbol name. - Or use an icon or initial (e.g., "D", "S", "L"
 badges) with a legend. For clarity, text is fine: *"AAPL -- Day Trade"*
 vs *"AAPL -- Long Term"*. In code, this is easy since `TradeSetup`
@@ -276,7 +276,7 @@ trade -- those are very different contexts.
 
 Scope for phase 3 is strictly OpenAI and Google Gemini. Do not expose
 temperature, top-p, or other sampling controls in the UI. The app
-normalizes configuration into three user-facing controls only:
+normalises configuration into three user-facing controls only:
 
 1. Reasoning depth
 2. Output length (token cap)
@@ -403,7 +403,7 @@ caps.
     to fetch candidates that meet certain criteria (e.g., price \< \$5
     but above some pennies, decent volume, high volatility). For
     example, Finnhub has an API for stock symbols and could filter by
-    market cap or sector, and Financial Modeling Prep offers screener
+    market cap or sector, and Financial Modelling Prep offers screener
     endpoints. This would move us closer to dynamic discovery rather
     than the hardcoded
     list[\[30\]](docs/implementation/product_vision.md#L31-L39).
@@ -451,8 +451,8 @@ volume below a threshold, and perhaps remove highly volatile tickers
 from the initial list.
 
 In summary, introducing risk-based branching in candidate discovery will
-make the suggestions more personalized: - **Conservative:** fewer,
-larger names (we could even prioritize dividend stocks or ETFs). -
+make the suggestions more personalised: - **Conservative:** fewer,
+larger names (we could even prioritise dividend stocks or ETFs). -
 **Aggressive:** include penny stocks and highly volatile picks. Use
 provider screener if possible to get current hot small caps.
 
@@ -501,7 +501,7 @@ Twelve Data was considered but not implemented on the server either, or
 it was an optional part of the plan that was deferred.
 
 **Recommendation:** If license/cost is not an issue, we should consider
-adding Twelve Data support to "better synthesize decisions." This could
+adding Twelve Data support to "better synthesise decisions." This could
 mean: - Integrating Twelve Data's API for price quotes, maybe technical
 indicator endpoints. For instance, Twelve Data can directly provide
 indicator values (RSI, etc.) via API, which could complement our
@@ -533,19 +533,19 @@ In summary, there's no inherent code issue preventing Twelve Data's use
 our data source coverage, which may improve result quality (especially
 if one provider lacks a data point, Twelve Data might have it).
 
-## Centralizing AI Prompt Definitions
+## Centralising AI Prompt Definitions
 
 Currently, the prompts fed to the LLM are defined in-line at various
-points in the code. For example, the prompt for synthesizing a trade
+points in the code. For example, the prompt for synthesising a trade
 setup is constructed with a hardcoded template string inside
 `SynthesizeSetupUseCase.buildPrompt()`[\[35\]](app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/SynthesizeSetupUseCase.kt#L52-L60).
 Also, the system role message ("You are a senior trading analyst...") is
 embedded in `OpenAiLlmClient`
 code[\[36\]](app/src/main/java/com/polaralias/signalsynthesis/data/ai/OpenAiLlmClient.kt#L13-L21).
 This scattering of prompt text makes it hard to audit or tweak the AI's
-behavior.
+behaviour.
 
-**Plan to centralize prompts:** We should externalize these prompt
+**Plan to centralise prompts:** We should externalise these prompt
 templates into a single location (or a small number of clearly defined
 places). A good approach is to create a **Prompt Library** -- e.g., a
 Kotlin object or set of constants that store the base prompt strings.
@@ -571,7 +571,7 @@ string in one place. Another idea is to keep these in a resource file
 without recompiling (though not easily by end-user, but by us). A single
 JSON/YAML config for prompts could list each prompt template with a key.
 
-By centralizing, you (as the developer) can review all AI prompts in one
+By centralising, you (as the developer) can review all AI prompts in one
 file. This makes auditing for tone, correctness, or biases easier. Also,
 if we want to adjust the style (say, change how the summary is phrased
 or add a new field to the output schema), we edit the template in one
@@ -601,7 +601,7 @@ AI usages (for instance, if in the future we have a prompt for
 discovering candidates or for explaining watchlist alerts) also draw
 from this central file.
 
-No visual diagram is needed for this; it's purely a code organization
+No visual diagram is needed for this; it's purely a code organisation
 improvement. But we should document this change so future contributors
 know to edit the prompts in the one file rather than sprinkling changes
 throughout. This "single source of truth" for prompts will make your

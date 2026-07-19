@@ -12,13 +12,13 @@ The repository's product contract supports one staged LLM synthesis pipeline.
 
 Canonical product docs should describe only that supported staged pipeline.
 
-If the codebase still contains legacy alternative analysis-path code or settings, treat them as implementation drift or convergence work, not as supported product behavior.
+If the codebase still contains legacy alternative analysis-path code or settings, treat them as implementation drift or convergence work, not as supported product behaviour.
 
 ## Meaning
 
 - Agents should treat the staged LLM synthesis pipeline as the default implementation target.
 - README and active product docs should lead with the single staged-pipeline contract.
-- Work that removes product/doc drift toward that single-pipeline contract is aligned with repository direction.
+- Work that removes product/doc drift towards that single-pipeline contract is aligned with repository direction.
 - Claims that the product supports multiple long-term analysis pipelines are incorrect unless this decision is replaced.
 
 ## Why

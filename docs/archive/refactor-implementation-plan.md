@@ -2,7 +2,7 @@
 
 Last updated: 2026-01-30
 
-This document is the source of truth for validating the staged pipeline, RSS ingestion, and Deep Dive tooling. It includes exact code excerpts and file paths so an agent can verify behavior without searching the repo.
+This document is the source of truth for validating the staged pipeline, RSS ingestion, and Deep Dive tooling. It includes exact code excerpts and file paths so an agent can verify behaviour without searching the repo.
 
 ---
 
@@ -146,7 +146,7 @@ val result = if (useStaged) {
 
 ## 2.1 Stage routing config and defaults
 
-- Routing is centralized in `StageModelRouter` + `StageModelConfig`.
+- Routing is centralised in `StageModelRouter` + `StageModelConfig`.
 - Only `AnalysisStage.DEEP_DIVE` can use tools; everything else is forced to `ToolsMode.NONE`.
 
 Excerpt (router guardrails):
@@ -664,9 +664,9 @@ These are important for validation — the agent should highlight them if they r
 
 # 10) Validation checklist (agentic pass)
 
-Use this checklist to validate implementation behavior against the reference above.
+Use this checklist to validate implementation behaviour against the reference above.
 
-## 10.1 Staged pipeline behavior
+## 10.1 Staged pipeline behaviour
 
 - Confirm `useStagedPipeline` toggles between V1 and V2 in `AnalysisViewModel.runAnalysis`.
 - Confirm staged pipeline requires non-empty LLM key before execution.

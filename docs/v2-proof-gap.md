@@ -15,7 +15,7 @@ V2 is implemented and executable, and the original blocking proof gap has now be
 The biggest remaining caveats are now:
 
 - broader external-provider combination breadth beyond the currently verified Gemini, OpenAI, and Anthropic staged routes
-- broader proof around real-world RSS quality and user-facing artifact observability
+- broader proof around real-world RSS quality and user-facing artefact observability
 
 ## 2. Current evidence, confirmed
 
@@ -24,18 +24,18 @@ The repository currently has direct tests for:
 - candidate discovery
 - tradeability filtering
 - intraday enrichment
-- context enrichment continuation behavior
+- context enrichment continuation behaviour
 - EOD enrichment
 - ranking
-- shortlist stage contract behavior
-- decision-update contract behavior
-- fundamentals/news synthesis contract behavior
+- shortlist stage contract behaviour
+- decision-update contract behaviour
+- fundamentals/news synthesis contract behaviour
 - deterministic `RunAnalysisV2UseCase` orchestration
 - RSS feed resolution
 - RSS digest matching
-- `AnalysisViewModel` smoke behavior
-- staged-path missing-LLM-key guard behavior
-- staged-path progress ordering and staged artifact publication behavior
+- `AnalysisViewModel` smoke behaviour
+- staged-path missing-LLM-key guard behaviour
+- staged-path progress ordering and staged artefact publication behaviour
 
 The repository also now has a documented live-provider staged verification note:
 
@@ -65,11 +65,11 @@ That is no longer the only end-to-end proof surface, because the repo now also h
 
 Why it is not enough:
 
-- it only exercises shortlist behavior
+- it only exercises shortlist behaviour
 - it uses random quote values
 - it does not assert outcomes
 - it does not cover decision update, RSS, or synthesis
-- it does not produce a stable reproducible artifact
+- it does not produce a stable reproducible artefact
 
 Relevant file:
 
@@ -105,7 +105,7 @@ Completed in the current tranche:
   - keep path
   - drop path
   - malformed response fallback
-  - symbol normalization
+  - symbol normalisation
 
 - `SynthesizeFundamentalsAndNewsUseCase`
   - digest present
@@ -114,7 +114,7 @@ Completed in the current tranche:
 
 - `EnrichContextUseCase`
   - partial failures for profile/metrics/sentiment
-  - per-symbol continuation behavior
+  - per-symbol continuation behaviour
 
 Remaining value in this area is incremental rather than foundational.
 
@@ -132,11 +132,11 @@ Completed in the current tranche:
 
 The current suite asserts:
 
-- shortlisted symbols are correctly normalized and filtered to the tradeable universe
-- requested enrichment subsets are honored
+- shortlisted symbols are correctly normalised and filtered to the tradeable universe
+- requested enrichment subsets are honoured
 - setups dropped by decision update disappear
 - RSS expansion flags affect feed resolution inputs
-- final `AnalysisResult` includes expected V2 artifacts
+- final `AnalysisResult` includes expected V2 artefacts
 
 ### 5.3 Control-plane tests
 
@@ -149,7 +149,7 @@ Completed in the current tranche:
 
 Remaining value in this area is now architectural rather than proof-foundational:
 
-- making staged artifacts easier to inspect remains a future architecture/observability step
+- making staged artefacts easier to inspect remains a future architecture/observability step
 
 ### 5.5 Local Android verification baseline
 
@@ -161,7 +161,7 @@ Completed in the current tranche:
 
 This does not widen the staged-product contract by itself, but it closes the previous "device/emulator verification still missing" caveat for the local publish baseline.
 
-### 5.4 Manual real-provider verification artifact
+### 5.4 Manual real-provider verification artefact
 
 Completed in the current tranche:
 
@@ -174,7 +174,7 @@ Completed in the current tranche:
 V2 was ready to move to `verified working` once all were true:
 
 - dedicated automated tests exist for the LLM-driven stage use cases
-- at least one deterministic `RunAnalysisV2UseCase` test proves stable end-to-end artifact generation
+- at least one deterministic `RunAnalysisV2UseCase` test proves stable end-to-end artefact generation
 - `AnalysisViewModel` tests cover the V2-first execution contract materially better than smoke level
 - one documented manual real-provider verification note exists using the existing template
 - canonical docs are updated to reflect the stronger evidence level
