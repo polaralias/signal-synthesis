@@ -17,7 +17,7 @@ The next tranche should not start by removing the V1/V2 branch in `AnalysisViewM
 ## Meaning
 
 - The first public interface under TDD is `RunAnalysisV2UseCase`.
-- The first behaviors to lock down are shortlist normalization, targeted enrichment selection, decision-update filtering, RSS expansion handling, and final `AnalysisResult` artifact publication.
+- The first behaviours to lock down are shortlist normalisation, targeted enrichment selection, decision-update filtering, RSS expansion handling, and final `AnalysisResult` artefact publication.
 - Direct tests for `ShortlistCandidatesUseCase`, `UpdateDecisionsUseCase`, `SynthesizeFundamentalsAndNewsUseCase`, and `EnrichContextUseCase` should follow the orchestrator suite, not replace it.
 - V1→V2 convergence remains important, but it should be sequenced after proof-building establishes a stronger V2 baseline.
 

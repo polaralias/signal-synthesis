@@ -18,7 +18,7 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {})
 **Features:**
 - **Visibility Control:** Only displays when `isVisible = true` (i.e., when `!uiState.hasAnyApiKeys`)
 - **Visual Design:** 
-  - Uses error container color scheme for high visibility
+  - Uses error container colour scheme for high visibility
   - Bold warning emoji (⚠️) and "MOCK MODE ACTIVE" title
   - Clear explanatory text about why mock mode is active
   - Clickable surface to navigate to API key configuration

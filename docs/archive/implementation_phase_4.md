@@ -1,6 +1,6 @@
 Integrate Real Screener: Replace the static ticker list with a call to a screener endpoint (e.g., FMP Stock Screener).
 Add Mock Indicators: Add a simple "Mock Mode" badge to the top of the Dashboard when providerFactory falls back to mock data.
-Expand Test Coverage: Add UI tests (Compose Tests) to verify the Settings navigation and Alert Permission dialog interactions.
+Expand Test Coverage: Add UI tests (Compose Tests) to verify the Settings navigation and Alert Permission dialogue interactions.
 
 For the stock screener you can utilise whichever 2 providers offer the best functionality. Ensure they work across the stack and synthesising process. Also offer custom ticker entering for user querying, but advise they use the API and LLM suggested ones. Also ensure this addition is added to the llm/api transparency log implemented previously
 

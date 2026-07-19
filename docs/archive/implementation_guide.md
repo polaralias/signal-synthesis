@@ -1,7 +1,7 @@
 # Implementation Guide: Signal Synthesis Android App
 
 This document translates the existing MCP server plan into an
-implementation-focused guide for building the Android app. It is based
+implementation-focussed guide for building the Android app. It is based
 on `docs/implementation/product_vision.md` and keeps parity with the
 current MCP pipeline while mapping each part to mobile architecture,
 data flow, and code structure.
@@ -42,7 +42,7 @@ data flow, and code structure.
 2. ViewModel invokes pipeline.
 3. Repository fetches data (quotes, bars, fundamentals, sentiment).
 4. Domain logic computes indicators, filters, ranks.
-5. UI displays results, prioritizing the AI-synthesized summary over raw data.
+5. UI displays results, prioritising the AI-synthesised summary over raw data.
 6. Background worker runs periodic checks for alerts.
 
 ## 3. Data Model Mapping
@@ -113,7 +113,7 @@ Recommended models (minimum set):
 Mimic the MCP server's provider fallback:
 1. Build a list of available providers based on which API keys are set.
 2. Try providers in priority order (e.g., Alpaca, Polygon, Finnhub,
-   Financial Modeling Prep).
+   Financial Modelling Prep).
 3. If a provider fails, continue to the next.
 4. If all fail, return mock or cached data where available.
 
@@ -256,10 +256,10 @@ Return a single `AnalysisResult` object with counts and setups.
 - **Results List**
   - Cards with symbol, confidence, label.
   - Primary content: Short AI summary snippet.
-  - Color or icon mapping for confidence and type.
+  - Colour or icon mapping for confidence and type.
 
 - **Setup Details**
-  - **Primary View:** AI-synthesized analysis, reasoning, and risk assessment.
+  - **Primary View:** AI-synthesised analysis, reasoning, and risk assessment.
   - **Raw Data View (Toggle):** Full metrics, indicators, sentiment, score components.
 
 - **Alerts**
@@ -282,7 +282,7 @@ Use Compose Navigation. Model each screen as a destination; pass
 
 AI is a core component. The app is designed to reason on data before
 presentation. While the app can function in a "raw mode" without an LLM key,
-the intended and default experience relies on the LLM to synthesize
+the intended and default experience relies on the LLM to synthesise
 complex signals into actionable intelligence.
 
 ### Integration Strategy
@@ -400,5 +400,5 @@ This table clarifies how MCP server pieces map to Android components.
 - Replace static discovery with a screener.
 - Add MACD and Bollinger Bands indicators.
 - Improve ranking with fundamental weighting.
-- Add chart visualizations in detail screen.
+- Add chart visualisations in detail screen.
 - Optional watchlist sync across devices.

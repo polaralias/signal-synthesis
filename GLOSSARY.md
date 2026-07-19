@@ -4,7 +4,7 @@ This glossary defines the repository's preferred language.
 
 ## Analysis Result
 
-The persisted output of an analysis run. It contains ranked setups and may also contain staged AI artifacts such as `globalNotes`, `decisionUpdate`, `rssDigest`, and `fundamentalsNewsSynthesis`.
+The persisted output of an analysis run. It contains ranked setups and may also contain staged AI artefacts such as `globalNotes`, `decisionUpdate`, `rssDigest`, and `fundamentalsNewsSynthesis`.
 
 ## Analysis Stage
 
@@ -47,7 +47,7 @@ The staged-pipeline step that re-evaluates ranked setups after enrichment and ca
 
 ## Mock Mode
 
-The setting that allows the app to operate without live market-data provider keys by falling back to mock data behavior.
+The setting that allows the app to operate without live market-data provider keys by falling back to mock data behaviour.
 
 ## Provider Fallback
 

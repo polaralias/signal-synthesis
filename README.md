@@ -53,4 +53,4 @@ Start with:
 - [docs/v2-verification-matrix.md](docs/v2-verification-matrix.md)
 - [docs/codebase-map.md](docs/codebase-map.md)
 
-For repository workflow and agent-focused context, read [AGENTS.md](AGENTS.md).
+For repository workflow and agent-focussed context, read [AGENTS.md](AGENTS.md).

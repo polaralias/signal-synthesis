@@ -129,13 +129,13 @@ Impact: CI/unit regression coverage is blocked.
 Code comment says defaults should run for symbols without explicit requests at RunAnalysisV2UseCase.kt (line 149), but when any symbol requests intraday/context/eod, only that subset is enriched (...RunAnalysisV2UseCase.kt (line 150), ...RunAnalysisV2UseCase.kt (line 156), ...RunAnalysisV2UseCase.kt (line 163)).
 Impact: shortlisted symbols may be ranked with incomplete data.
 
-[MEDIUM][DONE] Keep/drop filtering is case-sensitive and unnormalized
+[MEDIUM][DONE] Keep/drop filtering is case-sensitive and unnormalised
 Decision symbols are read raw from JSON at DecisionUpdate.kt (line 69) and DecisionUpdate.kt (line 88), then matched case-sensitively at RunAnalysisV2UseCase.kt (line 194) and RunAnalysisV2UseCase.kt (line 195).
 Impact: if LLM returns lowercase/mixed-case tickers, keep/drop instructions may be ignored.
 
 [MEDIUM][DONE] includeMock flag in ProviderFactory is ineffective
 Constructor has includeMock at ProviderFactory.kt (line 13), but mock provider creation ignores it and only checks key presence at ProviderFactory.kt (line 40).
-Impact: config toggle is dead; behavior differs from API contract expectations.
+Impact: config toggle is dead; behaviour differs from API contract expectations.
 
 [MEDIUM][DONE] RSS ticker regex is not escaped
 Ticker is interpolated directly into regex at BuildRssDigestUseCase.kt (line 67) and BuildRssDigestUseCase.kt (line 68).
@@ -146,12 +146,12 @@ MainActivity.kt (line 39) uses .fallbackToDestructiveMigration().
 Impact: app updates with schema changes can wipe local data (history/cache/settings tables in DB).
 
 [LOW][DONE] Static context holder pattern flagged as leak risk
-UsageTracker singleton at ActivityLogger.kt (line 161) keeps context field at ActivityLogger.kt (line 170) (initialized via application context at ...ActivityLogger.kt (line 181)).
+UsageTracker singleton at ActivityLogger.kt (line 161) keeps context field at ActivityLogger.kt (line 170) (initialised via application context at ...ActivityLogger.kt (line 181)).
 Impact: low practical risk due applicationContext, but lint correctly flags lifecycle risk pattern.
 
 [LOW][DONE] Locale-sensitive formatting used widely
 lintDebug reports 34 DefaultLocale warnings (example: AnalysisViewModel.kt (line 742), MarketAlertWorker.kt (line 175), UpdateDecisionsUseCase.kt (line 75)).
-Impact: formatting/parsing behavior can vary by device locale.
+Impact: formatting/parsing behaviour can vary by device locale.
 
 Verification Run Summary
 

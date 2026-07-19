@@ -60,7 +60,7 @@ If the codebase still contains legacy analysis-path code, settings, or reference
 
 - treat that as implementation drift or convergence work
 - document it only in evidence, architecture, or convergence docs
-- do not present it as supported product behavior
+- do not present it as supported product behaviour
 
 ## Verification Posture
 
