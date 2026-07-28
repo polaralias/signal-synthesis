@@ -1,5 +1,20 @@
+---
+type: "Historical Evidence"
+title: "Rss Previews Ai Suggestions"
+description: "Documents Rss Previews Ai Suggestions for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 ## Proposed Approach
-### 1) Add previews to curated RSS catalog
+### 1) Add previews to curated RSS catalogue
   - Add a **provider-level RSS preview** modal: open from each provider header, with a toggle/selector to swipe through that provider’s topics/feeds inside the preview (so users don’t have to open 20+ previews).
 
 ### 2) AI Suggestions Consolidation (settings-wide)
@@ -64,7 +79,11 @@ Good questions
 Make sense?
 
 ### Agent
-Yes, that makes sense. I’ve updated the plan to capture the provider‑level preview modal with topic/feeds toggle, and the single “Suggest all settings” flow with per‑area toggles and history/apply‑last behavior.
+Yes, that makes sense. I’ve updated the plan to capture the provider‑level preview modal with topic/feeds toggle, and the single “Suggest all settings” flow with per‑area toggles and history/apply‑last behaviour.
 
 ### Human
 Make sure the settings screen doesnt overlap (the last PR was great, no sign of this bug) and check the app builds before sign off with .\gradlew assembleDebug. Oh also make sure the drop down expand buttons for the RSS providers work, a previous version had them broken.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

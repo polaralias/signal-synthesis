@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Mock Mode Banner Feature"
+description: "Documents Mock Mode Banner Feature for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Mock Mode Banner Feature
 
 ## Overview
@@ -18,7 +33,7 @@ fun MockModeBanner(isVisible: Boolean, onClick: () -> Unit = {})
 **Features:**
 - **Visibility Control:** Only displays when `isVisible = true` (i.e., when `!uiState.hasAnyApiKeys`)
 - **Visual Design:** 
-  - Uses error container color scheme for high visibility
+  - Uses error container colour scheme for high visibility
   - Bold warning emoji (⚠️) and "MOCK MODE ACTIVE" title
   - Clear explanatory text about why mock mode is active
   - Clickable surface to navigate to API key configuration
@@ -105,3 +120,7 @@ The `MockModeBanner` has been integrated into three key screens:
 - Include a "Learn More" link to documentation
 - Show which specific providers are in mock mode vs. real mode
 - Add a dismiss option for advanced users who understand mock mode
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

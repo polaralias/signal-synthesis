@@ -1,3 +1,18 @@
+---
+type: "Architecture Concept"
+title: "Signal Synthesis Codebase Map"
+description: "Documents Signal Synthesis Codebase Map for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - architecture-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Signal Synthesis Codebase Map
 
 Last reviewed: 2026-05-24
@@ -20,7 +35,7 @@ Probable product goal:
 - Discover candidate tickers for a selected trading intent.
 - Filter and enrich those tickers with quotes, intraday data, daily data, fundamentals, sentiment, and RSS/news context.
 - Rank the results into trade setups.
-- Optionally run LLM stages over those setups to shortlist, revise decisions, synthesize news/fundamentals, and generate deeper explanations.
+- Optionally run LLM stages over those setups to shortlist, revise decisions, synthesise news/fundamentals, and generate deeper explanations.
 - Persist results locally, allow watchlists/history, and run background market alerts.
 
 The code strongly suggests that the app started as a local Android translation of an earlier MCP/server project, then expanded into a broader AI-routing and research surface.
@@ -74,7 +89,7 @@ Important model families:
 
 - `TradingIntent`: day trade / swing / long-term framing.
 - `TradeSetup`: ranked candidate with trigger/stop/target/confidence and enrichment fields.
-- `AnalysisResult`: a full run output, including setups and optional staged/AI artifacts.
+- `AnalysisResult`: a full run output, including setups and optional staged/AI artefacts.
 - `Quote`, `IntradayBar`, `DailyBar`, `IntradayStats`, `EodStats`.
 - `CompanyProfile`, `FinancialMetrics`, `SentimentData`.
 - `RssDigest`, `DecisionUpdate`, `FundamentalsNewsSynthesis`, `DeepDive`.
@@ -113,7 +128,7 @@ Code-backed providers currently include:
 - Alpaca
 - Polygon/Massive
 - Finnhub
-- Financial Modeling Prep
+- Financial Modelling Prep
 - Twelve Data
 - Mock provider
 
@@ -124,7 +139,7 @@ Provider selection is capability-specific rather than global:
 - Screener uses a separate priority order.
 - Search has its own provider order.
 
-`MarketDataRepository` is the operational center here:
+`MarketDataRepository` is the operational centre here:
 
 - It owns provider fallback.
 - It owns in-memory TTL caches.
@@ -135,7 +150,7 @@ Provider selection is capability-specific rather than global:
 Interpretation:
 
 - This is one of the most important "real" subsystems in the project.
-- It is also one of the highest-risk areas for hidden behavior drift, because correctness depends on live third-party APIs.
+- It is also one of the highest-risk areas for hidden behaviour drift, because correctness depends on live third-party APIs.
 
 ### 5.2 AI / LLM providers
 
@@ -162,7 +177,7 @@ Configured provider enum includes:
 The code includes:
 
 - Per-provider API format metadata.
-- Model enums and alias normalization.
+- Model enums and alias normalisation.
 - Stage-based routing through `StageModelRouter`.
 - Separate stage runners for OpenAI, Anthropic, Gemini, and generic OpenAI-compatible providers.
 - Deep-dive provider logic.
@@ -281,7 +296,7 @@ Working conclusion:
 - Multi-provider LLM support is ambitious enough that documentation drift is almost guaranteed.
 - External-provider correctness is unverified in this pass.
 - Some claims in docs/README are stale or incomplete.
-- A passing unit suite does not validate live API behavior, staging quality, prompt quality, or UI correctness.
+- A passing unit suite does not validate live API behaviour, staging quality, prompt quality, or UI correctness.
 
 ### 10.3 What this is now
 
@@ -326,7 +341,7 @@ This repo is small enough that the main map is now known, but the following area
    - Confirm which providers/models are real, current, tested, and actually reachable from the app.
 
 5. Persistence/security audit
-   - Verify API key encryption, migration behavior, and failure cases.
+   - Verify API key encryption, migration behaviour, and failure cases.
 
 6. RSS subsystem audit
    - Confirm feed defaults, topic taxonomy, ticker-source resolution, and digest quality.
@@ -335,10 +350,14 @@ This repo is small enough that the main map is now known, but the following area
    - Screen-by-screen inventory of what is genuinely production-ready versus merely present.
 
 8. Test strategy audit
-   - Distinguish pure unit tests, repository tests, serialization tests, and missing integration coverage.
+   - Distinguish pure unit tests, repository tests, serialisation tests, and missing integration coverage.
 
 ## 13. Practical repo narrative, if you had to explain it today
 
 If forced to describe the codebase without overselling it:
 
 "Signal Synthesis is an Android app for staged LLM-assisted market screening. It combines provider-fallback market data retrieval, a staged analysis pipeline with deterministic substrate stages, local persistence for watchlists/history/summaries/RSS state, and background alerting. The repository now has a publish-ready documentation and verification baseline, with remaining work concentrated in deeper architecture polish and broader provider evidence."
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

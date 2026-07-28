@@ -1,3 +1,18 @@
+---
+type: "Repository Knowledge"
+title: "AnalysisViewModel And Pipeline Map"
+description: "Documents AnalysisViewModel And Pipeline Map for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # AnalysisViewModel And Pipeline Map
 
 Last reviewed: 2026-05-23
@@ -14,10 +29,10 @@ Scope of this document:
 
 Two conclusions matter most:
 
-1. `AnalysisViewModel` is the operational center of the app, not just a presentation-model layer.
+1. `AnalysisViewModel` is the operational centre of the app, not just a presentation-model layer.
 2. The active staged pipeline is not a minor extension of the retired V1 shape. It is a different product mode built around LLM gating, targeted enrichment, RSS resolution, and post-ranking AI revision.
 
-That means future stabilization work should treat:
+That means future stabilisation work should treat:
 
 - `AnalysisViewModel` as a system boundary problem.
 - legacy V1 references as historical architecture context rather than a live product choice.
@@ -31,7 +46,7 @@ Current size signal:
 Function surface signal:
 
 - It contains dozens of public entry points and private helpers.
-- It owns boot-time initialization, user mutations, async orchestration, cache invalidation, AI calls, persistence wiring, alert scheduling, and RSS interactions.
+- It owns boot-time initialisation, user mutations, async orchestration, cache invalidation, AI calls, persistence wiring, alert scheduling, and RSS interactions.
 
 Practical interpretation:
 
@@ -188,7 +203,7 @@ Meaning:
 Owned here:
 
 - Stage routing defaults
-- Provider/model normalization
+- Provider/model normalisation
 - Token sizing
 - Missing-key checks
 - Cache key generation for AI summaries
@@ -205,7 +220,7 @@ Relevant methods:
 
 Meaning:
 
-- The ViewModel contains provider policy and AI routing behavior that would normally live deeper in a service/configuration layer.
+- The ViewModel contains provider policy and AI routing behaviour that would normally live deeper in a service/configuration layer.
 
 ### 3.8 Parsing and transformation helpers
 
@@ -213,7 +228,7 @@ Owned here:
 
 - Parsing AI settings suggestion payloads
 - Parsing threshold and screener suggestion JSON
-- Risk normalization
+- Risk normalisation
 - Text explanation composition
 
 Relevant methods:
@@ -233,9 +248,9 @@ Meaning:
 The coupling is not abstract; it creates concrete operational risks:
 
 - Settings changes can invalidate AI outputs because routing and RSS policy live here.
-- Alert behavior depends on analysis output post-processing in the same file.
+- Alert behaviour depends on analysis output post-processing in the same file.
 - Some persistence writes happen after analysis completion in the same coroutine as result publication.
-- A future bug in AI settings or RSS policy can destabilize the main analysis path because the boundaries are weak.
+- A future bug in AI settings or RSS policy can destabilise the main analysis path because the boundaries are weak.
 
 This does not mean the code is bad. It means the control plane is concentrated.
 
@@ -313,7 +328,7 @@ Interpretation:
 
 - V2 is an AI-mediated pipeline, not just AI commentary attached to V1.
 
-## 6. Key behavioral difference: targeted enrichment
+## 6. Key behavioural difference: targeted enrichment
 
 This is the most important structural difference.
 
@@ -340,7 +355,7 @@ Implication:
 - V2’s promise is lower API cost and more selective analysis.
 - V2’s risk is that a weak shortlist stage can hide good candidates before enrichment ever happens.
 
-## 7. Key behavioral difference: post-ranking revision
+## 7. Key behavioural difference: post-ranking revision
 
 After ranking, V2 does not trust the heuristic rank output as final.
 
@@ -361,9 +376,9 @@ Relevant file:
 Implication:
 
 - In V2, ranking is intermediate, not final.
-- That makes explainability and reproducibility weaker unless logs or artifacts are surfaced clearly.
+- That makes explainability and reproducibility weaker unless logs or artefacts are surfaced clearly.
 
-## 8. Key behavioral difference: RSS/news as a pipeline dependency
+## 8. Key behavioural difference: RSS/news as a pipeline dependency
 
 V1 has no RSS stage.
 
@@ -383,7 +398,7 @@ Implication:
 - News context is now part of the decision model in V2.
 - RSS feed quality now directly affects final synthesis quality.
 
-## 9. Failure behavior comparison
+## 9. Failure behaviour comparison
 
 V1 failure posture:
 
@@ -440,10 +455,10 @@ Confirmed test coverage exists for:
 - EOD enrichment
 - ranking
 - deterministic V2 orchestration
-- stage-contract behavior for shortlist, decision update, and fundamentals/news synthesis
+- stage-contract behaviour for shortlist, decision update, and fundamentals/news synthesis
 - RSS digest matching
 - RSS feed resolver
-- ViewModel staged-path behavior
+- ViewModel staged-path behaviour
 
 Relevant tests:
 
@@ -474,13 +489,13 @@ Implication:
 If the goal is public-repo hardening, the next best follow-up is:
 
 1. ViewModel cut-lines
-   - Identify seams where behavior could be extracted later without changing product behavior yet.
+   - Identify seams where behaviour could be extracted later without changing product behaviour yet.
 
 2. Documentation and observability cleanup
    - Keep active docs aligned with the staged-only product path.
-   - Make staged AI artifacts easier to inspect without relying on logs.
+   - Make staged AI artefacts easier to inspect without relying on logs.
 
-3. AI artifact observability
+3. AI artefact observability
    - Determine how shortlist, keep/drop decisions, and RSS-driven synthesis should be exposed to users and maintainers.
 
 ## 13. Short practical conclusion
@@ -489,10 +504,14 @@ If you need a plain description:
 
 `AnalysisViewModel` currently functions as the app’s control plane.
 
-The active product path is an AI-gated analysis workflow that uses LLM stages to decide what to enrich, what to keep, what RSS context to collect, and how to summarize final setups.
+The active product path is an AI-gated analysis workflow that uses LLM stages to decide what to enrich, what to keep, what RSS context to collect, and how to summarise final setups.
 
 That means the repository’s hardest problems are no longer "how do we compute RSI?" They are:
 
 - "How do we finish removing dead compatibility state and stale architecture narrative?"
-- "How do we verify staged AI behavior?"
+- "How do we verify staged AI behaviour?"
 - "How do we reduce control-plane coupling without breaking working paths?"
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

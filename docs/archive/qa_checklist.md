@@ -1,8 +1,23 @@
+---
+type: "Historical Evidence"
+title: "QA Checklist: Signal Synthesis Android App"
+description: "Documents QA Checklist: Signal Synthesis Android App for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # QA Checklist: Signal Synthesis Android App
 
 Last updated: 2026-01-31
 
-This checklist consolidates requirements from all docs in `docs/implementation/` into one QA pass. It is structured as a full-app scaffold: each section states what must exist and how later phases depend on earlier work. Use this to validate end-to-end behavior and catch hidden dependencies (e.g., a later phase assuming settings or models from an earlier phase).
+This checklist consolidates requirements from all docs in `docs/implementation/` into one QA pass. It is structured as a full-app scaffold: each section states what must exist and how later phases depend on earlier work. Use this to validate end-to-end behaviour and catch hidden dependencies (e.g., a later phase assuming settings or models from an earlier phase).
 
 How to use this checklist:
 - Run top-to-bottom for full QA.
@@ -86,7 +101,7 @@ Provider implementations:
 - [ ] Mapping logic converts API responses (e.g., `FmpQuote`) to domain models (`Quote`).
 - [ ] Mock provider is used as a fallback or when no keys exist (Mock Mode).
 
-Repository behavior:
+Repository behaviour:
 - [ ] All provider calls route through `MarketDataRepository` (single decision point).
 - [ ] Repository selects providers based on availability (API keys) and priority list.
 - [ ] Repository implements `TimedCache` for all data types.
@@ -100,7 +115,7 @@ Retry + rate limit handling:
 Logging + crash reporting:
 - [ ] `Logger` wrapper exists and is used in providers, repository, and ViewModels.
 - [ ] Exceptions are logged with stack traces; no silent catch blocks.
-- [ ] API keys/secrets are NEVER logged (sanitized).
+- [ ] API keys/secrets are NEVER logged (sanitised).
 
 **Dependencies:**
 - Pipeline and UI assume repository returns empty maps on total failure (not crashes).
@@ -165,7 +180,7 @@ Core pipeline flow:
 
 ## 7) Staged Pipeline (V2) + LLM Shortlist + RSS (Refactor Plan)
 
-**Scaffolding Requirement:** Room database (RSS tables) and `StageModelRouter` must be initialized before switching to V2.
+**Scaffolding Requirement:** Room database (RSS tables) and `StageModelRouter` must be initialised before switching to V2.
 
 Staged pipeline selection:
 - [ ] `useStagedPipeline` toggle in Settings switches V1 vs V2 execution.
@@ -204,12 +219,12 @@ LLM providers and configuration:
 - [ ] Model routing allows selecting specific models (e.g., GPT-5.2 for Deep Dive, GPT-5 Mini for Shortlist).
 
 Prompting & Outputs:
-- [ ] Prompts are centralized in `AiPrompts.kt` (no hardcoded templates in UseCases).
+- [ ] Prompts are centralised in `AiPrompts.kt` (no hardcoded templates in UseCases).
 - [ ] Synthesis prompts require AI to explicitly mention indicator names and values.
 - [ ] JSON extraction is robust (handles markdown code blocks or surrounding text).
 
 AI summary caching & prefetch:
-- [ ] Top N setups are prefetch-synthesized (if enabled).
+- [ ] Top N setups are prefetch-synthesised (if enabled).
 - [ ] Progress indicator shows "Processing AI Summary" in Results list.
 
 **Dependencies:**
@@ -227,7 +242,7 @@ Screens & navigation:
 - [ ] Setup Detail: AI Summary primary view with "Show Raw Data" toggle.
 - [ ] Raw Data View: Lists RSI, ATR, VWAP, SMA values with static educational explanations.
 - [ ] Settings: Comprehensive list of toggles, thresholds, and key edits.
-- [ ] Log Viewer: Sanitized activity feed (Requests/Responses), not raw Android logs.
+- [ ] Log Viewer: Sanitised activity feed (Requests/Responses), not raw Android logs.
 
 Charts:
 - [ ] Interactive price chart (Intraday/Daily) in Setup Detail using cached enrichment data.
@@ -236,7 +251,7 @@ Intent Context:
 - [ ] All lists/cards show the intent (Day Trade, Swing, Long Term) for the setup.
 
 **Dependencies:**
-- Background tasks (Alerts) require WorkManager initialization.
+- Background tasks (Alerts) require WorkManager initialisation.
 - Log Viewer requires `ActivityLogger` to be wired into Repository/LLM runners.
 
 ---
@@ -260,7 +275,7 @@ Alert logic:
 
 ## 11) Logging, Transparency, and Log Viewer
 
-Activity Log Sanitization:
+Activity Log Sanitisation:
 - [ ] Log Viewer displays a curated list of activity (e.g., "Alpaca Quote Fetched", "LLM Shortlist Generated").
 - [ ] Details view for each log entry shows inputs/outputs (JSON) but masks API Keys and User IDs.
 - [ ] Does not reveal system prompts or internal routing logic.
@@ -273,9 +288,9 @@ Activity Log Sanitization:
 ## 12) API Usage Tracking & Quotas
 
 Daily & Monthly tracking:
-- [ ] Requests categorized by type (Discovery, Analysis, Fundamentals, Alerts, Deep Dive).
+- [ ] Requests categorised by type (Discovery, Analysis, Fundamentals, Alerts, Deep Dive).
 - [ ] Monthly aggregate is displayed in Settings to warn of provider limits.
-- [ ] Mock provider calls are tracked but labeled "Mock".
+- [ ] Mock provider calls are tracked but labelled "Mock".
 
 **Dependencies:**
 - Repository must increment usage counters on every network call.
@@ -285,7 +300,7 @@ Daily & Monthly tracking:
 ## 13) Mock Mode
 
 - [ ] Mock Mode banner appears on Dashboard and Analysis screens when no keys are present.
-- [ ] Provider selection logic prioritizes MockProvider if `hasAnyApiKeys` is false.
+- [ ] Provider selection logic prioritises MockProvider if `hasAnyApiKeys` is false.
 - [ ] Banner links directly to API Keys setup.
 
 ---
@@ -304,7 +319,7 @@ Room Database:
 
 - [ ] **Unit Tests**: Coverage for Indicators, Filter logic, Ranking, and JSON Parsers.
 - [ ] **Integration Tests**: Repository fallback sequence, Staged pipeline execution with mock LLM.
-- [ ] **UI Tests**: Compose tests for Analysis chips, Screen navigation, and Error Dialogs.
+- [ ] **UI Tests**: Compose tests for Analysis chips, Screen navigation, and Error Dialogues.
 - [ ] **Manual Testing**: Validate Rate Limit (429) delay, ETag (304) RSS fetching, and Deep Link navigation.
 
 ---
@@ -315,8 +330,8 @@ Room Database:
 - [ ] **News Synthesis Stage**: Missing `SynthesizeFundamentalsAndNewsUseCase`.
 - [ ] **Gemini Deep Dive Tools**: `ToolsMode.GOOGLE_SEARCH` must be default for Gemini Deep Dives.
 - [ ] **V2 LLM Key**: `RunAnalysisV2UseCase` should use provided `llmKey` parameter or remove it.
-- [ ] **Log Viewer Sanitization**: Ensure no raw Android system logs are visible.
-- [ ] **Custom Tickers**: Search must be list-based and labeled "User Added" in Detail view.
+- [ ] **Log Viewer Sanitisation**: Ensure no raw Android system logs are visible.
+- [ ] **Custom Tickers**: Search must be list-based and labelled "User Added" in Detail view.
 
 ---
 
@@ -325,3 +340,7 @@ Room Database:
 - [ ] All sections above pass.
 - [ ] Known gaps are resolved or explicitly deferred.
 - [ ] `docs/implementation/implementation_log.md` updated.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

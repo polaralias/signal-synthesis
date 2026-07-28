@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "Public Readiness Verification 2026-05-24"
+description: "Documents Public Readiness Verification 2026-05-24 for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Public Readiness Verification 2026-05-24
 
 Status: `verified working`
@@ -93,3 +108,7 @@ These caveats remain honest and should stay documented:
 ## Conclusion
 
 The repository now has enough code, documentation, and local verification evidence to be presented as a public-ready project without overstating provider breadth or architectural maturity. Provider breadth evidence now directly includes full staged live market-data runs for Gemini, OpenAI, and Anthropic.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

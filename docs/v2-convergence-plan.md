@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "V2 Convergence Plan"
+description: "Documents V2 Convergence Plan for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # V2 Convergence Plan
 
 Last reviewed: 2026-05-24
@@ -37,9 +52,9 @@ Implication:
 - production execution no longer treats V2 as opt-in
 - active settings no longer model V2 as an optional product mode
 
-### 2.3 The result contract already favors V2
+### 2.3 The result contract already favours V2
 
-`AnalysisResult` already supports the V2 artifact surface:
+`AnalysisResult` already supports the V2 artefact surface:
 
 - `globalNotes`
 - `rssDigest`
@@ -88,7 +103,7 @@ The target end state is:
 - one analysis execution path
 - one current product description
 - one settings model that does not frame V2 as optional
-- one verification posture centered on the staged pipeline
+- one verification posture centred on the staged pipeline
 
 Practical interpretation:
 
@@ -151,7 +166,7 @@ Required convergence:
 
 ### Phase 1: Make V2 the explicit default contract in code
 
-- remove or neutralize `useStagedPipeline` as a product choice
+- remove or neutralise `useStagedPipeline` as a product choice
 - route `runAnalysis()` through V2 by default
 - preserve current deterministic substrate inside V2 where needed
 
@@ -166,7 +181,7 @@ Acceptance signal:
 ### Phase 2: Extract or consolidate shared deterministic stages
 
 - continue identifying seams inside the V2 deterministic substrate
-- extract shared deterministic behavior where duplication blocks maintainability
+- extract shared deterministic behaviour where duplication blocks maintainability
 - keep reducing dead legacy references in tests and docs
 
 Acceptance signal:
@@ -175,7 +190,7 @@ Acceptance signal:
 
 ### Phase 3: Tighten documentation and compatibility notes
 
-- confirm no active docs still present the old toggle as current behavior
+- confirm no active docs still present the old toggle as current behaviour
 - document any compatibility assumptions only where historical context still matters
 - ensure stored config still loads without corrupting app state
 
@@ -187,9 +202,9 @@ Status:
 
 - completed in the current tranche
 
-### Phase 4: Tighten observability of V2 artifacts
+### Phase 4: Tighten observability of V2 artefacts
 
-- make shortlist, decision update, RSS needs, and synthesis artifacts easier to inspect
+- make shortlist, decision update, RSS needs, and synthesis artefacts easier to inspect
 - keep enough visibility for debugging and verification after V1 removal
 
 Acceptance signal:
@@ -252,6 +267,10 @@ Those are separate proof and architecture concerns.
 
 If this plan is used as a build sequence, the highest-leverage next implementation task is:
 
-- improve artifact observability around shortlist, decision update, RSS selection, and final synthesis without widening support claims
+- improve artefact observability around shortlist, decision update, RSS selection, and final synthesis without widening support claims
 
 The repository now executes only the staged path for standard analysis; the next payoff is making its decisions easier to inspect while the repo is `verified working` at product-path level.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

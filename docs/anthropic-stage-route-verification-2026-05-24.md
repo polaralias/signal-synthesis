@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "Anthropic Stage-Route Verification 2026-05-24"
+description: "Documents Anthropic Stage-Route Verification 2026-05-24 for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Anthropic Stage-Route Verification 2026-05-24
 
 Status: `verified working`
@@ -44,13 +59,13 @@ This run intentionally isolated the live dependency to Claude-routed stages:
 - decision update drop symbols: none
 - synthesis review symbols: `AAPL`, `MSFT`
 
-All three staged Anthropic calls completed successfully in the recorded report artifact:
+All three staged Anthropic calls completed successfully in the recorded report artefact:
 
 - `SHORTLIST`
 - `DECISION_UPDATE`
 - `FUNDAMENTALS_NEWS_SYNTHESIS`
 
-Report artifact:
+Report artefact:
 
 - `app/build/reports/live-verification/anthropic-stage-route-live-report.json`
 
@@ -71,3 +86,7 @@ This note does not claim that the narrower stage-route run replaces the fuller m
 It claims the narrower and accurate thing:
 
 - Anthropic is a verified working staged LLM route for shortlist, decision update, and fundamentals/news synthesis
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

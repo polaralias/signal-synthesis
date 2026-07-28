@@ -1,3 +1,18 @@
+---
+type: "Navigation Guide"
+title: "Repository Knowledge Base"
+description: "Documents Repository Knowledge Base for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - navigation-guide
+navigation:
+  role: supporting
+  order: 100
+---
 # Repository Knowledge Base
 
 This directory is the canonical repository knowledge surface.
@@ -81,7 +96,7 @@ Distinguish clearly between:
 At the time of this knowledge-base setup:
 
 - the supported product contract is one staged LLM synthesis pipeline
-- canonical product docs should not present legacy alternative pipelines as supported product behavior
+- canonical product docs should not present legacy alternative pipelines as supported product behaviour
 - the repository has a coherent Android app architecture
 - the staged LLM synthesis path is now `verified working` at product-path level
 - the repository now also has a verified local publish baseline covering build, unit tests, connected Android tests, and a bounded publish-safety/doc-alignment pass
@@ -110,3 +125,7 @@ If the next task is beginning TDD against the staged path, start with:
 - [`decisions/0005-first-tdd-proof-slice.md`](decisions/0005-first-tdd-proof-slice.md)
 - [`v2-proof-gap.md`](v2-proof-gap.md)
 - [`v2-verification-matrix.md`](v2-verification-matrix.md)
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

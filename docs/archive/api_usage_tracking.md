@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "API Usage Tracking & Logging Enhancements"
+description: "Documents API Usage Tracking & Logging Enhancements for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # API Usage Tracking & Logging Enhancements
 
 ## Overview
@@ -5,19 +20,19 @@ Comprehensive improvements to API usage tracking, logging, and UI display to pro
 
 ## Key Features Implemented
 
-### 1. **Categorized API Usage Tracking**
+### 1. **Categorised API Usage Tracking**
 
 #### New Usage Categories
-API calls are now categorized by operation type:
+API calls are now categorised by operation type:
 - **Discovery** - Finding tickers (screener, gainers, losers, actives)
 - **Analysis** - Reviewing trends (quotes, intraday, daily data)
 - **Fundamentals** - Company data (profile, metrics, sentiment)
 - **Alerts** - Background alert checks
 - **Search** - Ticker search operations
-- **Other** - Fallback for uncategorized operations
+- **Other** - Fallback for uncategorised operations
 
-#### Automatic Categorization
-The system automatically categorizes each API call based on the operation name:
+#### Automatic Categorisation
+The system automatically categorises each API call based on the operation name:
 ```kotlin
 enum class ApiUsageCategory {
     DISCOVERY, ANALYSIS, FUNDAMENTALS, ALERTS, SEARCH, OTHER
@@ -92,10 +107,10 @@ Technical category names are translated to user-friendly descriptions:
 
 ### 4. **Mock Provider Logging Re-enabled**
 
-#### Previous Behavior
+#### Previous Behaviour
 Mock provider calls were excluded from logging to avoid inflating usage counts when no real API keys were configured.
 
-#### New Behavior
+#### New Behaviour
 Mock provider calls are NOW logged and tracked, providing users with:
 - **Better understanding** of usage patterns before adding real API keys
 - **Realistic preview** of how many API calls will be made with real providers
@@ -200,7 +215,7 @@ Users can see exactly how API calls are being used:
 ### 2. **Cost Management**
 Better understanding helps users:
 - Stay within API rate limits
-- Optimize which providers to use
+- Optimise which providers to use
 - Identify expensive operations
 
 ### 3. **Debugging**
@@ -232,11 +247,11 @@ Historical data helps users:
 ### Unit Tests
 1. Test category detection logic
 2. Test archive creation and cleanup
-3. Test day rollover behavior
+3. Test day rollover behaviour
 4. Test manual archive function
 
 ### Integration Tests
-1. Verify UI displays correct categorized counts
+1. Verify UI displays correct categorised counts
 2. Test archive expansion/collapse
 3. Verify archive button appears when usage > 0
 4. Test password manager detection on API key fields
@@ -255,7 +270,7 @@ Historical data helps users:
 3. **Cost Estimation**: Show estimated costs based on provider pricing
 4. **Charts/Graphs**: Visual representation of usage over time
 5. **Per-Symbol Tracking**: Track which symbols consume the most calls
-6. **Optimization Suggestions**: AI-powered recommendations to reduce API usage
+6. **Optimisation Suggestions**: AI-powered recommendations to reduce API usage
 
 ## Files Modified
 
@@ -281,7 +296,7 @@ Historical data helps users:
 ### UI Components
 - `app/src/main/java/com/polaralias/signalsynthesis/ui/SettingsScreen.kt`
   - Completely redesigned usage display section
-  - Added categorized breakdown cards
+  - Added categorised breakdown cards
   - Added archive viewer with expand/collapse
   - Added manual archive button
   - Added `formatCategoryName()` helper
@@ -298,3 +313,7 @@ Historical data helps users:
 ## Documentation
 - `docs/features/mock_mode_banner.md` - Mock mode banner feature
 - `docs/features/api_usage_tracking.md` - This document
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

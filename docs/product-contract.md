@@ -1,3 +1,18 @@
+---
+type: "Product Contract"
+title: "Product Contract"
+description: "Documents Product Contract for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - product-contract
+navigation:
+  role: foundational
+  order: 20
+---
 # Product Contract
 
 Last reviewed: 2026-05-24
@@ -60,7 +75,7 @@ If the codebase still contains legacy analysis-path code, settings, or reference
 
 - treat that as implementation drift or convergence work
 - document it only in evidence, architecture, or convergence docs
-- do not present it as supported product behavior
+- do not present it as supported product behaviour
 
 ## Verification Posture
 
@@ -89,3 +104,7 @@ Read next:
 3. `AGENTS.md`
 4. `docs/README.md`
 5. `docs/decisions/`
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

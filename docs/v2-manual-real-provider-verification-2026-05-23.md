@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "V2 Manual Real-Provider Verification 2026-05-23"
+description: "Documents V2 Manual Real-Provider Verification 2026-05-23 for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # V2 Manual Real-Provider Verification 2026-05-23
 
 Status: `verified working`
@@ -120,7 +135,7 @@ It satisfies the repository requirement for a documented manual real-provider sc
   - ranked setups before decision update: `NVDA`, `AMZN`, `META`, `TSLA`
   - global notes:
     - all shortlisted symbols were liquid mega-cap tech names suitable for swing-trading liquidity expectations
-    - `NVDA` and `AMZN` were prioritized for stronger volume profiles
+    - `NVDA` and `AMZN` were prioritised for stronger volume profiles
     - sector concentration was explicitly called out as a timing and diversification consideration
 - Decision update keep/drop output:
   - keep: `NVDA`, `META`, `AMZN`
@@ -142,10 +157,10 @@ It satisfies the repository requirement for a documented manual real-provider sc
   - a separate OpenAI-routed attempt failed before shortlist with `HTTP 429`
 - Provider failures observed:
   - later OpenAI-routed attempts failed with `SocketTimeoutException` until the OpenAI HTTP client timeouts were increased above OkHttp defaults
-- Fallback behavior observed:
+- Fallback behaviour observed:
   - Gemini served as the first successful live-provider proof surface before OpenAI transport was fixed
 - Provider failures observed:
-  - an initial Anthropic full live rerun was blocked by transient local Gradle resource-merger corruption rather than provider behavior
+  - an initial Anthropic full live rerun was blocked by transient local Gradle resource-merger corruption rather than provider behaviour
 - JSON or parsing issues observed:
   - none in the successful Gemini-routed, OpenAI-routed, or Anthropic-routed runs
 - Any user-visible inconsistencies:
@@ -167,8 +182,12 @@ It satisfies the repository requirement for a documented manual real-provider sc
   - this note verifies the staged product path with Gemini, OpenAI, and Anthropic, not every possible external provider combination in the repository
   - provider-specific latency can still materially affect large staged prompts, so transport timeout settings remain part of runtime correctness
 
-## Report Artifacts
+## Report Artefacts
 
-- Gemini live report artifact: `app/build/reports/live-verification/v2-live-report-gemini.json`
-- OpenAI live report artifact: `app/build/reports/live-verification/v2-live-report-openai.json`
-- Anthropic live report artifact: `app/build/reports/live-verification/v2-live-report-anthropic.json`
+- Gemini live report artefact: `app/build/reports/live-verification/v2-live-report-gemini.json`
+- OpenAI live report artefact: `app/build/reports/live-verification/v2-live-report-openai.json`
+- Anthropic live report artefact: `app/build/reports/live-verification/v2-live-report-anthropic.json`
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

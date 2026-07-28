@@ -1,10 +1,25 @@
+---
+type: "Historical Evidence"
+title: "Implementation Plan: Converting MCP Server to an Android App"
+description: "Documents Implementation Plan: Converting MCP Server to an Android App for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Implementation Plan: Converting MCP Server to an Android App
 
-## 1. Analyzing the Current MCP Server's Core Functionality
+## 1. Analysing the Current MCP Server's Core Functionality
 
 -   **Multi-Provider Data Access:** The MCP server aggregates financial
     data from multiple providers (Alpaca, Polygon, Finnhub, Financial
-    Modeling Prep, etc.) using API
+    Modelling Prep, etc.) using API
     keys[\[1\]](https://github.com/polaralias/signal-synthesis-mcp/blob/3d1a5a398606c386c8d3368d390acff375fe1cb0/README.md#L6-L13).
     It instantiates provider clients based on which API keys are
     configured and follows a preference order, falling back to a mock
@@ -28,7 +43,7 @@
     setups. This pipeline is composed of several tools, orchestrated in
     sequence[\[7\]](https://github.com/polaralias/signal-synthesis-mcp/blob/3d1a5a398606c386c8d3368d390acff375fe1cb0/src/tools/orchestrator.ts#L20-L28)[\[8\]](https://github.com/polaralias/signal-synthesis-mcp/blob/3d1a5a398606c386c8d3368d390acff375fe1cb0/src/tools/orchestrator.ts#L48-L56):
 
--   *Candidate Discovery:* Identify a list of stock symbols to analyze
+-   *Candidate Discovery:* Identify a list of stock symbols to analyse
     based on trading intent (e.g. day trade, swing, long term). In the
     current server, this is simplified to return a default set of
     popular
@@ -121,7 +136,7 @@ Android app.
     reimplement the core logic (screening, filtering, enrichment,
     ranking) in Kotlin, producing the same kind of results. The app will
     not expose a JSON-RPC API; instead, the functions will be called
-    internally (e.g. when a user taps "Analyze Market"). This eliminates
+    internally (e.g. when a user taps "Analyse Market"). This eliminates
     the need for a network server and gives users direct control. The
     same algorithms defined in the server will be translated into Kotlin
     methods (e.g. computing RSI, ATR, moving averages, etc.).
@@ -203,7 +218,7 @@ Android app.
 -   **Lifecycle and Performance:** Because the logic runs on-device, we
     must handle threading properly (using coroutines or background
     threads for network calls and computations to avoid blocking the
-    UI). The heavy computations (like indicator math or sorting
+    UI). The heavy computations (like indicator maths or sorting
     rankings) are not extremely intensive (the data sets are relatively
     small per request), but we will ensure efficient implementation. The
     app can perform these computations on a background dispatcher and
@@ -236,8 +251,8 @@ will include extended features as described:
     must be the data reasoned on by an LLM.
 
 -   *Synthesis & Decision Making:* Instead of just explaining results,
-    the LLM will analyze the gathered data (indicators, news,
-    fundamentals) to provide a synthesized recommendation and reasoning.
+    the LLM will analyse the gathered data (indicators, news,
+    fundamentals) to provide a synthesised recommendation and reasoning.
     This goes beyond simple rule-based ranking; the LLM can weigh conflicting
     signals and provide a more nuanced outlook, effectively acting as
     an intelligent analyst.
@@ -245,8 +260,8 @@ will include extended features as described:
 -   *AI-First User Experience:* The primary interface will present the
     AI's interpretation of the market and specific trade setups. The
     raw technical data (charts, indicator values) remains accessible for
-    users who want to "deep dive," but the initial interaction is centered
-    on the AI's synthesized insights.
+    users who want to "deep dive," but the initial interaction is centred
+    on the AI's synthesised insights.
 
 -   *Q&A and Interactive Reasoning:* Users can interact with the AI to
     ask follow-up questions about a setup (e.g., "What are the risks here?"
@@ -286,7 +301,7 @@ will include extended features as described:
         dropped to the suggested stop-loss level"*).
 
 -   *Implementation:* The worker will fetch fresh quotes (or run a
-    focused part of the pipeline) for relevant stocks. If any condition
+    focussed part of the pipeline) for relevant stocks. If any condition
     is met, it will generate a local notification using Android's
     Notification API. For instance, *"Alert: ABC Corp dipped 5% since
     open -- potential buy opportunity!"*. These notifications direct the
@@ -338,11 +353,11 @@ will include extended features as described:
 -   **UI/UX Improvements:** The app will make the features more
     accessible:
 
--   A **Dashboard** or home screen will likely summarize the current
+-   A **Dashboard** or home screen will likely summarise the current
     market status (maybe a few major indices or user-selected favorites)
     and provide an entry point to run the analysis.
 
--   The **Analysis Results Screen** will prioritize the **AI-Synthesized
+-   The **Analysis Results Screen** will prioritise the **AI-Synthesised
     Insights**. The list of setups will feature the AI's summary and
     confidence assessment prominently.
 
@@ -351,7 +366,7 @@ will include extended features as described:
     toggle or secondary tab will allow the user to inspect the **Raw Data**
     (exact indicator values, price tables, raw news headlines) to verify
     the AI's conclusions. This ensures transparency while keeping the
-    experience focused on meaningful information.
+    experience focussed on meaningful information.
 
 -   A **Notifications/Alerts Screen** for configuring alerts as
     discussed, and possibly viewing a history of triggered alerts.
@@ -362,7 +377,7 @@ will include extended features as described:
     interval, etc.).
 
 In essence, the Android app will **carry forward the MCP server's core
-mission** -- to analyze and synthesize trading signals -- but will do so
+mission** -- to analyse and synthesise trading signals -- but will do so
 in a self-contained way, while also extending functionality to be more
 interactive and proactive (through AI explanations and notifications).
 Next, we outline a step-by-step implementation plan to achieve this.
@@ -377,7 +392,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
 
 **Phase 1: Project Setup and Core Data Structures**
 
-1.  **Set Up Android Project:** Initialize a new Android project
+1.  **Set Up Android Project:** Initialise a new Android project
     (preferably in Android Studio). Choose Kotlin as the language, **Min
     SDK \~24+** (for modern API usage), and include Jetpack Compose
     support. Configure necessary dependencies:
@@ -451,7 +466,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
 
 4.  Alpaca (if used for market data): they have data API endpoints for
     bars, quotes, fundamentals (though Alpaca might require OAuth and is
-    more for trading -- maybe less needed if focusing on data).
+    more for trading -- maybe less needed if focussing on data).
 
 5.  FMP API: endpoints for stock screener or financial metrics. Each
     interface will have methods annotated with GET/POST and the expected
@@ -650,7 +665,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
     -   For each symbol in the intraday map (which represents each
         candidate that passed filtering):
     -   Retrieve the latest price (e.g. last close of intraday bars).
-    -   Initialize a score and reasons list.
+    -   Initialise a score and reasons list.
     -   Apply rules similarly to the server:
         -   If price is above VWAP, add +1 (reason: "Price above
             VWAP")[\[15\]](https://github.com/polaralias/signal-synthesis-mcp/blob/3d1a5a398606c386c8d3368d390acff375fe1cb0/src/tools/ranking.ts#L23-L31).
@@ -744,7 +759,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
         the top pick.
     g.  **Results List Screen:** After running analysis, display a list
         of TradeSetups. Each item shows key info (ticker, confidence %,
-        label, maybe an icon or color indicating High Probability vs
+        label, maybe an icon or colour indicating High Probability vs
         Speculative). We can use LazyColumn in Compose to list them.
     h.  Each item on click can navigate to a **Details Screen**.
     i.  **Trade Setup Details Screen:** Shows full details for one
@@ -797,7 +812,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
     -   Implement the **Results List Screen** (this can be part of the
         main screen or a separate destination). Each item in the list
         can be a Card composable with the info. Use visual cues for
-        confidence (e.g. progress bar or color coding high vs low
+        confidence (e.g. progress bar or colour coding high vs low
         confidence).
     -   Implement the **Details Screen**. This might involve more
         complex UI (maybe a scrollable column with sections for each
@@ -805,11 +820,11 @@ digestible by an LLM or a development team, facilitating agentic coding.
         and perhaps Divider to separate sections. If adding a small
         chart, we might use a Canvas or a third-party chart library to
         plot intraday prices; or a simpler approach: show a list of last
-        few price points or percent change. To keep initial
+few price points or percentage change. To keep initial
         implementation simple, focus on textual data and maybe a
         sparkline later.
     -   **API Key Screen:** Use basic TextField components for each key.
-        You might have one TextField per provider (labeled accordingly).
+        You might have one TextField per provider (labelled accordingly).
         Also a field for LLM API key. Provide a "Save" button. On save,
         validate and store to EncryptedSharedPreferences (via a small
         helper function or ViewModel function).
@@ -868,7 +883,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
 
     <!-- -->
 
-    -   "Analyze the following trading signal:\nTicker: ABC\nReasons: Price above VWAP, RSI Oversold (28), Positive Sentiment (Bullish).\nExplain what this means and why ABC might be a good opportunity."
+    -   "Analyse the following trading signal:\nTicker: ABC\nReasons: Price above VWAP, RSI Oversold (28), Positive Sentiment (Bullish).\nExplain what this means and why ABC might be a good opportunity."
 
         The model's answer can be shown to the user.
 
@@ -879,7 +894,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
         (`Authorization: Bearer <key>`).
     -   This integration should be decoupled from the main analysis flow
         (so that lack of an AI key doesn't stop the core features). It's
-        an add-on the user can utilize on demand.
+        an add-on the user can utilise on demand.
 
 5.  **Notifications & Background Work:**
 
@@ -887,7 +902,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
         since we can't rely on server push in a local-only scenario).
     -   Use **WorkManager** to schedule a periodic work (e.g. a
         **PeriodicWorkRequest** that runs every X minutes). WorkManager
-        is ideal as it respects Doze mode and system optimizations.
+        is ideal as it respects Doze mode and system optimisations.
     -   Create a Worker class, e.g. `MarketAlertWorker`, that when
         executed will:
     -   Load the list of symbols to monitor. (This could be from the
@@ -899,7 +914,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
         repository).
     -   Apply the alert conditions. For example, for each symbol:
         -   Check if current price is X% below the price when it was
-            last analyzed or below its VWAP from last analysis (if we
+            last analysed or below its VWAP from last analysis (if we
             saved that). Or simply, if current RSI just dropped below 30
             or MACD turned positive, etc.
         -   If any condition is true, create a Notification. Use
@@ -926,7 +941,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
     -   Implement persistence for analysis results if needed (so that
         the user can see the last results without re-running, or so the
         background worker knows previous trigger prices/VWAPs).
-    -   Optimize performance: e.g., if analyzing many symbols, consider
+    -   Optimise performance: e.g., if analysing many symbols, consider
         concurrency limits to not overload the device or network. Use
         coroutines with dispatchers and maybe limit the number of
         parallel API calls (Dispatchers.IO is fine for network calls,
@@ -951,7 +966,7 @@ digestible by an LLM or a development team, facilitating agentic coding.
         feedback).
     -   Finally, prepare the app for release: set up proper permission
         requests (if using work in background on certain OEMs, might
-        need battery optimizations exemption instructions), and ensure
+        need battery optimisations exemption instructions), and ensure
         compliance with provider API terms (some require attributions or
         have usage limits which we should document to the user).
 
@@ -970,8 +985,11 @@ By following these steps, we will have systematically transformed the
 MCP server into a feature-rich Android application. The core logic of
 **market signal synthesis** is preserved (and even improved with more
 indicators and smarter screening), while the new app design adds
-usability (UI, notifications) and personalization (user's own API keys
+usability (UI, notifications) and personalisation (user's own API keys
 and AI integration). Each phase ensures the system is built up in
 logical increments, which is ideal for an LLM-driven development
 approach to implement and validate iteratively.
 
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

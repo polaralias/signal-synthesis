@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0006: Provider Model Discovery For OpenAI, Gemini, And Anthropic"
+description: "Documents Decision 0006: Provider Model Discovery For OpenAI, Gemini, And Anthropic for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0006: Provider Model Discovery For OpenAI, Gemini, And Anthropic
 
 Date: 2026-05-24
@@ -8,7 +23,7 @@ Accepted
 
 ## Decision
 
-OpenAI, Gemini, and Anthropic model selection should no longer rely only on a static in-app catalog during provider setup.
+OpenAI, Gemini, and Anthropic model selection should no longer rely only on a static in-app catalogue during provider setup.
 
 When a user saves an OpenAI, Gemini, or Anthropic API key, the app should call that provider's model-list endpoint, intersect the returned model IDs with the app's curated supported models, and use that discovered set for provider-specific defaults and settings choices.
 
@@ -25,7 +40,7 @@ Anthropic should follow the same pattern, with `claude-sonnet-4-5` as the defaul
 - Recommendation tiers are derived from model names, but generation and suffix must both be considered.
 - Example: `gemini-3-flash-preview` can be a cheaper recommendation while `gemini-3.5-flash` is the default current-generation flash recommendation.
 - The provider list-model endpoints decide availability, not pricing or support claims.
-- Saved settings should be normalized away from stale defaults when discovery proves a better current default is available.
+- Saved settings should be normalised away from stale defaults when discovery proves a better current default is available.
 
 ## Why
 
@@ -33,8 +48,12 @@ The repository had drift between static model enums, runtime provider reality, a
 
 That caused two problems:
 
-- defaults aged out faster than the provider catalogs
+- defaults aged out faster than the provider catalogues
 - setup could present models the current key could not use
 - Anthropic also defaulted too easily to the first curated model without discovery-backed balancing
 
 Using provider discovery at key-save time keeps setup honest without turning the app into a free-form arbitrary model-ID surface.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "V2 Verification Matrix"
+description: "Documents V2 Verification Matrix for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # V2 Verification Matrix
 
 Last reviewed: 2026-05-24
@@ -6,7 +21,7 @@ This document defines the staged pipeline in verification terms.
 
 Goal:
 
-- Turn `RunAnalysisV2UseCase` from "implemented code" into "auditable behavior".
+- Turn `RunAnalysisV2UseCase` from "implemented code" into "auditable behaviour".
 - Identify what each stage needs, what it emits, how it fails, and what evidence currently exists.
 
 Primary code path:
@@ -33,7 +48,7 @@ Residual caveats remain around:
 - decision update pruning
 - RSS feed selection correctness
 - fundamentals/news synthesis quality
-- end-to-end artifact visibility
+- end-to-end artefact visibility
 
 ## 2. Pipeline outline
 
@@ -64,7 +79,7 @@ V2 stages:
 | 7. Targeted EOD enrichment | `app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCase.kt` | shortlist-derived EOD targets | Daily providers and SMA calculator | `Map<String, EodStats>` | Per-symbol failures are swallowed and skipped | Direct unit test exists in `app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/EnrichEodUseCaseTest.kt` |
 | 8. Rank setups | `app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/RankSetupsUseCase.kt` | shortlisted symbols, quotes, intraday, eod, context, intent | None beyond supplied data | `List<TradeSetup>` | Missing quote drops symbol; other enrichment fields are optional | Direct unit test exists in `app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/RankSetupsUseCaseTest.kt` |
 | 9. LLM decision update | `app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/UpdateDecisionsUseCase.kt` | ranked setups, intent, risk, maxKeep | Stage router, LLM provider, JSON extraction | `DecisionUpdate` | Exceptions or invalid JSON produce empty decision update; pipeline continues | Direct unit coverage exists in `app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/UpdateDecisionsUseCaseTest.kt` |
-| 10. RSS resolution and digest build | `app/src/main/java/com/polaralias/signalsynthesis/domain/rss/RssFeedResolver.kt`, `app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/BuildRssDigestUseCase.kt` | setups, ticker source, rssNeeded flags, app RSS settings, feed catalog | RSS feed URLs, RSS client, RSS DAO | `RssFeedResolution` and optional `RssDigest` | Digest errors are caught in V2 and downgraded to `null` digest | Direct tests exist for resolver and digest matching |
+| 10. RSS resolution and digest build | `app/src/main/java/com/polaralias/signalsynthesis/domain/rss/RssFeedResolver.kt`, `app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/BuildRssDigestUseCase.kt` | setups, ticker source, rssNeeded flags, app RSS settings, feed catalogue | RSS feed URLs, RSS client, RSS DAO | `RssFeedResolution` and optional `RssDigest` | Digest errors are caught in V2 and downgraded to `null` digest | Direct tests exist for resolver and digest matching |
 | 11. LLM fundamentals/news synthesis | `app/src/main/java/com/polaralias/signalsynthesis/domain/usecase/SynthesizeFundamentalsAndNewsUseCase.kt` | final setups, optional digest, intent, risk | Stage router, LLM provider, JSON extraction | `FundamentalsNewsSynthesis` | Exceptions or invalid JSON produce empty object or `null` in caller; pipeline still returns `AnalysisResult` | Direct unit coverage exists in `app/src/test/java/com/polaralias/signalsynthesis/domain/usecase/SynthesizeFundamentalsAndNewsUseCaseTest.kt` |
 
 ## 4. Cross-stage preconditions
@@ -92,7 +107,7 @@ These are no longer blocking the staged-product `verified working` claim, but th
 
 - Does `SCREENER` mode actually produce usable universes across supported providers?
 - Are asset-class specific symbol formats valid for downstream providers?
-- Are custom tickers normalized consistently with provider expectations?
+- Are custom tickers normalised consistently with provider expectations?
 
 ### Stage 2: Filter tradeable
 
@@ -124,7 +139,7 @@ These are no longer blocking the staged-product `verified working` claim, but th
 
 ### Stage 9: LLM decision update
 
-- Does keep/drop behavior improve result quality or just add noise?
+- Does keep/drop behaviour improve result quality or just add noise?
 - Are `must_review`, `rss_needed`, and `expanded_rss_needed` fields trustworthy enough to drive later stages?
 - Are users shown enough evidence to understand why a setup disappeared?
 
@@ -147,12 +162,12 @@ What the repo currently proves reasonably well:
 - Deterministic candidate discovery works at a basic level.
 - Tradeability filtering works at a basic level.
 - Intraday and EOD enrichment logic exist and have unit coverage.
-- Context enrichment continuation behavior is directly covered.
+- Context enrichment continuation behaviour is directly covered.
 - Ranking logic exists and has unit coverage.
-- Shortlist, decision-update, and fundamentals/news synthesis contract behavior now have direct unit coverage.
-- One deterministic `RunAnalysisV2UseCase` suite proves stable end-to-end artifact generation for the staged path.
+- Shortlist, decision-update, and fundamentals/news synthesis contract behaviour now have direct unit coverage.
+- One deterministic `RunAnalysisV2UseCase` suite proves stable end-to-end artefact generation for the staged path.
 - RSS digest matching and RSS feed resolution have direct tests.
-- `AnalysisViewModel` now has direct staged-path checks for missing-key gating, progress ordering, and staged artifact publication.
+- `AnalysisViewModel` now has direct staged-path checks for missing-key gating, progress ordering, and staged artefact publication.
 - One documented live-provider staged verification run exists in `docs/v2-manual-real-provider-verification-2026-05-23.md`.
 
 What the repo currently does not prove well:
@@ -189,10 +204,10 @@ Completed in the current tranche using:
 
 The current harness proves:
 
-- selected enrichment targets are honored
+- selected enrichment targets are honoured
 - dropped symbols really disappear
 - RSS expansion flags influence feed selection
-- final `AnalysisResult` contains all expected artifacts
+- final `AnalysisResult` contains all expected artefacts
 
 ### C. Manual verification script
 
@@ -219,7 +234,7 @@ If you want hard gates, these are pragmatic ones.
 - Stage 9 passes when keep/drop logic is reproducible against fixed fake LLM outputs.
 - Stage 10 passes when RSS resolution matches policy for at least custom, predefined, and expanded-RSS cases.
 - Stage 11 passes when synthesis returns schema-valid JSON with and without digest input.
-- Full V2 passes when one deterministic test run produces stable `AnalysisResult` artifacts end to end.
+- Full V2 passes when one deterministic test run produces stable `AnalysisResult` artefacts end to end.
 
 ## 9. Repository positioning implication
 
@@ -237,6 +252,10 @@ That difference matters for public GitHub presentation.
 
 If the next pass should continue straight from here, the highest-value task is:
 
-- improve user-visible observability of shortlist, decision-update, RSS, and synthesis artifacts
+- improve user-visible observability of shortlist, decision-update, RSS, and synthesis artefacts
 
-The repo now has the minimum proof threshold for `verified working`; the next payoff is making that staged behavior easier to inspect and debug.
+The repo now has the minimum proof threshold for `verified working`; the next payoff is making that staged behaviour easier to inspect and debug.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

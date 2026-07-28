@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0005: First TDD Proof Slice"
+description: "Documents Decision 0005: First TDD Proof Slice for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0005: First TDD Proof Slice
 
 Date: 2026-05-23
@@ -17,7 +32,7 @@ The next tranche should not start by removing the V1/V2 branch in `AnalysisViewM
 ## Meaning
 
 - The first public interface under TDD is `RunAnalysisV2UseCase`.
-- The first behaviors to lock down are shortlist normalization, targeted enrichment selection, decision-update filtering, RSS expansion handling, and final `AnalysisResult` artifact publication.
+- The first behaviours to lock down are shortlist normalisation, targeted enrichment selection, decision-update filtering, RSS expansion handling, and final `AnalysisResult` artefact publication.
 - Direct tests for `ShortlistCandidatesUseCase`, `UpdateDecisionsUseCase`, `SynthesizeFundamentalsAndNewsUseCase`, and `EnrichContextUseCase` should follow the orchestrator suite, not replace it.
 - V1→V2 convergence remains important, but it should be sequenced after proof-building establishes a stronger V2 baseline.
 
@@ -31,3 +46,7 @@ The repository knowledge base already establishes that:
 - V1 is still the better-evidenced baseline in some areas
 
 Starting with the V2 orchestrator contract suite reduces ambiguity about the first test surface, strengthens the current product path before structural refactors, and lowers the risk of removing the better-evidenced fallback too early.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

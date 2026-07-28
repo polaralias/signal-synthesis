@@ -1,10 +1,25 @@
+---
+type: "Glossary Concept"
+title: "Glossary"
+description: "Documents Glossary for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - glossary-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Glossary
 
 This glossary defines the repository's preferred language.
 
 ## Analysis Result
 
-The persisted output of an analysis run. It contains ranked setups and may also contain staged AI artifacts such as `globalNotes`, `decisionUpdate`, `rssDigest`, and `fundamentalsNewsSynthesis`.
+The persisted output of an analysis run. It contains ranked setups and may also contain staged AI artefacts such as `globalNotes`, `decisionUpdate`, `rssDigest`, and `fundamentalsNewsSynthesis`.
 
 ## Analysis Stage
 
@@ -47,7 +62,7 @@ The staged-pipeline step that re-evaluates ranked setups after enrichment and ca
 
 ## Mock Mode
 
-The setting that allows the app to operate without live market-data provider keys by falling back to mock data behavior.
+The setting that allows the app to operate without live market-data provider keys by falling back to mock data behaviour.
 
 ## Provider Fallback
 
@@ -72,3 +87,7 @@ The combined enrichment payload for a symbol's profile, financial metrics, and s
 ## Ticker Source
 
 The origin classification for a candidate symbol, such as `PREDEFINED`, `SCREENER`, or `CUSTOM`. RSS feed resolution and result interpretation depend on this.
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

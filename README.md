@@ -1,3 +1,18 @@
+---
+type: "Repository Guide"
+title: "Signal Synthesis"
+description: "Documents Signal Synthesis for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - repository-guide
+navigation:
+  role: entry-point
+  order: 10
+---
 <p align="center">
   <img src="Signal%20Synthesis%20Banner.png" alt="Signal Synthesis banner" width="960" />
 </p>
@@ -53,4 +68,8 @@ Start with:
 - [docs/v2-verification-matrix.md](docs/v2-verification-matrix.md)
 - [docs/codebase-map.md](docs/codebase-map.md)
 
-For repository workflow and agent-focused context, read [AGENTS.md](AGENTS.md).
+For repository workflow and agent-focussed context, read [AGENTS.md](AGENTS.md).
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

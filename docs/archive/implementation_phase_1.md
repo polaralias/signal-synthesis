@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Phased Implementation Plan (Agent Guide)"
+description: "Documents Phased Implementation Plan (Agent Guide) for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Phased Implementation Plan (Agent Guide)
 
 This document breaks implementation into phases with goals, inputs,
@@ -81,7 +96,7 @@ milestone.
 
 ### Acceptance Checks
 - Repository can return mock or test data in isolation.
-- Fallback logic and cache TTL behavior are validated with unit tests
+- Fallback logic and cache TTL behaviour are validated with unit tests
   or a simple harness.
 
 ## Phase 3: Indicator and Enrichment Logic
@@ -182,8 +197,8 @@ milestone.
 ## Phase 7: AI Reasoning & Foundation
 
 ### Goals
-- Implement the foundational AI layer that synthesizes market data.
-- Ensure the default view prioritizes AI insights when keys are available.
+- Implement the foundational AI layer that synthesises market data.
+- Ensure the default view prioritises AI insights when keys are available.
 
 ### Inputs
 - LLM API key storage and updated prompting strategy (analyst persona).
@@ -198,7 +213,7 @@ milestone.
 
 ### Acceptance Checks
 - AI analysis runs automatically on setup view if key is present.
-- UI displays the synthesized summary prominently.
+- UI displays the synthesised summary prominently.
 - Fallback to raw data view is available.
 
 ## Phase 8: Hardening and Testing
@@ -219,3 +234,6 @@ milestone.
 - Tests pass locally.
 - Errors are surfaced clearly in UI.
 
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.
