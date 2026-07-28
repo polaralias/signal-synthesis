@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "OpenAI Responses API Alignment Bugs"
+description: "Documents OpenAI Responses API Alignment Bugs for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # OpenAI Responses API Alignment Bugs
 
 Reviewed against:
@@ -164,3 +179,7 @@ Residual Risk / Coverage Gaps
 No pending items from this bug-fix pass were found in current code review scope.
 
 This is a static + build/lint/unit-test verification pass; runtime-only issues (device/network/provider-specific) still need instrumentation or manual scenario testing.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

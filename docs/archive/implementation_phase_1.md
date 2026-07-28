@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Phased Implementation Plan (Agent Guide)"
+description: "Documents Phased Implementation Plan (Agent Guide) for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Phased Implementation Plan (Agent Guide)
 
 This document breaks implementation into phases with goals, inputs,
@@ -219,3 +234,6 @@ milestone.
 - Tests pass locally.
 - Errors are surfaced clearly in UI.
 
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

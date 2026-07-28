@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0002: Evidence And Status Policy"
+description: "Documents Decision 0002: Evidence And Status Policy for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0002: Evidence And Status Policy
 
 Date: 2026-05-23
@@ -31,3 +46,7 @@ A capability may be upgraded from `verified limited` to `verified working` only 
 This repository depends on live market-data and LLM providers. Automated tests can prove orchestration and deterministic behaviour, but they do not fully prove live integration behaviour on their own.
 
 This policy creates a repeatable threshold for trustworthy support claims.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

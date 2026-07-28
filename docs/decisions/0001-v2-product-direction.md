@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0001: Single Staged Pipeline Product Contract"
+description: "Documents Decision 0001: Single Staged Pipeline Product Contract for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0001: Single Staged Pipeline Product Contract
 
 Date: 2026-05-23
@@ -32,3 +47,7 @@ Without an explicit decision, agents would continue to rediscover or debate:
 - whether current implementation drift should leak back into product-facing documentation
 
 This decision resolves that ambiguity.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

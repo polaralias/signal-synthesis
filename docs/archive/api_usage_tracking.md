@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "API Usage Tracking & Logging Enhancements"
+description: "Documents API Usage Tracking & Logging Enhancements for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # API Usage Tracking & Logging Enhancements
 
 ## Overview
@@ -298,3 +313,7 @@ Historical data helps users:
 ## Documentation
 - `docs/features/mock_mode_banner.md` - Mock mode banner feature
 - `docs/features/api_usage_tracking.md` - This document
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

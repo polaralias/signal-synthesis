@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Implementation Plan: Converting MCP Server to an Android App"
+description: "Documents Implementation Plan: Converting MCP Server to an Android App for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Implementation Plan: Converting MCP Server to an Android App
 
 ## 1. Analysing the Current MCP Server's Core Functionality
@@ -975,3 +990,6 @@ and AI integration). Each phase ensures the system is built up in
 logical increments, which is ideal for an LLM-driven development
 approach to implement and validate iteratively.
 
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

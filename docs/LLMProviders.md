@@ -1,3 +1,18 @@
+---
+type: "Repository Knowledge"
+title: "LLM provider documentation extraction"
+description: "Documents LLM provider documentation extraction for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # LLM provider documentation extraction
 
 Below is a practical, implementation-ready update that gives you:
@@ -1694,3 +1709,7 @@ If you want, next I can turn this into a **Kotlin data model + mapper layer** (s
 [14]: https://localai.io/advanced/model-configuration/ "Model Configuration :: LocalAI"
 [15]: https://docs.vllm.ai/en/stable/serving/openai_compatible_server/ "OpenAI-Compatible Server - vLLM"
 [16]: https://qwen.readthedocs.io/en/latest/deployment/sglang.html "SGLang - Qwen"
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

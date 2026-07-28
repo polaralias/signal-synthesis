@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0003: Canonical Documentation Hierarchy"
+description: "Documents Decision 0003: Canonical Documentation Hierarchy for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0003: Canonical Documentation Hierarchy
 
 Date: 2026-05-23
@@ -38,3 +53,7 @@ The repository now separates:
 - evidence and implementation state
 
 That sharper hierarchy reduces rediscovery and prevents implementation drift from leaking back into product-facing docs.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

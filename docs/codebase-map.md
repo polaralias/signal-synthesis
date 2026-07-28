@@ -1,3 +1,18 @@
+---
+type: "Architecture Concept"
+title: "Signal Synthesis Codebase Map"
+description: "Documents Signal Synthesis Codebase Map for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - architecture-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Signal Synthesis Codebase Map
 
 Last reviewed: 2026-05-24
@@ -342,3 +357,7 @@ This repo is small enough that the main map is now known, but the following area
 If forced to describe the codebase without overselling it:
 
 "Signal Synthesis is an Android app for staged LLM-assisted market screening. It combines provider-fallback market data retrieval, a staged analysis pipeline with deterministic substrate stages, local persistence for watchlists/history/summaries/RSS state, and background alerting. The repository now has a publish-ready documentation and verification baseline, with remaining work concentrated in deeper architecture polish and broader provider evidence."
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

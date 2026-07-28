@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Refactor + staged pipeline implementation reference (authoritative)"
+description: "Documents Refactor + staged pipeline implementation reference (authoritative) for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Refactor + staged pipeline implementation reference (authoritative)
 
 Last updated: 2026-01-30
@@ -726,3 +741,7 @@ These are the JSON keys consumed by parsing logic and must remain stable.
 - RSS digest: map of `symbol -> [title, link, published_at, snippet]`.
 - Fundamentals/news synthesis: `ranked_review_list`, `portfolio_guidance`.
 - Deep dive: `summary`, `drivers`, `risks`, `what_changes_my_mind`, `sources`.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

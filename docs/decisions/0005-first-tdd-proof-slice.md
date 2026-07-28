@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0005: First TDD Proof Slice"
+description: "Documents Decision 0005: First TDD Proof Slice for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0005: First TDD Proof Slice
 
 Date: 2026-05-23
@@ -31,3 +46,7 @@ The repository knowledge base already establishes that:
 - V1 is still the better-evidenced baseline in some areas
 
 Starting with the V2 orchestrator contract suite reduces ambiguity about the first test surface, strengthens the current product path before structural refactors, and lowers the risk of removing the better-evidenced fallback too early.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

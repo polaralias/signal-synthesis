@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Implementation Phase 2"
+description: "Documents Implementation Phase 2 for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 Agent Prompts for Missing Functionality (Ordered by Priority)
 
 Below are detailed, actionable prompts for implementing all identified gaps from the QA analysis, ordered to maximise stability and debuggability before adding complex new features.
@@ -1480,3 +1495,7 @@ expand_less
 | 6 | AI Summary Caching | 🟢 Medium | Medium |
 | 7 | Dashboard Screen | 🟢 Medium | Medium |
 | 8 | Room Database for Watchlists | 🟢 Medium | High |
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

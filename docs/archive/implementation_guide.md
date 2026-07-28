@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Implementation Guide: Signal Synthesis Android App"
+description: "Documents Implementation Guide: Signal Synthesis Android App for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Implementation Guide: Signal Synthesis Android App
 
 This document translates the existing MCP server plan into an
@@ -402,3 +417,7 @@ This table clarifies how MCP server pieces map to Android components.
 - Improve ranking with fundamental weighting.
 - Add chart visualisations in detail screen.
 - Optional watchlist sync across devices.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

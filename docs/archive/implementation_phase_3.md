@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Next Steps for Improving the Trading Companion App"
+description: "Documents Next Steps for Improving the Trading Companion App for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # Next Steps for Improving the Trading Companion App
 
 ## Introducing Graphs for Signals
@@ -607,3 +622,7 @@ know to edit the prompts in the one file rather than sprinkling changes
 throughout. This "single source of truth" for prompts will make your
 audits and updates straightforward -- you can open one file and see
 exactly what we're asking the AI to do in all cases.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

@@ -1,3 +1,18 @@
+---
+type: "Repository Knowledge"
+title: "AnalysisViewModel And Pipeline Map"
+description: "Documents AnalysisViewModel And Pipeline Map for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # AnalysisViewModel And Pipeline Map
 
 Last reviewed: 2026-05-23
@@ -496,3 +511,7 @@ That means the repository’s hardest problems are no longer "how do we compute 
 - "How do we finish removing dead compatibility state and stale architecture narrative?"
 - "How do we verify staged AI behaviour?"
 - "How do we reduce control-plane coupling without breaking working paths?"
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

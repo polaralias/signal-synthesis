@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "V2 Verification Matrix"
+description: "Documents V2 Verification Matrix for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # V2 Verification Matrix
 
 Last reviewed: 2026-05-24
@@ -240,3 +255,7 @@ If the next pass should continue straight from here, the highest-value task is:
 - improve user-visible observability of shortlist, decision-update, RSS, and synthesis artefacts
 
 The repo now has the minimum proof threshold for `verified working`; the next payoff is making that staged behaviour easier to inspect and debug.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

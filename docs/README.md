@@ -1,3 +1,18 @@
+---
+type: "Navigation Guide"
+title: "Repository Knowledge Base"
+description: "Documents Repository Knowledge Base for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - navigation-guide
+navigation:
+  role: supporting
+  order: 100
+---
 # Repository Knowledge Base
 
 This directory is the canonical repository knowledge surface.
@@ -110,3 +125,7 @@ If the next task is beginning TDD against the staged path, start with:
 - [`decisions/0005-first-tdd-proof-slice.md`](decisions/0005-first-tdd-proof-slice.md)
 - [`v2-proof-gap.md`](v2-proof-gap.md)
 - [`v2-verification-matrix.md`](v2-verification-matrix.md)
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

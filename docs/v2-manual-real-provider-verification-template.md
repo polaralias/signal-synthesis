@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "V2 Manual Real-Provider Verification Template"
+description: "Documents V2 Manual Real-Provider Verification Template for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # V2 Manual Real-Provider Verification Template
 
 Status: `untested`
@@ -62,3 +77,7 @@ Do not mark this note as evidence until the run has happened.
 - Manual scenario outcome:
 - Does this run justify any status change:
 - Remaining caveats:
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

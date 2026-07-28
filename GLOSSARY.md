@@ -1,3 +1,18 @@
+---
+type: "Glossary Concept"
+title: "Glossary"
+description: "Documents Glossary for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - glossary-concept
+navigation:
+  role: foundational
+  order: 20
+---
 # Glossary
 
 This glossary defines the repository's preferred language.
@@ -72,3 +87,7 @@ The combined enrichment payload for a symbol's profile, financial metrics, and s
 ## Ticker Source
 
 The origin classification for a candidate symbol, such as `PREDEFINED`, `SCREENER`, or `CUSTOM`. RSS feed resolution and result interpretation depend on this.
+
+## Repository knowledge
+
+- [Documentation map](docs/knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

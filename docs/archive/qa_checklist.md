@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "QA Checklist: Signal Synthesis Android App"
+description: "Documents QA Checklist: Signal Synthesis Android App for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # QA Checklist: Signal Synthesis Android App
 
 Last updated: 2026-01-31
@@ -325,3 +340,7 @@ Room Database:
 - [ ] All sections above pass.
 - [ ] Known gaps are resolved or explicitly deferred.
 - [ ] `docs/implementation/implementation_log.md` updated.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

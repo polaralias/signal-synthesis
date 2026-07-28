@@ -1,3 +1,18 @@
+---
+type: "Decision"
+title: "Decision 0006: Provider Model Discovery For OpenAI, Gemini, And Anthropic"
+description: "Documents Decision 0006: Provider Model Discovery For OpenAI, Gemini, And Anthropic for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - decision
+navigation:
+  role: foundational
+  order: 20
+---
 # Decision 0006: Provider Model Discovery For OpenAI, Gemini, And Anthropic
 
 Date: 2026-05-24
@@ -38,3 +53,7 @@ That caused two problems:
 - Anthropic also defaulted too easily to the first curated model without discovery-backed balancing
 
 Using provider discovery at key-save time keeps setup honest without turning the app into a free-form arbitrary model-ID surface.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

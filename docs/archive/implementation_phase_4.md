@@ -1,3 +1,18 @@
+---
+type: "Historical Evidence"
+title: "Implementation Phase 4"
+description: "Documents Implementation Phase 4 for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - historical-evidence
+navigation:
+  role: reference
+  order: 200
+---
 Integrate Real Screener: Replace the static ticker list with a call to a screener endpoint (e.g., FMP Stock Screener).
 Add Mock Indicators: Add a simple "Mock Mode" badge to the top of the Dashboard when providerFactory falls back to mock data.
 Expand Test Coverage: Add UI tests (Compose Tests) to verify the Settings navigation and Alert Permission dialogue interactions.
@@ -19,3 +34,7 @@ Also, we need to offer customisation for the alert frequency so users can increa
 Next, we need to log and surface how many api requests have been completed within the current month to provide transparency for how close a user is to the thresholds and limits provided by our api providers.
 
 Finally, can we extend the custom ticker input so it allows users to search for tickers instead of just entering the ticker value, we should offer a list addition rather than a comma separated input. We also need to update all areas of the UI that show ticker values to have a clear indicator they were added by the user in the settings and not suggested by the ai synthesis pipeline.
+
+## Repository knowledge
+
+- [Documentation map](../knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

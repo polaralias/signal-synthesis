@@ -1,3 +1,18 @@
+---
+type: "Repository Knowledge"
+title: "V2 Proof Gap"
+description: "Documents V2 Proof Gap for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - repository-knowledge
+navigation:
+  role: supporting
+  order: 100
+---
 # V2 Proof Gap
 
 Last reviewed: 2026-05-24
@@ -206,3 +221,7 @@ This document does not claim that:
 - the existing demo harness has no value
 
 It only claims that the staged product claim is now strong enough for `verified working`, while broader provider-specific and observability questions remain.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

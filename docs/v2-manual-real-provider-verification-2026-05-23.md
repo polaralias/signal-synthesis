@@ -1,3 +1,18 @@
+---
+type: "Validation Evidence"
+title: "V2 Manual Real-Provider Verification 2026-05-23"
+description: "Documents V2 Manual Real-Provider Verification 2026-05-23 for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: evidence
+verification: verified-limited
+owner: polaralias
+tags:
+  - signal-synthesis
+  - validation-evidence
+navigation:
+  role: reference
+  order: 200
+---
 # V2 Manual Real-Provider Verification 2026-05-23
 
 Status: `verified working`
@@ -172,3 +187,7 @@ It satisfies the repository requirement for a documented manual real-provider sc
 - Gemini live report artefact: `app/build/reports/live-verification/v2-live-report-gemini.json`
 - OpenAI live report artefact: `app/build/reports/live-verification/v2-live-report-openai.json`
 - Anthropic live report artefact: `app/build/reports/live-verification/v2-live-report-anthropic.json`
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.

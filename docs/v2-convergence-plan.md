@@ -1,3 +1,18 @@
+---
+type: "Delivery Plan"
+title: "V2 Convergence Plan"
+description: "Documents V2 Convergence Plan for the signal-synthesis repository."
+timestamp: 2026-07-28T21:55:36Z
+authority: canonical
+verification: untested
+owner: polaralias
+tags:
+  - signal-synthesis
+  - delivery-plan
+navigation:
+  role: supporting
+  order: 100
+---
 # V2 Convergence Plan
 
 Last reviewed: 2026-05-24
@@ -255,3 +270,7 @@ If this plan is used as a build sequence, the highest-leverage next implementati
 - improve artefact observability around shortlist, decision update, RSS selection, and final synthesis without widening support claims
 
 The repository now executes only the staged path for standard analysis; the next payoff is making its decisions easier to inspect while the repo is `verified working` at product-path level.
+
+## Repository knowledge
+
+- [Documentation map](knowledge/documentation-map.md) — RKE-managed reading order and relationship hub.
